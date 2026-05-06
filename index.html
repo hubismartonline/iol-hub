@@ -210,16 +210,56 @@
     <!-- ===== ABA: FAQ ===== -->
     <div id="tab-faq" class="tab-content">
       <section class="section">
-        <p class="section-intro">Respostas para as dúvidas mais comuns.</p>
-        <div id="faq-lista">
-          <!-- preenchido via JS -->
+
+        <!-- Busca inteligente -->
+        <div class="faq-search-wrap">
+          <div class="faq-search-box">
+            <span class="faq-search-icon">🔍</span>
+            <input
+              type="text"
+              id="faqSearchInput"
+              class="faq-search-input"
+              placeholder="Digite sua dúvida aqui... ex: não consigo acessar a Layers"
+              oninput="buscarFAQ(this.value)"
+              autocomplete="off"
+            >
+            <button class="faq-search-clear" id="faqClearBtn" onclick="limparFAQ()" style="display:none">✕</button>
+          </div>
+          <div class="faq-sugestoes">
+            <span onclick="buscarFAQRapido('senha')">🔑 Senha</span>
+            <span onclick="buscarFAQRapido('layers')">🔗 Layers</span>
+            <span onclick="buscarFAQRapido('prazo')">⏰ Prazos</span>
+            <span onclick="buscarFAQRapido('formação')">🎓 Formação</span>
+            <span onclick="buscarFAQRapido('tutor')">💬 Tutor</span>
+            <span onclick="buscarFAQRapido('enem')">📝 Enem</span>
+          </div>
         </div>
+
+        <!-- Resultado da busca -->
+        <div id="faq-resultado" style="display:none">
+          <div class="faq-resultado-titulo" id="faq-resultado-titulo"></div>
+          <div id="faq-resultado-lista"></div>
+          <button class="faq-ver-todos" onclick="limparFAQ()">Ver todas as perguntas</button>
+        </div>
+
+        <!-- Lista completa -->
+        <div id="faq-lista-wrap">
+          <p class="section-intro">Perguntas frequentes dos alunos do IOL.</p>
+          <div id="faq-lista"></div>
+        </div>
+
         <div class="faq-footer">
           <p>Não encontrou o que precisava?</p>
-          <button class="wpp-btn outline" onclick="abrirWhatsApp()">
-            💬 Falar com meu tutor
-          </button>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+            <button class="wpp-btn outline" onclick="abrirWhatsApp()" style="flex:1;min-width:160px">
+              💬 Falar com meu tutor
+            </button>
+            <a href="https://bit.ly/ChamaNoForms2026" target="_blank" rel="noopener" class="wpp-btn outline" style="flex:1;min-width:160px;text-decoration:none;text-align:center">
+              📋 Formulário de atendimento
+            </a>
+          </div>
         </div>
+
       </section>
     </div>
 
