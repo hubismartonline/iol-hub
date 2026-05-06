@@ -102,6 +102,7 @@
       <button class="tab" data-tab="plataformas" onclick="trocarAba('plataformas')" role="tab">🚀 Plataformas</button>
       <button class="tab" data-tab="guias" onclick="trocarAba('guias')" role="tab">📚 Guias</button>
       <button class="tab" data-tab="agenda" onclick="trocarAba('agenda')" role="tab">📅 Agenda</button>
+      <button class="tab" data-tab="faq" onclick="trocarAba('faq')" role="tab">❓ FAQ</button>
       <button class="tab" data-tab="atendimento" onclick="trocarAba('atendimento')" role="tab">📋 Atendimento</button>
       <button class="tab" data-tab="perfil" onclick="trocarAba('perfil')" role="tab">👤 Meu Perfil</button>
     </nav>
@@ -334,6 +335,45 @@
   <div id="loading-overlay" class="loading-overlay" style="display:none">
     <div class="loading-spinner"></div>
   </div>
+
+  <!-- BOTÃO FLUTUANTE DE AJUDA -->
+  <div id="fab-ajuda" class="fab-ajuda" onclick="toggleFabMenu()" style="display:none">
+    <span class="fab-icon" id="fab-icon">💬</span>
+  </div>
+
+  <!-- MENU DO BOTÃO FLUTUANTE -->
+  <div id="fab-menu" class="fab-menu" style="display:none">
+    <div class="fab-menu-titulo">Como posso te ajudar? 🦉</div>
+
+    <!-- Mini busca FAQ -->
+    <div class="fab-search-wrap">
+      <input
+        type="text"
+        id="fabFaqInput"
+        class="fab-search-input"
+        placeholder="Digite sua dúvida..."
+        oninput="buscarFABFaq(this.value)"
+        autocomplete="off"
+      >
+    </div>
+    <div id="fab-faq-resultado"></div>
+
+    <!-- Ações rápidas -->
+    <div class="fab-acoes" id="fab-acoes">
+      <button class="fab-acao" onclick="abrirWhatsApp(); toggleFabMenu()">
+        💬 Falar com meu tutor
+      </button>
+      <button class="fab-acao" onclick="trocarAba('faq'); toggleFabMenu()">
+        ❓ Ver FAQ completo
+      </button>
+      <a href="https://bit.ly/ChamaNoForms2026" target="_blank" rel="noopener" class="fab-acao" onclick="toggleFabMenu()">
+        📋 Formulário de atendimento
+      </a>
+    </div>
+  </div>
+
+  <!-- Overlay para fechar o menu -->
+  <div id="fab-overlay" class="fab-overlay" onclick="fecharFabMenu()" style="display:none"></div>
 
   <script src="dados.js"></script>
   <script src="app.js"></script>
