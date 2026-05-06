@@ -1329,3 +1329,126 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   .perfil-campo:nth-child(even) { border-right: none; }
   .perfil-valor { text-align: left; }
 }
+
+/* =============================================
+   ABA ATENDIMENTO
+   ============================================= */
+
+.atend-card {
+  background: var(--navy);
+  border-radius: var(--r-lg);
+  padding: 24px 20px;
+  text-align: center;
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.atend-card::before {
+  content: '';
+  position: absolute;
+  top: -30px; right: -30px;
+  width: 120px; height: 120px;
+  background: var(--blue);
+  opacity: 0.12;
+  border-radius: 50%;
+}
+
+.atend-icon { font-size: 40px; margin-bottom: 12px; }
+
+.atend-titulo {
+  color: #fff;
+  font-size: 18px;
+  font-weight: 800;
+  font-family: 'Montserrat', sans-serif;
+  margin-bottom: 10px;
+}
+
+.atend-desc {
+  color: rgba(255,255,255,0.7);
+  font-size: 13px;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.atend-btn {
+  display: inline-block;
+  background: var(--pink);
+  color: #fff;
+  text-decoration: none;
+  border-radius: var(--r-sm);
+  padding: 14px 24px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  transition: opacity 0.2s, transform 0.15s;
+  position: relative;
+}
+
+.atend-btn:hover  { opacity: 0.9; }
+.atend-btn:active { transform: scale(0.97); }
+
+.atend-faq {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.atend-faq-titulo {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text);
+  margin-bottom: 14px;
+}
+
+.atend-steps { display: flex; flex-direction: column; gap: 10px; }
+
+.atend-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.atend-step-num {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: var(--navy);
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.atend-step-texto { font-size: 13px; color: var(--text2); }
+
+.atend-tipos {
+  background: var(--bg);
+  border-radius: var(--r-md);
+  padding: 16px;
+}
+
+.atend-tipos-titulo {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--text2);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.atend-tipo-item {
+  font-size: 13px;
+  color: var(--text);
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.atend-tipo-item:last-child { border-bottom: none; }
