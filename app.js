@@ -168,7 +168,7 @@ function renderizarTudo(aluno) {
   renderizarGuias(aluno);
   renderizarAgenda();
   renderizarFAQ();
-  renderizarContatos();
+  renderizarContatos(aluno);
   renderizarAvisos();
 }
 
@@ -418,20 +418,31 @@ function renderizarAvisos() {
 }
 
 function renderizarTutor(aluno) {
+  // DEBUG temporário — remove após confirmar a série
+  console.log("Série do aluno:", JSON.stringify(aluno.serie));
+  showToast(`Série: "${aluno.serie}" → normalizada: "${normalizarSerie(aluno.serie)}"`);
   document.getElementById("tutor-avatar").textContent = aluno.tutor_iniciais || iniciais(aluno.tutor || "");
   document.getElementById("tutor-name").textContent   = aluno.tutor;
   document.getElementById("tutor-turma").textContent  = aluno.serie;
 }
 
+// Normaliza série: "9º EF" ou "9EF" ou "9ºEF" → "9EF"
+function normalizarSerie(s) {
+  return (s || "").replace(/[°º ]/g, "").toUpperCase().trim();
+}
+
 function renderizarPlataformas(aluno) {
-  const filtradas = PLATAFORMAS.filter(p => p.series.includes(aluno.serie));
+  const sNorm = normalizarSerie(aluno.serie);
+  const filtradas = PLATAFORMAS.filter(p => p.series.some(s => normalizarSerie(s) === sNorm));
+
   const gridHome = document.getElementById("platforms-home");
   if (gridHome) gridHome.innerHTML = filtradas.slice(0, 4).map(p => `
     <a class="platform-card" href="${p.url}" target="_blank" rel="noopener">
       <div class="platform-icon" style="background:${p.cor_bg}">${p.icon}</div>
       <div class="platform-name">${p.nome}</div>
       <div class="platform-desc">${p.desc}</div>
-    </a>`).join("");
+    </a>`).join("") || `<p style="color:var(--text2);font-size:13px;padding:8px 0;grid-column:1/-1">Nenhuma plataforma encontrada para "${aluno.serie}".</p>`;
+
   const full = document.getElementById("platforms-full");
   if (full) full.innerHTML = filtradas.map(p => `
     <a class="platform-card-full" href="${p.url}" target="_blank" rel="noopener">
@@ -441,14 +452,15 @@ function renderizarPlataformas(aluno) {
         <div class="platform-desc">${p.desc}</div>
       </div>
       <span class="platform-arrow">›</span>
-    </a>`).join("");
+    </a>`).join("") || `<p style="color:var(--text2);font-size:13px;padding:8px 0">Nenhuma plataforma encontrada para "${aluno.serie}".</p>`;
 }
 
 function renderizarGuias(aluno) {
   const container = document.getElementById("guias-lista");
   if (!container) return;
+  const sNorm = normalizarSerie(aluno.serie);
   container.innerHTML = GUIAS.map(grupo => {
-    const itens = grupo.itens.filter(i => i.series.includes(aluno.serie));
+    const itens = grupo.itens.filter(i => i.series.some(s => normalizarSerie(s) === sNorm));
     if (!itens.length) return "";
     return `<div class="guias-group">
       <div class="guias-group-title">${grupo.grupo}</div>
@@ -462,7 +474,7 @@ function renderizarGuias(aluno) {
           <span style="color:var(--text3);font-size:18px">›</span>
         </a>`).join("")}
     </div>`;
-  }).join("");
+  }).join("") || `<p style="color:var(--text2);font-size:13px;padding:8px 0">Nenhum guia encontrado.</p>`;
 }
 
 function renderizarAgenda() {
@@ -497,14 +509,26 @@ function renderizarFAQ() {
 
 function toggleFaq(i) { document.getElementById(`faq-${i}`)?.classList.toggle("open"); }
 
-function renderizarContatos() {
+function renderizarContatos(aluno) {
   const container = document.getElementById("contatos-lista");
   if (!container) return;
-  container.innerHTML = CONTATOS.map(c => {
+
+  const cardTutor = aluno ? `
+    <div class="contato-item" onclick="abrirWhatsApp()">
+      <div class="contato-icon" style="background:rgba(0,189,242,0.15);font-family:Montserrat,sans-serif;font-weight:800;font-size:13px;color:var(--navy)">
+        ${aluno.tutor_iniciais || (aluno.tutor||"").split(" ").filter(Boolean).slice(0,2).map(p=>p[0]).join("").toUpperCase()}
+      </div>
+      <div class="contato-info">
+        <div class="contato-nome">${aluno.tutor}</div>
+        <div class="contato-desc">Seu(a) tutor(a) — falar pelo WhatsApp</div>
+      </div>
+      <span class="contato-action">💬</span>
+    </div>` : "";
+
+  const cardsFixos = CONTATOS.map(c => {
     const onclick = c.tipo === "link"
       ? `window.open('${c.url}','_blank','noopener')`
       : `abrirWhatsAppContato('${c.wpp}','${(c.msg||"").replace(/'/g,"\\'")}')`;
-    const iconeAcao = c.tipo === "link" ? "↗️" : "💬";
     return `
       <div class="contato-item" onclick="${onclick}">
         <div class="contato-icon" style="background:${c.cor_bg}">${c.icon}</div>
@@ -512,9 +536,11 @@ function renderizarContatos() {
           <div class="contato-nome">${c.nome}</div>
           <div class="contato-desc">${c.desc}</div>
         </div>
-        <span class="contato-action">${iconeAcao}</span>
+        <span class="contato-action">${c.tipo === "link" ? "↗️" : "💬"}</span>
       </div>`;
   }).join("");
+
+  container.innerHTML = cardTutor + cardsFixos;
 }
 
 // -------------------------------------------------------
