@@ -500,15 +500,21 @@ function toggleFaq(i) { document.getElementById(`faq-${i}`)?.classList.toggle("o
 function renderizarContatos() {
   const container = document.getElementById("contatos-lista");
   if (!container) return;
-  container.innerHTML = CONTATOS.map(c => `
-    <div class="contato-item" onclick="abrirWhatsAppContato('${c.wpp}', '${c.msg.replace(/'/g,"\\'")}')">
-      <div class="contato-icon" style="background:${c.cor_bg}">${c.icon}</div>
-      <div class="contato-info">
-        <div class="contato-nome">${c.nome}</div>
-        <div class="contato-desc">${c.desc}</div>
-      </div>
-      <span class="contato-action">💬</span>
-    </div>`).join("");
+  container.innerHTML = CONTATOS.map(c => {
+    const onclick = c.tipo === "link"
+      ? `window.open('${c.url}','_blank','noopener')`
+      : `abrirWhatsAppContato('${c.wpp}','${(c.msg||"").replace(/'/g,"\\'")}')`;
+    const iconeAcao = c.tipo === "link" ? "↗️" : "💬";
+    return `
+      <div class="contato-item" onclick="${onclick}">
+        <div class="contato-icon" style="background:${c.cor_bg}">${c.icon}</div>
+        <div class="contato-info">
+          <div class="contato-nome">${c.nome}</div>
+          <div class="contato-desc">${c.desc}</div>
+        </div>
+        <span class="contato-action">${iconeAcao}</span>
+      </div>`;
+  }).join("");
 }
 
 // -------------------------------------------------------
