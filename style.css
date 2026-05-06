@@ -1229,3 +1229,103 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
 @media (min-width: 900px) {
   .logo-owl { width: 44px; height: 44px; }
 }
+
+/* =============================================
+   ABA PERFIL DO ALUNO
+   ============================================= */
+
+.perfil-aviso {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: rgba(0,189,242,0.08);
+  border: 1px solid rgba(0,189,242,0.25);
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.5;
+}
+
+.perfil-aviso span { font-size: 18px; flex-shrink: 0; }
+
+.perfil-ultima {
+  font-size: 11px;
+  color: var(--text3);
+  font-family: 'Montserrat', sans-serif;
+  margin-bottom: 16px;
+  text-align: right;
+}
+
+.perfil-secao {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.perfil-secao-titulo {
+  background: var(--navy);
+  color: #fff;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 12px 16px;
+}
+
+.perfil-campos { padding: 4px 0; }
+
+.perfil-campo {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.perfil-campo:last-child { border-bottom: none; }
+
+.perfil-label {
+  font-size: 12px;
+  color: var(--text2);
+  min-width: 140px;
+  flex-shrink: 0;
+}
+
+.perfil-valor {
+  font-size: 13px;
+  color: var(--text);
+  font-weight: 700;
+  font-family: 'Montserrat', sans-serif;
+  text-align: right;
+}
+
+.perfil-loading, .perfil-vazio {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text2);
+  font-size: 14px;
+}
+
+@media (min-width: 900px) {
+  #tab-perfil .section {
+    max-width: 800px;
+  }
+
+  .perfil-campos {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .perfil-campo {
+    border-right: 1px solid var(--border);
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .perfil-campo:nth-child(even) { border-right: none; }
+  .perfil-valor { text-align: left; }
+}
