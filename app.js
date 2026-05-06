@@ -150,6 +150,7 @@ function identificarAluno(aluno) {
   const main = document.getElementById("main-content");
   main.style.cssText = "display:block;opacity:0;transform:translateY(10px);transition:opacity 0.4s,transform 0.4s";
   setTimeout(() => main.style.cssText = "display:block;opacity:1;transform:translateY(0);transition:opacity 0.4s,transform 0.4s", 50);
+  mostrarFAB();
   showToast(`Bem-vindo(a), ${aluno.nome.split(" ")[0]}! 🎉`);
 }
 
@@ -374,6 +375,7 @@ function sair() {
   document.getElementById("raInput").value = "";
   document.getElementById("ra-error").style.display = "none";
   trocarAba("home");
+  esconderFAB();
   showToast("Até logo! 👋");
 }
 
@@ -719,4 +721,88 @@ function destacarTermos(texto, query) {
     result = result.replace(re, "<mark>$1</mark>");
   }
   return result;
+}
+
+// =============================================================
+//  BOTÃO FLUTUANTE DE AJUDA (FAB)
+// =============================================================
+
+let fabAberto = false;
+
+// Mostra o FAB após o login
+function mostrarFAB() {
+  const fab = document.getElementById("fab-ajuda");
+  if (fab) fab.style.display = "flex";
+}
+
+// Esconde o FAB ao sair
+function esconderFAB() {
+  const fab = document.getElementById("fab-ajuda");
+  if (fab) fab.style.display = "none";
+  fecharFabMenu();
+}
+
+function toggleFabMenu() {
+  fabAberto ? fecharFabMenu() : abrirFabMenu();
+}
+
+function abrirFabMenu() {
+  fabAberto = true;
+  document.getElementById("fab-menu").style.display = "block";
+  document.getElementById("fab-overlay").style.display = "block";
+  document.getElementById("fab-ajuda").classList.add("open");
+  document.getElementById("fab-faq-resultado").innerHTML = "";
+  document.getElementById("fabFaqInput").value = "";
+  setTimeout(() => document.getElementById("fabFaqInput").focus(), 200);
+}
+
+function fecharFabMenu() {
+  fabAberto = false;
+  document.getElementById("fab-menu").style.display = "none";
+  document.getElementById("fab-overlay").style.display = "none";
+  document.getElementById("fab-ajuda").classList.remove("open");
+}
+
+// Busca FAQ dentro do FAB
+function buscarFABFaq(query) {
+  const container = document.getElementById("fab-faq-resultado");
+  const acoes = document.getElementById("fab-acoes");
+
+  if (!query || query.trim().length < 2) {
+    container.innerHTML = "";
+    acoes.style.display = "flex";
+    return;
+  }
+
+  const resultados = FAQ.map(item => ({
+    item,
+    score: calcularRelevancia(query, item)
+  })).filter(r => r.score > 0)
+     .sort((a, b) => b.score - a.score)
+     .slice(0, 3);
+
+  acoes.style.display = resultados.length ? "none" : "flex";
+
+  if (!resultados.length) {
+    container.innerHTML = `
+      <div class="fab-faq-sem-resultado">
+        🤔 Não encontrei resposta para isso.<br>
+        Tente outras palavras ou use as opções abaixo.
+      </div>`;
+    acoes.style.display = "flex";
+    return;
+  }
+
+  container.innerHTML = resultados.map((r, i) => `
+    <div class="fab-faq-item" id="fab-item-${i}" onclick="toggleFabItem(${i})">
+      <div class="fab-faq-pergunta">${r.item.q}</div>
+      <div class="fab-faq-resposta">${r.item.a}</div>
+    </div>`).join("");
+
+  // Abre o primeiro automaticamente
+  setTimeout(() => toggleFabItem(0), 100);
+}
+
+function toggleFabItem(i) {
+  document.getElementById(`fab-item-${i}`)?.classList.toggle("aberto");
 }
