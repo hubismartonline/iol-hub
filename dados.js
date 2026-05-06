@@ -351,3 +351,4 @@ const SEARCH_INDEX = [
   { cat: "Ação", texto: "falar tutor whatsapp ajuda", acao: () => { abrirWhatsApp(); } },
   { cat: "Seção", texto: "agenda calendario eventos mentorias simulado", acao: () => { trocarAba("agenda"); } }
 ];
+ 
