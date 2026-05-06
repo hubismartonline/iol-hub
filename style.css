@@ -945,6 +945,9 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
    ============================================= */
 
 @media (min-width: 900px) {
+  /* Garante que tabs inativas ficam ocultas mesmo no desktop */
+  .tab-content:not(.active) { display: none !important; }
+
 
   /* Remove a limitação de 480px e centraliza com fundo */
   body {
@@ -1009,8 +1012,8 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
     padding: 14px 18px;
   }
 
-  /* CONTEÚDO em grid de 2 colunas */
-  #tab-home {
+  /* CONTEÚDO em grid de 2 colunas — só quando ativo */
+  #tab-home.active {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 0;
