@@ -592,3 +592,131 @@ function mostrarLoading(show) {
 document.addEventListener("keydown", e => {
   if (e.key === "Enter" && document.activeElement.id === "raInput") buscarRA();
 });
+
+// =============================================================
+//  FAQ INTELIGENTE
+//  Busca por similaridade de palavras no FAQ
+// =============================================================
+
+// Palavras sem significado para ignorar na busca
+const STOPWORDS = new Set([
+  "a","o","e","é","de","do","da","em","um","uma","com","que","se","na","no",
+  "para","por","como","não","meu","minha","meus","minhas","eu","me","mim",
+  "tem","ter","tenho","está","estou","foi","ser","isso","esse","essa","mais",
+  "mas","ou","já","quando","onde","qual","quais","preciso","quero","dúvida",
+  "sobre","ajuda","saber","consegui","consigo","posso","devo"
+]);
+
+function tokenizar(texto) {
+  return texto
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // remove acentos
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter(t => t.length > 2 && !STOPWORDS.has(t));
+}
+
+function calcularRelevancia(query, faqItem) {
+  const tokens = tokenizar(query);
+  if (!tokens.length) return 0;
+
+  const textoCompleto = (faqItem.q + " " + faqItem.a + " " + (faqItem.tags || "")).toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+  let score = 0;
+  for (const token of tokens) {
+    if (textoCompleto.includes(token)) {
+      // Peso maior se aparece na pergunta
+      if (faqItem.q.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").includes(token)) {
+        score += 3;
+      } else {
+        score += 1;
+      }
+    }
+  }
+  return score;
+}
+
+function buscarFAQ(query) {
+  const clearBtn = document.getElementById("faqClearBtn");
+  const resultado = document.getElementById("faq-resultado");
+  const listaWrap = document.getElementById("faq-lista-wrap");
+  const tituloEl  = document.getElementById("faq-resultado-titulo");
+  const listaEl   = document.getElementById("faq-resultado-lista");
+
+  if (clearBtn) clearBtn.style.display = query.length > 0 ? "block" : "none";
+
+  if (!query || query.trim().length < 2) {
+    resultado.style.display = "none";
+    listaWrap.style.display = "block";
+    return;
+  }
+
+  // Calcula relevância de cada item
+  const scoredFAQ = FAQ.map(item => ({
+    item,
+    score: calcularRelevancia(query, item)
+  })).filter(r => r.score > 0)
+     .sort((a, b) => b.score - a.score)
+     .slice(0, 5);
+
+  listaWrap.style.display = "none";
+  resultado.style.display = "block";
+
+  if (scoredFAQ.length === 0) {
+    tituloEl.textContent = `Nenhum resultado para "${query}"`;
+    listaEl.innerHTML = `
+      <div class="faq-sem-resultado">
+        <div class="faq-sem-icon">🤔</div>
+        <p>Não encontrei uma resposta para isso no FAQ.</p>
+        <p>Tente outras palavras ou use o formulário de atendimento.</p>
+      </div>`;
+    return;
+  }
+
+  tituloEl.textContent = `${scoredFAQ.length} resultado${scoredFAQ.length > 1 ? "s" : ""} para "${query}"`;
+  listaEl.innerHTML = scoredFAQ.map((r, i) => `
+    <div class="faq-item" id="faq-result-${i}">
+      <div class="faq-q" onclick="toggleFaqResult(${i})">
+        <span>${r.item.q}</span>
+        <span class="faq-chevron">›</span>
+      </div>
+      <div class="faq-a">${destacarTermos(r.item.a, query)}</div>
+    </div>`).join("");
+
+  // Abre automaticamente o primeiro resultado
+  setTimeout(() => {
+    document.getElementById("faq-result-0")?.classList.add("open");
+  }, 100);
+}
+
+function toggleFaqResult(i) {
+  document.getElementById(`faq-result-${i}`)?.classList.toggle("open");
+}
+
+function buscarFAQRapido(termo) {
+  const input = document.getElementById("faqSearchInput");
+  if (input) {
+    input.value = termo;
+    buscarFAQ(termo);
+    input.focus();
+  }
+}
+
+function limparFAQ() {
+  const input = document.getElementById("faqSearchInput");
+  if (input) input.value = "";
+  document.getElementById("faqClearBtn").style.display = "none";
+  document.getElementById("faq-resultado").style.display = "none";
+  document.getElementById("faq-lista-wrap").style.display = "block";
+}
+
+function destacarTermos(texto, query) {
+  const tokens = tokenizar(query);
+  let result = texto;
+  for (const token of tokens) {
+    const re = new RegExp(`(${token})`, "gi");
+    result = result.replace(re, "<mark>$1</mark>");
+  }
+  return result;
+}
