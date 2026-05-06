@@ -3,10 +3,10 @@
    Identidade visual: Montserrat + Lato
    Cores: #00BDF2 #008ED4 #002561 #EE2D67 #EBEA70
    ============================================= */
-
+ 
 /* ---------- RESET & BASE ---------- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+ 
 :root {
   --blue:    #00BDF2;
   --dark:    #008ED4;
@@ -26,9 +26,9 @@
   --shadow:  0 2px 16px rgba(0,37,97,0.08);
   --shadow-lg: 0 6px 32px rgba(0,37,97,0.13);
 }
-
+ 
 html { scroll-behavior: smooth; }
-
+ 
 body {
   font-family: 'Lato', 'Tahoma', sans-serif;
   background: var(--bg);
@@ -40,11 +40,11 @@ body {
   max-width: 480px;
   margin: 0 auto;
 }
-
+ 
 h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tutor-name, .platform-name, .faq-q, .aviso-title {
   font-family: 'Montserrat', 'Tahoma', sans-serif;
 }
-
+ 
 /* ---------- HEADER ---------- */
 .header {
   background: var(--navy);
@@ -53,7 +53,7 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   z-index: 200;
   overflow: hidden;
 }
-
+ 
 .header::before {
   content: '';
   position: absolute;
@@ -64,7 +64,7 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   border-radius: 50%;
   pointer-events: none;
 }
-
+ 
 .header::after {
   content: '';
   position: absolute;
@@ -75,43 +75,43 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   border-radius: 50%;
   pointer-events: none;
 }
-
+ 
 .header-inner {
   padding: 16px 20px 20px;
   position: relative;
   z-index: 1;
 }
-
+ 
 .logo-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 16px;
 }
-
+ 
 .logo {
   display: flex;
   align-items: center;
   gap: 10px;
 }
-
+ 
 .logo-owl {
   width: 36px;
   height: 36px;
 }
-
+ 
 .logo-text {
   display: flex;
   flex-direction: column;
 }
-
+ 
 .logo-name {
   color: #fff;
   font-weight: 700;
   font-size: 16px;
   line-height: 1.2;
 }
-
+ 
 .logo-sub {
   color: rgba(255,255,255,0.55);
   font-size: 10px;
@@ -119,7 +119,7 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   font-family: 'Lato', sans-serif;
   letter-spacing: 0.04em;
 }
-
+ 
 .icon-btn {
   width: 38px; height: 38px;
   background: rgba(255,255,255,0.1);
@@ -132,21 +132,21 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   justify-content: center;
   transition: background 0.2s;
 }
-
+ 
 .icon-btn:hover { background: rgba(255,255,255,0.18); }
-
+ 
 /* --- RA Input no header --- */
 .header-greeting {
   color: rgba(255,255,255,0.7);
   font-size: 13px;
   margin-bottom: 10px;
 }
-
+ 
 .ra-input-row {
   display: flex;
   gap: 8px;
 }
-
+ 
 .ra-input {
   flex: 1;
   background: rgba(255,255,255,0.1);
@@ -160,13 +160,13 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   transition: border-color 0.2s;
   -moz-appearance: textfield;
 }
-
+ 
 .ra-input::-webkit-outer-spin-button,
 .ra-input::-webkit-inner-spin-button { -webkit-appearance: none; }
-
+ 
 .ra-input::placeholder { color: rgba(255,255,255,0.4); }
 .ra-input:focus { border-color: var(--blue); }
-
+ 
 .ra-btn {
   background: var(--blue);
   border: none;
@@ -179,23 +179,23 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   transition: transform 0.15s, opacity 0.15s;
   white-space: nowrap;
 }
-
+ 
 .ra-btn:active { transform: scale(0.96); }
 .ra-btn:hover { opacity: 0.9; }
-
+ 
 .ra-error {
   color: #ff8fab;
   font-size: 12px;
   margin-top: 8px;
   font-family: 'Montserrat', sans-serif;
 }
-
+ 
 .ra-hint {
   color: rgba(255,255,255,0.4);
   font-size: 11px;
   margin-top: 8px;
 }
-
+ 
 /* --- Perfil do aluno --- */
 .student-name {
   color: #fff;
@@ -203,13 +203,13 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   font-weight: 800;
   margin-bottom: 10px;
 }
-
+ 
 .badges-row {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
 }
-
+ 
 .badge {
   padding: 5px 12px;
   border-radius: 20px;
@@ -217,7 +217,7 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   font-weight: 700;
   letter-spacing: 0.03em;
 }
-
+ 
 .badge-blue { background: var(--blue); color: var(--navy); }
 .badge-ghost {
   background: transparent;
@@ -227,7 +227,7 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   font-family: 'Montserrat', sans-serif;
 }
 .badge-ghost:hover { background: rgba(255,255,255,0.08); }
-
+ 
 /* ---------- SEARCH ---------- */
 .search-section {
   background: var(--white);
@@ -237,7 +237,7 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   top: 0;
   z-index: 100;
 }
-
+ 
 .search-wrap {
   display: flex;
   align-items: center;
@@ -248,11 +248,11 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   padding: 10px 16px;
   transition: border-color 0.2s;
 }
-
+ 
 .search-wrap:focus-within { border-color: var(--blue); }
-
+ 
 .search-icon { color: var(--text3); flex-shrink: 0; }
-
+ 
 .search-input {
   flex: 1;
   border: none;
@@ -262,9 +262,9 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   outline: none;
   font-family: 'Lato', sans-serif;
 }
-
+ 
 .search-input::placeholder { color: var(--text3); }
-
+ 
 .search-results {
   margin-top: 8px;
   background: var(--white);
@@ -273,17 +273,17 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   overflow: hidden;
   box-shadow: var(--shadow-lg);
 }
-
+ 
 .search-result-item {
   padding: 12px 16px;
   border-bottom: 1px solid var(--border);
   cursor: pointer;
   transition: background 0.15s;
 }
-
+ 
 .search-result-item:last-child { border-bottom: none; }
 .search-result-item:hover { background: var(--bg); }
-
+ 
 .search-result-cat {
   font-size: 10px;
   font-weight: 700;
@@ -292,9 +292,9 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   text-transform: uppercase;
   margin-bottom: 2px;
 }
-
+ 
 .search-result-text { font-size: 14px; color: var(--text); }
-
+ 
 /* ---------- TABS ---------- */
 .tabs-nav {
   display: flex;
@@ -306,9 +306,9 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
-
+ 
 .tabs-nav::-webkit-scrollbar { display: none; }
-
+ 
 .tab {
   flex-shrink: 0;
   padding: 9px 14px;
@@ -323,44 +323,44 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   white-space: nowrap;
   border-bottom: 2px solid transparent;
 }
-
+ 
 .tab:hover { color: var(--dark); }
-
+ 
 .tab.active {
   color: var(--navy);
   border-bottom-color: var(--blue);
   background: rgba(0,189,242,0.06);
 }
-
+ 
 /* ---------- TAB CONTENT ---------- */
 .tab-content { display: none; }
 .tab-content.active { display: block; }
-
+ 
 /* ---------- SEÇÕES ---------- */
 .section {
   padding: 20px 20px 8px;
 }
-
+ 
 .section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 12px;
 }
-
+ 
 .section-title {
   font-size: 14px;
   font-weight: 700;
   color: var(--text);
   letter-spacing: 0.02em;
 }
-
+ 
 .section-intro {
   font-size: 13px;
   color: var(--text2);
   margin-bottom: 16px;
 }
-
+ 
 .link-btn {
   background: none;
   border: none;
@@ -372,7 +372,7 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   padding: 0;
   text-decoration: underline;
 }
-
+ 
 /* ---------- AVISOS ---------- */
 .aviso-destaque {
   background: linear-gradient(135deg, var(--navy), #004fa3);
@@ -382,7 +382,7 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   position: relative;
   overflow: hidden;
 }
-
+ 
 .aviso-destaque::after {
   content: '';
   position: absolute;
@@ -392,7 +392,7 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   opacity: 0.18;
   border-radius: 50%;
 }
-
+ 
 .aviso-tag {
   display: inline-block;
   background: var(--yellow);
@@ -405,29 +405,29 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   margin-bottom: 10px;
   letter-spacing: 0.05em;
 }
-
+ 
 .aviso-title {
   color: #fff;
   font-size: 15px;
   font-weight: 700;
   margin-bottom: 6px;
 }
-
+ 
 .aviso-text {
   color: rgba(255,255,255,0.72);
   font-size: 13px;
   line-height: 1.55;
 }
-
+ 
 .aviso-date {
   display: block;
   color: rgba(255,255,255,0.4);
   font-size: 11px;
   margin-top: 10px;
 }
-
+ 
 .avisos-lista { display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px; }
-
+ 
 .aviso-item {
   background: var(--white);
   border: 1px solid var(--border);
@@ -435,7 +435,7 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   border-radius: var(--r-sm);
   padding: 12px 14px;
 }
-
+ 
 .aviso-item-tag {
   font-size: 10px;
   font-weight: 700;
@@ -444,13 +444,13 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   margin-bottom: 4px;
   letter-spacing: 0.04em;
 }
-
+ 
 .aviso-item-texto {
   font-size: 13px;
   color: var(--text);
   line-height: 1.45;
 }
-
+ 
 /* ---------- TUTOR ---------- */
 .tutor-card {
   background: var(--navy);
@@ -460,7 +460,7 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   position: relative;
   overflow: hidden;
 }
-
+ 
 .tutor-card::before {
   content: '';
   position: absolute;
@@ -470,7 +470,7 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   opacity: 0.14;
   border-radius: 50%;
 }
-
+ 
 .tutor-top {
   display: flex;
   align-items: center;
@@ -478,7 +478,7 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   margin-bottom: 14px;
   position: relative;
 }
-
+ 
 .tutor-avatar {
   width: 50px; height: 50px;
   border-radius: 50%;
@@ -493,13 +493,13 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   flex-shrink: 0;
   border: 2px solid rgba(255,255,255,0.15);
 }
-
+ 
 .tutor-info {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
-
+ 
 .tutor-label {
   color: rgba(255,255,255,0.5);
   font-size: 10px;
@@ -507,18 +507,18 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   letter-spacing: 0.07em;
   font-family: 'Montserrat', sans-serif;
 }
-
+ 
 .tutor-name {
   color: #fff;
   font-size: 15px;
   font-weight: 700;
 }
-
+ 
 .tutor-turma {
   color: var(--blue);
   font-size: 12px;
 }
-
+ 
 .wpp-btn {
   width: 100%;
   background: var(--pink);
@@ -536,31 +536,31 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   position: relative;
   transition: opacity 0.2s, transform 0.15s;
 }
-
+ 
 .wpp-btn:hover { opacity: 0.92; }
 .wpp-btn:active { transform: scale(0.97); }
-
+ 
 .wpp-btn.outline {
   background: transparent;
   border: 2px solid var(--blue);
   color: var(--blue);
 }
-
+ 
 .wpp-btn.outline:hover { background: rgba(0,189,242,0.07); }
-
+ 
 /* ---------- PLATAFORMAS ---------- */
 .platforms-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
-
+ 
 .platforms-full {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
-
+ 
 .platform-card {
   background: var(--white);
   border: 1px solid var(--border);
@@ -571,14 +571,14 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   transition: transform 0.15s, box-shadow 0.2s;
   cursor: pointer;
 }
-
+ 
 .platform-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow);
 }
-
+ 
 .platform-card:active { transform: scale(0.97); }
-
+ 
 .platform-icon {
   width: 44px; height: 44px;
   border-radius: var(--r-sm);
@@ -588,20 +588,20 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   font-size: 22px;
   margin-bottom: 10px;
 }
-
+ 
 .platform-name {
   font-size: 13px;
   font-weight: 700;
   color: var(--text);
   margin-bottom: 3px;
 }
-
+ 
 .platform-desc {
   font-size: 11px;
   color: var(--text2);
   line-height: 1.4;
 }
-
+ 
 /* Platform card full (aba plataformas) */
 .platform-card-full {
   background: var(--white);
@@ -614,27 +614,27 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   gap: 14px;
   transition: transform 0.15s, box-shadow 0.2s;
 }
-
+ 
 .platform-card-full:hover {
   transform: translateY(-1px);
   box-shadow: var(--shadow);
 }
-
+ 
 .platform-card-full .platform-icon {
   margin-bottom: 0;
   flex-shrink: 0;
 }
-
+ 
 .platform-card-full .platform-info { flex: 1; }
-
+ 
 .platform-card-full .platform-name { font-size: 14px; margin-bottom: 4px; }
 .platform-card-full .platform-desc { font-size: 12px; }
-
+ 
 .platform-arrow {
   color: var(--text3);
   font-size: 18px;
 }
-
+ 
 /* ---------- GUIAS ---------- */
 .guias-group { margin-bottom: 20px; }
 .guias-group-title {
@@ -646,7 +646,7 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   font-family: 'Montserrat', sans-serif;
   margin-bottom: 10px;
 }
-
+ 
 .guia-item {
   background: var(--white);
   border: 1px solid var(--border);
@@ -660,9 +660,9 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   text-decoration: none;
   transition: box-shadow 0.2s;
 }
-
+ 
 .guia-item:hover { box-shadow: var(--shadow); }
-
+ 
 .guia-icon {
   width: 38px; height: 38px;
   border-radius: 8px;
@@ -672,9 +672,9 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   font-size: 18px;
   flex-shrink: 0;
 }
-
+ 
 .guia-info { flex: 1; }
-
+ 
 .guia-name {
   font-size: 13px;
   font-weight: 700;
@@ -682,9 +682,9 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   font-family: 'Montserrat', sans-serif;
   margin-bottom: 2px;
 }
-
+ 
 .guia-desc { font-size: 11px; color: var(--text2); }
-
+ 
 /* ---------- AGENDA ---------- */
 .agenda-item {
   background: var(--white);
@@ -696,7 +696,7 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   gap: 14px;
   align-items: flex-start;
 }
-
+ 
 .agenda-date {
   background: var(--navy);
   color: #fff;
@@ -705,7 +705,7 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   text-align: center;
   padding: 8px 6px;
 }
-
+ 
 .agenda-day {
   font-size: 20px;
   font-weight: 800;
@@ -713,7 +713,7 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   line-height: 1;
   display: block;
 }
-
+ 
 .agenda-month {
   font-size: 9px;
   text-transform: uppercase;
@@ -722,18 +722,18 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   display: block;
   margin-top: 2px;
 }
-
+ 
 .agenda-info { flex: 1; }
-
+ 
 .agenda-titulo {
   font-weight: 700;
   font-size: 14px;
   font-family: 'Montserrat', sans-serif;
   margin-bottom: 4px;
 }
-
+ 
 .agenda-subtitulo { font-size: 12px; color: var(--text2); }
-
+ 
 .agenda-tipo {
   display: inline-block;
   font-size: 10px;
@@ -743,11 +743,11 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   border-radius: 10px;
   margin-top: 6px;
 }
-
+ 
 .tipo-mentoria { background: rgba(0,189,242,0.15); color: var(--dark); }
 .tipo-simulado { background: rgba(238,45,103,0.12); color: var(--pink); }
 .tipo-prazo    { background: rgba(235,234,112,0.3); color: #7a7600; }
-
+ 
 .cal-embed-wrap {
   background: var(--bg);
   border: 1px dashed var(--border);
@@ -756,9 +756,9 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   text-align: center;
   margin-top: 10px;
 }
-
+ 
 .cal-info { font-size: 13px; color: var(--text2); margin-bottom: 12px; }
-
+ 
 .cal-link-btn {
   display: inline-block;
   background: var(--navy);
@@ -771,9 +771,9 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   font-size: 13px;
   transition: opacity 0.2s;
 }
-
+ 
 .cal-link-btn:hover { opacity: 0.88; }
-
+ 
 /* ---------- FAQ ---------- */
 .faq-item {
   background: var(--white);
@@ -783,9 +783,9 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   overflow: hidden;
   transition: box-shadow 0.2s;
 }
-
+ 
 .faq-item:hover { box-shadow: var(--shadow); }
-
+ 
 .faq-q {
   display: flex;
   align-items: center;
@@ -798,14 +798,14 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   color: var(--text);
   user-select: none;
 }
-
+ 
 .faq-chevron {
   color: var(--blue);
   font-size: 18px;
   transition: transform 0.25s;
   flex-shrink: 0;
 }
-
+ 
 .faq-a {
   display: none;
   padding: 0 16px 15px;
@@ -815,10 +815,10 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   border-top: 1px solid var(--border);
   padding-top: 12px;
 }
-
+ 
 .faq-item.open .faq-a  { display: block; }
 .faq-item.open .faq-chevron { transform: rotate(90deg); }
-
+ 
 .faq-footer {
   background: var(--bg);
   border-radius: var(--r-md);
@@ -826,25 +826,25 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   text-align: center;
   margin-top: 8px;
 }
-
+ 
 .faq-footer p {
   font-size: 13px;
   color: var(--text2);
   margin-bottom: 12px;
 }
-
+ 
 /* ---------- CONTATOS ---------- */
 .contatos-section {
   padding-bottom: 32px;
 }
-
+ 
 .contatos-lista {
   background: var(--white);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
   overflow: hidden;
 }
-
+ 
 .contato-item {
   display: flex;
   align-items: center;
@@ -854,10 +854,10 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   cursor: pointer;
   transition: background 0.15s;
 }
-
+ 
 .contato-item:last-child { border-bottom: none; }
 .contato-item:hover { background: var(--bg); }
-
+ 
 .contato-icon {
   width: 38px; height: 38px;
   border-radius: 50%;
@@ -867,20 +867,20 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   font-size: 16px;
   flex-shrink: 0;
 }
-
+ 
 .contato-info { flex: 1; }
-
+ 
 .contato-nome {
   font-weight: 700;
   font-size: 13px;
   font-family: 'Montserrat', sans-serif;
   margin-bottom: 2px;
 }
-
+ 
 .contato-desc { font-size: 11px; color: var(--text2); }
-
+ 
 .contato-action { font-size: 20px; }
-
+ 
 /* ---------- TOAST ---------- */
 .toast {
   position: fixed;
@@ -901,12 +901,12 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   white-space: nowrap;
   box-shadow: 0 4px 20px rgba(0,37,97,0.25);
 }
-
+ 
 .toast.show {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
-
+ 
 /* ---------- LOADING ---------- */
 .loading-overlay {
   position: fixed;
@@ -918,7 +918,7 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   z-index: 9000;
   backdrop-filter: blur(2px);
 }
-
+ 
 .loading-spinner {
   width: 40px; height: 40px;
   border: 3px solid var(--border);
@@ -926,16 +926,205 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
-
+ 
 @keyframes spin { to { transform: rotate(360deg); } }
-
+ 
 /* ---------- RESPONSIVIDADE ---------- */
 @media (max-width: 380px) {
   .platforms-grid { grid-template-columns: 1fr 1fr; }
   .platform-icon { font-size: 18px; }
   .tab { padding: 9px 10px; font-size: 12px; }
 }
-
+ 
 @media (min-width: 480px) {
   body { box-shadow: 0 0 60px rgba(0,37,97,0.1); }
 }
+ 
+/* =============================================
+   LAYOUT DESKTOP — responsivo para telas grandes
+   ============================================= */
+ 
+@media (min-width: 900px) {
+ 
+  /* Remove a limitação de 480px e centraliza com fundo */
+  body {
+    max-width: 100%;
+    background: var(--bg);
+    box-shadow: none;
+  }
+ 
+  /* HEADER vira sidebar fixa à esquerda */
+  .header {
+    position: fixed;
+    top: 0; left: 0;
+    width: 280px;
+    height: 100vh;
+    z-index: 300;
+    display: flex;
+    flex-direction: column;
+  }
+ 
+  .header-inner {
+    padding: 28px 24px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+ 
+  .logo-row { margin-bottom: 28px; }
+  .logo-name { font-size: 18px; }
+  .logo-sub  { font-size: 11px; }
+ 
+  .student-name { font-size: 22px; }
+ 
+  /* Busca por RA maior */
+  .ra-input  { font-size: 15px; padding: 12px 16px; }
+  .ra-hint   { font-size: 12px; }
+ 
+  /* Tudo à direita da sidebar */
+  .search-section,
+  #main-content {
+    margin-left: 280px;
+  }
+ 
+  .search-section {
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    padding: 16px 32px;
+  }
+ 
+  /* TABS horizontais no topo (não sticky no mobile) */
+  .tabs-nav {
+    padding: 0 32px;
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    gap: 8px;
+  }
+ 
+  .tab {
+    font-size: 14px;
+    padding: 14px 18px;
+  }
+ 
+  /* CONTEÚDO em grid de 2 colunas */
+  #tab-home {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    align-items: start;
+  }
+ 
+  /* Coluna esquerda: avisos ocupa a largura toda no topo */
+  #tab-home > section:first-child {
+    grid-column: 1 / -1;
+    border-bottom: 1px solid var(--border);
+  }
+ 
+  /* Tutor e plataformas lado a lado */
+  #tab-home > section:nth-child(2),
+  #tab-home > section:nth-child(3) {
+    border-right: 1px solid var(--border);
+    min-height: 300px;
+  }
+ 
+  /* Seções com padding maior */
+  .section {
+    padding: 28px 32px 16px;
+  }
+ 
+  /* Plataformas em grid 2x2 */
+  .platforms-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+ 
+  /* Plataformas completas em 2 colunas */
+  .platforms-full {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+ 
+  /* Guias em 2 colunas */
+  #tab-guias .guias-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    align-items: start;
+  }
+ 
+  #tab-guias .guias-group-title {
+    grid-column: 1 / -1;
+  }
+ 
+  /* Agenda em 2 colunas */
+  #tab-agenda .section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    align-items: start;
+  }
+ 
+  #tab-agenda .section > p,
+  #tab-agenda .section > .cal-embed-wrap {
+    grid-column: 1 / -1;
+  }
+ 
+  /* FAQ em 1 coluna mais larga (mais legível) */
+  #tab-faq .section {
+    max-width: 760px;
+  }
+ 
+  /* Contatos em 3 colunas */
+  .contatos-section {
+    padding: 28px 32px 40px;
+  }
+ 
+  .contatos-lista {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    border-radius: var(--r-lg);
+    overflow: hidden;
+  }
+ 
+  .contato-item {
+    border-bottom: none;
+    border-right: 1px solid var(--border);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 20px;
+  }
+ 
+  .contato-item:last-child { border-right: none; }
+ 
+  .contato-action { align-self: flex-end; margin-top: auto; }
+ 
+  /* Avisos em 2 colunas (destaque + lista) */
+  .aviso-destaque { margin-bottom: 0; }
+ 
+  .avisos-row-desktop {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+ 
+  /* Cards maiores no desktop */
+  .tutor-card { border-radius: var(--r-lg); }
+  .platform-card { padding: 20px; }
+ 
+  /* Esconde bottom nav no desktop */
+  /* (não há bottom nav no código atual, mas previne se adicionar) */
+}
+ 
+@media (min-width: 1200px) {
+  .header { width: 300px; }
+ 
+  .search-section,
+  #main-content { margin-left: 300px; }
+ 
+  .platforms-grid { grid-template-columns: repeat(4, 1fr); }
+}
+ 
