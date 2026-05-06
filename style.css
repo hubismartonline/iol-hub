@@ -95,7 +95,7 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   gap: 10px;
 }
 
-.logo-owl {
+.logo-owl-old {
   width: 36px;
   height: 36px;
 }
@@ -978,7 +978,9 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   .student-name { font-size: 22px; }
 
   /* Busca por RA maior */
-  .ra-input  { font-size: 15px; padding: 12px 16px; }
+  .ra-input-row { flex-direction: column; gap: 8px; }
+  .ra-input  { font-size: 15px; padding: 12px 16px; width: 100%; }
+  .ra-btn    { width: 100%; padding: 12px; font-size: 14px; }
   .ra-hint   { font-size: 12px; }
 
   /* Tudo à direita da sidebar */
@@ -1215,4 +1217,15 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
 @media (min-width: 1200px) {
   .welcome-screen { margin-left: 300px; }
   #main-content   { margin-left: 300px; }
+}
+
+/* Logo Ismart no header */
+.logo-owl {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+
+@media (min-width: 900px) {
+  .logo-owl { width: 44px; height: 44px; }
 }
