@@ -165,6 +165,7 @@ function renderizarPerfil(aluno) {
 
 function renderizarTudo(aluno) {
   renderizarTutor(aluno);
+  renderizarBanner9EF(aluno);
   renderizarPlataformas(aluno);
   renderizarGuias(aluno);
   renderizarAgenda();
@@ -377,6 +378,21 @@ function sair() {
   trocarAba("home");
   esconderFAB();
   showToast("Até logo! 👋");
+}
+
+
+// -------------------------------------------------------
+//  BANNER ESPECIAL 9º EF
+// -------------------------------------------------------
+function renderizarBanner9EF(aluno) {
+  const container = document.getElementById("banner-9ef");
+  if (!container) return;
+  const serie = normalizarSerie(aluno.serie);
+  if (serie === "9EF") {
+    container.style.display = "block";
+  } else {
+    container.style.display = "none";
+  }
 }
 
 // -------------------------------------------------------
