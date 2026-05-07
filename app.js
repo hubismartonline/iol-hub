@@ -8,6 +8,12 @@
 // Planilha 1 — tutores (CSV público)
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSKNO5Y95tm1siowcKImRyPmrrzKTOAMFjIPniSNPIp5TFTQ08mcIpKDEIRIpOb4BRGA1gHHWKwYVY/pub?gid=0&single=true&output=csv";
 
+// Planilha de Recados (avisos semanais por série)
+const RECADOS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vREl4x9Z31no1XMZ9aonG-ZPMqWUp09HySilUmFJN6vDUQ8r4_5AG-iZW5rMJuhU2W3y9BeCwa2CyVY/pub?gid=0&single=true&output=csv";
+
+// Planilha de Calendário
+const CALENDARIO_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vREl4x9Z31no1XMZ9aonG-ZPMqWUp09HySilUmFJN6vDUQ8r4_5AG-iZW5rMJuhU2W3y9BeCwa2CyVY/pub?gid=685280579&single=true&output=csv";
+
 // Planilha 2 — cadastro completo (Apps Script seguro)
 const CADASTRO_URL = "https://script.google.com/macros/s/AKfycbxhwZfOXqWgsoxA0G7ZAcGEqgYaPXKAcnjLOg_iZ3STTOkSB5rrtvbKeOq48xSqNr1X/exec";
 
@@ -168,10 +174,10 @@ function renderizarTudo(aluno) {
   renderizarBanner9EF(aluno);
   renderizarPlataformas(aluno);
   renderizarGuias(aluno);
-  renderizarAgenda();
   renderizarFAQ();
   renderizarContatos(aluno);
-  renderizarAvisos();
+  carregarRecados(aluno.serie);
+  carregarCalendario(aluno.serie);
 }
 
 // -------------------------------------------------------
@@ -421,14 +427,79 @@ function trocarAba(nomeAba) {
 // -------------------------------------------------------
 //  RENDERIZAÇÕES
 // -------------------------------------------------------
-function renderizarAvisos() {
-  if (!AVISOS) return;
-  const s = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-  s("aviso-titulo", AVISOS.destaque.titulo);
-  s("aviso-texto",  AVISOS.destaque.texto);
-  s("aviso-data",   AVISOS.destaque.data);
+async function carregarRecados(serie) {
+  try {
+    const response = await fetch(RECADOS_URL);
+    const csv = await response.text();
+    const linhas = csv.split("\n").slice(1).filter(l => l.trim());
+
+    // Filtra por série do aluno
+    const sNorm = normalizarSerie(serie);
+    const recados = [];
+
+    for (const linha of linhas) {
+      const cols = parsearLinha(linha);
+      if (cols.length < 2) continue;
+      const seriePlanilha = cols[0].trim().replace(/"/g, "");
+
+      // Verifica se o recado é para esta série
+      const paraEstaSerie =
+        seriePlanilha.toLowerCase() === "todos" ||
+        normalizarSerie(seriePlanilha) === sNorm ||
+        (seriePlanilha.toUpperCase() === "EF" && ["8EF","9EF"].includes(sNorm)) ||
+        (seriePlanilha.toUpperCase() === "EM" && ["1EM","2EM","3EM"].includes(sNorm));
+
+      if (paraEstaSerie) {
+        recados.push({
+          titulo: cols[1]?.replace(/"/g,"").trim() || "",
+          texto:  cols[2]?.replace(/"/g,"").trim() || "",
+          data:   cols[3]?.replace(/"/g,"").trim() || "",
+          tag1:   cols[4]?.replace(/"/g,"").trim() || "",
+          item1:  cols[5]?.replace(/"/g,"").trim() || "",
+          tag2:   cols[6]?.replace(/"/g,"").trim() || "",
+          item2:  cols[7]?.replace(/"/g,"").trim() || "",
+          tag3:   cols[8]?.replace(/"/g,"").trim() || "",
+          item3:  cols[9]?.replace(/"/g,"").trim() || "",
+        });
+      }
+    }
+
+    if (recados.length > 0) {
+      renderizarAvisos(recados[0], recados.slice(1));
+    }
+  } catch(e) {
+    console.log("Usando avisos locais:", e);
+    renderizarAvisos(AVISOS.destaque, AVISOS.lista.map(a => ({tag1: a.tag, item1: a.texto})));
+  }
+}
+
+function renderizarAvisos(destaque, extras) {
+  if (!destaque) return;
+
+  const setEl = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  setEl("aviso-titulo", destaque.titulo || AVISOS.destaque.titulo);
+  setEl("aviso-texto",  destaque.texto  || AVISOS.destaque.texto);
+  setEl("aviso-data",   destaque.data   || AVISOS.destaque.data);
+
   const lista = document.getElementById("avisos-lista");
-  if (lista) lista.innerHTML = AVISOS.lista.map(a => `
+  if (!lista) return;
+
+  // Itens extras do recado principal
+  let itens = [];
+  if (destaque.tag1 && destaque.item1) itens.push({tag: destaque.tag1, texto: destaque.item1});
+  if (destaque.tag2 && destaque.item2) itens.push({tag: destaque.tag2, texto: destaque.item2});
+  if (destaque.tag3 && destaque.item3) itens.push({tag: destaque.tag3, texto: destaque.item3});
+
+  // Recados extras (outras séries/todos)
+  if (extras) {
+    extras.forEach(r => {
+      if (r.tag1 && r.item1) itens.push({tag: r.tag1, texto: r.item1});
+      if (r.tag2 && r.item2) itens.push({tag: r.tag2, texto: r.item2});
+      if (r.tag3 && r.item3) itens.push({tag: r.tag3, texto: r.item3});
+    });
+  }
+
+  lista.innerHTML = itens.map(a => `
     <div class="aviso-item">
       <div class="aviso-item-tag">${a.tag}</div>
       <p class="aviso-item-texto">${a.texto}</p>
@@ -495,10 +566,52 @@ function renderizarGuias(aluno) {
   }).join("") || `<p style="color:var(--text2);font-size:13px;padding:8px 0">Nenhum guia encontrado.</p>`;
 }
 
-function renderizarAgenda() {
+async function carregarCalendario(serie) {
   const container = document.getElementById("agenda-lista");
   if (!container) return;
-  container.innerHTML = AGENDA.map(ev => `
+
+  try {
+    const response = await fetch(CALENDARIO_URL);
+    const csv = await response.text();
+    const linhas = csv.split("\n").slice(1).filter(l => l.trim());
+    const sNorm = normalizarSerie(serie);
+    const eventos = [];
+
+    for (const linha of linhas) {
+      const cols = parsearLinha(linha);
+      if (cols.length < 5) continue;
+
+      const seriePlanilha = cols[0]?.replace(/"/g,"").trim() || "todos";
+      const paraEstaSerie =
+        seriePlanilha.toLowerCase() === "todos" ||
+        normalizarSerie(seriePlanilha) === sNorm ||
+        (seriePlanilha.toUpperCase() === "EF" && ["8EF","9EF"].includes(sNorm)) ||
+        (seriePlanilha.toUpperCase() === "EM" && ["1EM","2EM","3EM"].includes(sNorm));
+
+      if (paraEstaSerie) {
+        eventos.push({
+          dia:        cols[1]?.replace(/"/g,"").trim() || "",
+          mes:        cols[2]?.replace(/"/g,"").trim() || "",
+          titulo:     cols[3]?.replace(/"/g,"").trim() || "",
+          subtitulo:  cols[4]?.replace(/"/g,"").trim() || "",
+          tipo:       cols[5]?.replace(/"/g,"").trim() || "prazo",
+          tipo_label: cols[6]?.replace(/"/g,"").trim() || "EVENTO",
+        });
+      }
+    }
+
+    renderizarAgenda(eventos.length > 0 ? eventos : AGENDA);
+  } catch(e) {
+    console.log("Usando agenda local:", e);
+    renderizarAgenda(AGENDA);
+  }
+}
+
+function renderizarAgenda(eventos) {
+  const container = document.getElementById("agenda-lista");
+  if (!container) return;
+  const lista = eventos || AGENDA;
+  container.innerHTML = lista.map(ev => `
     <div class="agenda-item">
       <div class="agenda-date">
         <span class="agenda-day">${ev.dia}</span>
