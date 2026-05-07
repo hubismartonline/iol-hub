@@ -430,8 +430,8 @@ const FAQ = [
     q: "Tive um problema técnico no site do processo seletivo. O que fazer?",
     a: "Entre em contato com a equipe do processo seletivo pelo WhatsApp: wa.me/5521991954950. Para erros no cadastro, fale com seu tutor para receber orientação.",
     tags: "bolsa talento erro técnico problema site whatsapp suporte"
-  }
-];
+  },
+
   // ===== DÚVIDAS PRÁTICAS =====
   {
     q: "Perdi um prazo. O que fazer?",
