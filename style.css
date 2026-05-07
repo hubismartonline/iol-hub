@@ -744,9 +744,11 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   margin-top: 6px;
 }
 
-.tipo-mentoria { background: rgba(0,189,242,0.15); color: var(--dark); }
-.tipo-simulado { background: rgba(238,45,103,0.12); color: var(--pink); }
-.tipo-prazo    { background: rgba(235,234,112,0.3); color: #7a7600; }
+.tipo-socioemocional { background: rgba(0,189,242,0.15); color: var(--dark); }
+.tipo-mentoria       { background: rgba(0,189,242,0.15); color: var(--dark); }
+.tipo-academico      { background: rgba(24,167,106,0.15); color: #0d6b44; }
+.tipo-simulado       { background: rgba(238,45,103,0.12); color: var(--pink); }
+.tipo-prazo          { background: rgba(186,117,23,0.15); color: #7a4f00; }
 
 .cal-embed-wrap {
   background: var(--bg);
