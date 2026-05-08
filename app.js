@@ -846,14 +846,18 @@ function renderizarEtapa2(carreiras) {
   simGetEl().innerHTML = `
     ${simTag("📊 " + simEstado.nota + " · " + simEstado.area)}
     <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:15px;color:#fff;margin-bottom:14px">Qual carreira você quer explorar?</div>
-    <div class="sim-carreiras-lista">
-      ${carreiras.map(c => `
-        <button class="sim-carreira-btn" onclick="escolherCarreira('${c.replace(/'/g,"\\'")}')">
-          ${c} <span class="sim-carreira-arrow">›</span>
-        </button>`).join("")}
-    </div>
-    ${simVoltar("renderizarEtapa1(['" + simEstado.area + "'])", "Trocar área")}
+    <div class="sim-carreiras-lista" id="sim-carreiras-lista"></div>
+    ${simVoltar("escolherArea(simEstado.area)", "Trocar área")}
   `;
+  // Monta os botões via JS para evitar problemas com aspas/acentos
+  const lista = document.getElementById("sim-carreiras-lista");
+  carreiras.forEach(c => {
+    const btn = document.createElement("button");
+    btn.className = "sim-carreira-btn";
+    btn.innerHTML = c + ' <span class="sim-carreira-arrow">›</span>';
+    btn.addEventListener("click", () => escolherCarreira(c));
+    lista.appendChild(btn);
+  });
 }
 
 // --- ETAPA 3: Estado ---
@@ -863,14 +867,17 @@ function escolherCarreira(carreira) {
     ${simTag("📊 " + simEstado.nota + " · " + carreira)}
     <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:15px;color:#fff;margin-bottom:4px">Prefere algum estado?</div>
     <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:14px">Ampliar para outros estados aumenta muito suas opções!</div>
-    <div class="sim-ufs-grid">
-      ${["todas","SP","RJ","MG","RS","PR","SC","DF","BA","CE","PE","GO"].map(uf => `
-        <button class="sim-uf-btn" onclick="buscarUniversidades('${uf}')">
-          ${uf === "todas" ? "🗺️ Qualquer estado" : uf}
-        </button>`).join("")}
-    </div>
-    ${simVoltar("escolherArea('" + simEstado.area + "')", "Trocar carreira")}
+    <div class="sim-ufs-grid" id="sim-ufs-grid"></div>
+    ${simVoltar("escolherArea(simEstado.area)", "Trocar carreira")}
   `;
+  const grid = document.getElementById("sim-ufs-grid");
+  ["todas","SP","RJ","MG","RS","PR","SC","DF","BA","CE","PE","GO"].forEach(uf => {
+    const btn = document.createElement("button");
+    btn.className = "sim-uf-btn";
+    btn.textContent = uf === "todas" ? "🗺️ Qualquer estado" : uf;
+    btn.addEventListener("click", () => buscarUniversidades(uf));
+    grid.appendChild(btn);
+  });
 }
 
 // --- ETAPA 4: Resultado ---
@@ -898,38 +905,10 @@ function renderizarUniversidades(data) {
   const { universidades, aviso } = data;
   const nota = simEstado.nota;
   const ufLabel = simEstado.uf === "todas" ? "todos os estados" : simEstado.uf;
+  const el = simGetEl();
 
-  if (!universidades || !universidades.length) {
-    simGetEl().innerHTML = `
-      <div style="color:#fff;font-family:Montserrat,sans-serif;font-weight:700;font-size:15px;margin-bottom:8px">📋 ${simEstado.carreira}</div>
-      <div style="color:rgba(255,255,255,0.7);font-size:13px;margin-bottom:14px">${aviso || "Nenhuma universidade encontrada."}</div>
-      <div style="background:rgba(0,189,242,0.15);border-radius:8px;padding:12px;font-size:13px;color:rgba(255,255,255,0.8);margin-bottom:14px">
-        💡 Tente ampliar para outros estados!
-      </div>
-      ${simVoltar("escolherCarreira('" + simEstado.carreira.replace(/'/g,"\\'") + "')", "Escolher outro estado")}
-      ${simBtnReset()}
-    `;
-    return;
-  }
-
-  // Agrupa por classificação
-  const grupos = [
-    { cor:"#1A7A4A", emoji:"🏆", titulo:"Aprovando!",          desc:"Mais de 10 pts acima da nota de corte",    min:10.01,  max:9999   },
-    { cor:"#27AE60", emoji:"✅", titulo:"Dentro da nota",       desc:"Igual ou até 10 pts acima da nota de corte", min:0,   max:10     },
-    { cor:"#E67E22", emoji:"⚠️", titulo:"Próximo",              desc:"Até 10 pts abaixo — chegando lá!",         min:-10,  max:-0.01  },
-    { cor:"#2980B9", emoji:"📚", titulo:"Longe da nota",        desc:"Entre 10 e 50 pts abaixo",                 min:-50,  max:-10.01 },
-    { cor:"#C0392B", emoji:"🔄", titulo:"Trocar urgente",       desc:"Mais de 50 pts abaixo — reveja essa opção",min:-9999,max:-50.01 },
-  ].map(g => ({
-    ...g,
-    lista: universidades.filter(u => {
-      const a = u.modalidades.find(m => m.tipo.toLowerCase().includes("ampla"));
-      if (!a) return false;
-      const d = nota - a.notaCorte;
-      return d >= g.min && d <= g.max;
-    })
-  })).filter(g => g.lista.length > 0);
-
-  simGetEl().innerHTML = `
+  // Cabeçalho sempre igual
+  el.innerHTML = `
     <div style="margin-bottom:16px">
       <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:15px;color:#fff;margin-bottom:8px">
         📋 ${simEstado.carreira}
@@ -939,68 +918,137 @@ function renderizarUniversidades(data) {
           📊 Sua nota: ${nota}
         </span>
         <span style="background:rgba(255,255,255,0.1);border-radius:20px;padding:3px 10px;font-size:11px;color:rgba(255,255,255,0.7);font-family:Montserrat,sans-serif;font-weight:700">
-          🏛️ ${universidades.length} univ. · ${ufLabel}
+          🏛️ ${universidades ? universidades.length : 0} univ. · ${ufLabel}
         </span>
       </div>
     </div>
-    ${grupos.map((g, gi) => `
-      <div style="margin-bottom:14px">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-          <span style="font-size:16px">${g.emoji}</span>
-          <div>
-            <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:13px;color:${g.cor}">${g.titulo}</div>
-            <div style="font-size:11px;color:rgba(255,255,255,0.5)">${g.desc}</div>
-          </div>
-        </div>
-        ${g.lista.map((u, i) => {
-          const ampla = u.modalidades.find(m => m.tipo.toLowerCase().includes("ampla"));
-          const cotas = u.modalidades.filter(m => !m.tipo.toLowerCase().includes("ampla"));
-          const cl = ampla ? classificar(nota, ampla.notaCorte) : null;
-          const uid = "u" + gi + "_" + i;
-          return `
-            <div style="background:#fff;border-radius:8px;margin-bottom:8px;overflow:hidden;border-left:4px solid ${g.cor}">
-              <div onclick="toggleSimUni('${uid}')" style="display:flex;align-items:center;gap:10px;padding:12px;cursor:pointer">
-                <div style="flex:1;min-width:0">
-                  <div style="font-family:Montserrat,sans-serif;font-weight:800;font-size:13px;color:#002561">${u.ies}</div>
-                  <div style="font-size:11px;color:#666;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${u.nomeIES}</div>
-                  <div style="font-size:11px;color:#999;margin-top:2px">📍 ${u.cidade}/${u.uf}${u.turno ? " · " + u.turno : ""}</div>
-                </div>
-                <div style="text-align:right;flex-shrink:0">
-                  ${ampla ? `<div style="font-family:Montserrat,sans-serif;font-weight:800;font-size:15px;color:#002561">${ampla.notaCorte.toFixed(1)}</div>
-                  <div style="font-size:10px;color:#999">nota de corte</div>` : ""}
-                  ${cl ? `<div style="background:${cl.bg};color:${cl.cor};border-radius:20px;padding:2px 7px;font-size:11px;font-weight:700;font-family:Montserrat,sans-serif;margin-top:3px">
-                    ${cl.diff >= 0 ? "+" : ""}${cl.diff.toFixed(1)} pts
-                  </div>` : ""}
-                  <span style="color:#ccc;font-size:18px">›</span>
-                </div>
-              </div>
-              <div id="simdet-${uid}" style="display:none;padding:0 12px 12px;border-top:1px solid #f0f0f0">
-                <div style="font-size:11px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px;margin:10px 0 8px">Modalidades de concorrência</div>
-                ${u.modalidades.map(m => {
-                  const mc = classificar(nota, m.notaCorte);
-                  return `<div style="padding:8px 10px;border-radius:6px;margin-bottom:6px;background:${mc.bg}">
-                    <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:11px;color:#002561;margin-bottom:4px">${m.tipo}</div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#333;flex-wrap:wrap;gap:4px">
-                      <span>Corte: <strong>${m.notaCorte.toFixed(1)}</strong> · Vagas: <strong>${m.vagas}</strong></span>
-                      <span style="color:${mc.cor};font-weight:700;font-family:Montserrat,sans-serif;font-size:11px">
-                        ${mc.label} (${mc.diff >= 0 ? "+" : ""}${mc.diff.toFixed(1)})
-                      </span>
-                    </div>
-                  </div>`;
-                }).join("")}
-                ${cotas.length ? `<div style="background:#FEF9E7;border-radius:6px;padding:8px 10px;font-size:12px;color:#856404;margin-top:4px;border-left:3px solid #F0C040">
-                  ✅ ${cotas.length} modalidade(s) de cota disponível — verifique se você se qualifica!
-                </div>` : ""}
-              </div>
-            </div>`;
-        }).join("")}
-      </div>`).join("")}
+    <div id="sim-grupos-container"></div>
     <div style="background:rgba(0,189,242,0.12);border-radius:8px;padding:10px 12px;font-size:12px;color:rgba(255,255,255,0.75);margin-bottom:12px">
       🗺️ Dica: considere ampliar para outros estados — mais opções, mais chances!
     </div>
-    ${simVoltar("escolherCarreira('" + simEstado.carreira.replace(/'/g,"\\'") + "')", "Escolher outro estado")}
-    ${simBtnReset()}
+    <div id="sim-btns-resultado"></div>
   `;
+
+  // Botões de voltar via DOM (evita problema com aspas)
+  const btnsDiv = document.getElementById("sim-btns-resultado");
+  const btnVoltar = document.createElement("button");
+  btnVoltar.textContent = "← Escolher outro estado";
+  btnVoltar.style.cssText = "background:none;border:none;color:rgba(255,255,255,0.55);font-size:13px;cursor:pointer;padding:6px 0;font-family:Montserrat,sans-serif;font-weight:700;display:block;margin-bottom:6px";
+  btnVoltar.addEventListener("click", () => escolherCarreira(simEstado.carreira));
+  btnsDiv.appendChild(btnVoltar);
+
+  const btnReset = document.createElement("button");
+  btnReset.textContent = "🔄 Nova busca";
+  btnReset.style.cssText = "width:100%;padding:10px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.25);border-radius:8px;color:#fff;font-family:Montserrat,sans-serif;font-weight:700;font-size:13px;cursor:pointer";
+  btnReset.addEventListener("click", resetarSimulador);
+  btnsDiv.appendChild(btnReset);
+
+  if (!universidades || !universidades.length) {
+    document.getElementById("sim-grupos-container").innerHTML = `
+      <div style="color:rgba(255,255,255,0.7);font-size:13px;margin-bottom:14px">
+        ${aviso || "Nenhuma universidade encontrada para os filtros selecionados."}
+      </div>
+      <div style="background:rgba(0,189,242,0.15);border-radius:8px;padding:12px;font-size:13px;color:rgba(255,255,255,0.8);margin-bottom:14px">
+        💡 Tente ampliar para outros estados!
+      </div>`;
+    return;
+  }
+
+  // Define grupos de classificação
+  const defGrupos = [
+    { cor:"#1A7A4A", emoji:"🏆", titulo:"Aprovando!",        desc:"Mais de 10 pts acima da nota de corte",      min:10.01,  max:9999   },
+    { cor:"#27AE60", emoji:"✅", titulo:"Dentro da nota",     desc:"Igual ou até 10 pts acima da nota de corte", min:0,      max:10     },
+    { cor:"#E67E22", emoji:"⚠️", titulo:"Próximo",            desc:"Até 10 pts abaixo — chegando lá!",           min:-10,    max:-0.01  },
+    { cor:"#2980B9", emoji:"📚", titulo:"Longe da nota",      desc:"Entre 10 e 50 pts abaixo",                   min:-50,    max:-10.01 },
+    { cor:"#C0392B", emoji:"🔄", titulo:"Trocar urgente",     desc:"Mais de 50 pts abaixo — reveja essa opção",  min:-9999,  max:-50.01 },
+  ];
+
+  const container = document.getElementById("sim-grupos-container");
+
+  defGrupos.forEach((g, gi) => {
+    const lista = universidades.filter(u => {
+      const a = u.modalidades.find(m => m.tipo.toLowerCase().includes("ampla"));
+      if (!a) return false;
+      const d = nota - a.notaCorte;
+      return d >= g.min && d <= g.max;
+    });
+    if (!lista.length) return;
+
+    // Header do grupo
+    const grupoDiv = document.createElement("div");
+    grupoDiv.style.marginBottom = "14px";
+    grupoDiv.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:16px">${g.emoji}</span>
+        <div>
+          <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:13px;color:${g.cor}">${g.titulo}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.5)">${g.desc}</div>
+        </div>
+      </div>
+      <div id="sim-grupo-lista-${gi}"></div>
+    `;
+    container.appendChild(grupoDiv);
+
+    const listaDiv = document.getElementById("sim-grupo-lista-" + gi);
+
+    lista.forEach((u, i) => {
+      const ampla = u.modalidades.find(m => m.tipo.toLowerCase().includes("ampla"));
+      const cotas = u.modalidades.filter(m => !m.tipo.toLowerCase().includes("ampla"));
+      const cl = ampla ? classificar(nota, ampla.notaCorte) : null;
+      const uid = "u" + gi + "_" + i;
+
+      const card = document.createElement("div");
+      card.style.cssText = `background:#fff;border-radius:8px;margin-bottom:8px;overflow:hidden;border-left:4px solid ${g.cor}`;
+
+      // Header do card
+      const header = document.createElement("div");
+      header.style.cssText = "display:flex;align-items:center;gap:10px;padding:12px;cursor:pointer";
+      header.innerHTML = `
+        <div style="flex:1;min-width:0">
+          <div style="font-family:Montserrat,sans-serif;font-weight:800;font-size:13px;color:#002561">${u.ies}</div>
+          <div style="font-size:11px;color:#666;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.nomeIES}</div>
+          <div style="font-size:11px;color:#999;margin-top:2px">📍 ${u.cidade}/${u.uf}${u.turno ? " · " + u.turno : ""}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          ${ampla ? `<div style="font-family:Montserrat,sans-serif;font-weight:800;font-size:15px;color:#002561">${ampla.notaCorte.toFixed(1)}</div><div style="font-size:10px;color:#999">nota de corte</div>` : ""}
+          ${cl ? `<div style="background:${cl.bg};color:${cl.cor};border-radius:20px;padding:2px 7px;font-size:11px;font-weight:700;font-family:Montserrat,sans-serif;margin-top:3px">${cl.diff >= 0 ? "+" : ""}${cl.diff.toFixed(1)} pts</div>` : ""}
+          <span style="color:#ccc;font-size:18px">›</span>
+        </div>
+      `;
+
+      // Detalhe expandível
+      const detalhe = document.createElement("div");
+      detalhe.id = "simdet-" + uid;
+      detalhe.style.cssText = "display:none;padding:0 12px 12px;border-top:1px solid #f0f0f0";
+
+      let detHTML = `<div style="font-size:11px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px;margin:10px 0 8px">Modalidades de concorrência</div>`;
+      u.modalidades.forEach(m => {
+        const mc = classificar(nota, m.notaCorte);
+        detHTML += `
+          <div style="padding:8px 10px;border-radius:6px;margin-bottom:6px;background:${mc.bg}">
+            <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:11px;color:#002561;margin-bottom:4px">${m.tipo}</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#333;flex-wrap:wrap;gap:4px">
+              <span>Corte: <strong>${m.notaCorte.toFixed(1)}</strong> · Vagas: <strong>${m.vagas}</strong></span>
+              <span style="color:${mc.cor};font-weight:700;font-family:Montserrat,sans-serif;font-size:11px">${mc.label} (${mc.diff >= 0 ? "+" : ""}${mc.diff.toFixed(1)})</span>
+            </div>
+          </div>`;
+      });
+      if (cotas.length) {
+        detHTML += `<div style="background:#FEF9E7;border-radius:6px;padding:8px 10px;font-size:12px;color:#856404;margin-top:4px;border-left:3px solid #F0C040">
+          ✅ ${cotas.length} modalidade(s) de cota — verifique se você se qualifica!
+        </div>`;
+      }
+      detalhe.innerHTML = detHTML;
+
+      header.addEventListener("click", () => {
+        detalhe.style.display = detalhe.style.display === "block" ? "none" : "block";
+      });
+
+      card.appendChild(header);
+      card.appendChild(detalhe);
+      listaDiv.appendChild(card);
+    });
+  });
 }
 
 // Helpers
