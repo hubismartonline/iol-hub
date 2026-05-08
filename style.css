@@ -2290,3 +2290,12 @@ mark {
   text-align: left;
 }
 .sim-voltar:hover { text-decoration: underline; }
+
+/* Variantes de cor dos blocos de orientação */
+.orient-azul  { background: #EBF4FF; border-left: 4px solid var(--blue); box-shadow: none; }
+.orient-navy  { background: var(--navy); border-left: none; }
+.orient-navy .orient-bloco-titulo { color: #fff; }
+.orient-navy .orient-bloco-sub    { color: rgba(255,255,255,0.7); }
+.orient-cinza { background: #F8F9FA; box-shadow: none; border: 1.5px solid var(--border); }
+.orient-verde { background: #EAFAF0; border-left: 4px solid #27AE60; box-shadow: none; }
+.orient-verde .es-programa { background: #fff; border-left-color: #27AE60; }
