@@ -17,6 +17,9 @@ const CALENDARIO_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vREl4x9Z
 // Planilha 2 — cadastro completo (Apps Script seguro)
 const CADASTRO_URL = "https://script.google.com/macros/s/AKfycbxhwZfOXqWgsoxA0G7ZAcGEqgYaPXKAcnjLOg_iZ3STTOkSB5rrtvbKeOq48xSqNr1X/exec";
 
+// Simulador de Vestibular — Apps Script (Guia de Carreiras + SISU)
+const SIMULADOR_URL = "https://script.google.com/macros/s/AKfycbyWFkcuJkk3qAXaUFpTDHhcctanY4-m35W2fpkVlvEbsUntugML7TVDP-NasdtUX61_gg/exec";
+
 // -------------------------------------------------------
 //  ESTADO GLOBAL
 // -------------------------------------------------------
@@ -725,7 +728,135 @@ document.addEventListener("keydown", e => {
 });
 
 // =============================================================
-//  FAQ INTELIGENTE
+//  SIMULADOR DE VESTIBULAR
+// =============================================================
+
+async function rodarSimulador() {
+  if (!alunoAtual) { showToast("Identifique-se com seu RA primeiro."); return; }
+
+  const nota = parseFloat(document.getElementById("simNota")?.value || "0");
+  if (!nota || nota < 100 || nota > 1000) {
+    showToast("Digite uma nota válida entre 100 e 1000.");
+    return;
+  }
+
+  const area = document.getElementById("simArea")?.value || "todas";
+  const uf   = document.getElementById("simUF")?.value   || "todas";
+
+  document.getElementById("simulador-form").style.display    = "none";
+  document.getElementById("simulador-loading").style.display = "block";
+  document.getElementById("simulador-resultado").style.display = "none";
+
+  try {
+    const url = `${SIMULADOR_URL}?action=simular&ra=${encodeURIComponent(alunoAtual.RA || alunoAtual.ra)}&nota=${nota}&area=${encodeURIComponent(area)}&uf=${encodeURIComponent(uf)}`;
+    const resp = await fetch(url);
+    const data = await resp.json();
+
+    document.getElementById("simulador-loading").style.display = "none";
+
+    if (data.erro) {
+      showToast(data.erro);
+      document.getElementById("simulador-form").style.display = "flex";
+      return;
+    }
+
+    renderizarResultadoSimulador(data);
+
+  } catch(e) {
+    document.getElementById("simulador-loading").style.display = "none";
+    document.getElementById("simulador-form").style.display    = "flex";
+    showToast("Erro ao conectar com o simulador. Tente novamente.");
+  }
+}
+
+function renderizarResultadoSimulador(data) {
+  const el = document.getElementById("simulador-resultado");
+  el.style.display = "block";
+
+  const { aluno, resultados, totais, dicaGeografica, mensagemDica } = data;
+
+  const categorias = [
+    {
+      id: "sonho",
+      emoji: "🌟",
+      nome: "Cursos Sonho",
+      desc: "Sua nota está até 30 pontos abaixo da nota de corte",
+      classe: "sonho",
+      itens: resultados.sonho,
+      total: totais.sonho
+    },
+    {
+      id: "possivel",
+      emoji: "✅",
+      nome: "Cursos Possíveis",
+      desc: "Sua nota está muito próxima da nota de corte",
+      classe: "possivel",
+      itens: resultados.possivel,
+      total: totais.possivel
+    },
+    {
+      id: "seguranca",
+      emoji: "🔒",
+      nome: "Cursos de Segurança",
+      desc: "Sua nota já está acima da nota de corte",
+      classe: "seguranca",
+      itens: resultados.seguranca,
+      total: totais.seguranca
+    }
+  ];
+
+  el.innerHTML = `
+    <div class="sim-aluno-tag">📊 Nota simulada: ${aluno.nota}</div>
+    <div class="sim-categorias">
+      ${categorias.map((cat, idx) => `
+        <div class="sim-categoria ${idx === 2 ? 'open' : ''}" id="simcat-${cat.id}">
+          <div class="sim-cat-header ${cat.classe}" onclick="toggleSimCat('${cat.id}')">
+            <span class="sim-cat-emoji">${cat.emoji}</span>
+            <div class="sim-cat-info">
+              <div class="sim-cat-nome">${cat.nome}</div>
+              <div class="sim-cat-desc">${cat.desc}</div>
+            </div>
+            <span class="sim-cat-count">${cat.total}</span>
+            <span class="sim-cat-chevron">›</span>
+          </div>
+          <div class="sim-cursos">
+            ${cat.itens.length === 0
+              ? `<p style="color:var(--text2);font-size:13px;padding:12px 0">Nenhum curso encontrado nessa categoria para os filtros selecionados.</p>`
+              : cat.itens.map(c => `
+                <div class="sim-curso">
+                  <div class="sim-curso-info">
+                    <div class="sim-curso-nome">${c.curso}</div>
+                    <div class="sim-curso-ies">${c.ies} · ${c.cidade}/${c.uf}</div>
+                  </div>
+                  <div class="sim-curso-nota">
+                    <div class="sim-nota-corte">Corte: ${c.notaCorte.toFixed(1)}</div>
+                    <div class="sim-nota-diff ${c.diff >= 0 ? 'positivo' : 'negativo'}">
+                      ${c.diff >= 0 ? '+' : ''}${c.diff.toFixed(1)}
+                    </div>
+                  </div>
+                </div>`).join("")
+            }
+          </div>
+        </div>`).join("")}
+    </div>
+    ${dicaGeografica ? `<div class="sim-dica-geo">${mensagemDica}</div>` : ""}
+    <button class="wpp-btn outline" onclick="resetarSimulador()" style="margin-top:16px;width:100%">
+      🔄 Simular com outros dados
+    </button>
+  `;
+}
+
+function toggleSimCat(id) {
+  document.getElementById(`simcat-${id}`)?.classList.toggle("open");
+}
+
+function resetarSimulador() {
+  document.getElementById("simulador-resultado").style.display = "none";
+  document.getElementById("simulador-form").style.display      = "flex";
+  document.getElementById("simNota").value = "";
+}
+
+
 //  Busca por similaridade de palavras no FAQ
 // =============================================================
 
