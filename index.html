@@ -230,34 +230,66 @@
     <!-- ===== ABA: ORIENTAÇÃO PROFISSIONAL ===== -->
     <div id="tab-orientacao" class="tab-content">
       <section class="section">
-        <p class="section-intro">Ferramentas para planejar seu futuro e conquistar a universidade dos seus sonhos.</p>
 
-        <!-- SIMULADOR DE VESTIBULAR -->
-        <div class="orient-bloco" id="bloco-simulador">
+        <!-- 1. ESTRATÉGIA -->
+        <div class="orient-bloco orient-azul">
+          <div class="orient-bloco-header">
+            <span class="orient-bloco-icon">💡</span>
+            <div>
+              <div class="orient-bloco-titulo">Como montar sua estratégia de vestibular</div>
+              <div class="orient-bloco-sub">O que seu tutor orienta nas Rodadas de Estratégia</div>
+            </div>
+          </div>
+          <div class="orient-dicas">
+            <div class="orient-dica">
+              <span class="orient-dica-num">🌟</span>
+              <div>
+                <strong>Curso Sonho</strong>
+                <span class="orient-dica-desc"> — o curso que você mais deseja, mesmo que a nota de corte seja mais alta que a sua atual.</span>
+              </div>
+            </div>
+            <div class="orient-dica">
+              <span class="orient-dica-num">✅</span>
+              <div>
+                <strong>Curso Possível</strong>
+                <span class="orient-dica-desc"> — cursos próximos da sua nota. Com dedicação, você tem grande chance de aprovação.</span>
+              </div>
+            </div>
+            <div class="orient-dica">
+              <span class="orient-dica-num">🔒</span>
+              <div>
+                <strong>Curso de Segurança</strong>
+                <span class="orient-dica-desc"> — sua nota já está dentro da nota de corte. Garante a entrada na universidade.</span>
+              </div>
+            </div>
+          </div>
+          <div class="orient-dica-destaque">
+            🗺️ <strong>Abra o mapa!</strong> Considerar outras cidades aumenta muito suas chances. SP, RJ e BH são os mais concorridos — vale olhar outras regiões!
+          </div>
+        </div>
+
+        <!-- 2. SIMULADOR -->
+        <div class="orient-bloco orient-navy" id="bloco-simulador">
           <div class="orient-bloco-header">
             <span class="orient-bloco-icon">🎯</span>
             <div>
-              <div class="orient-bloco-titulo">Simulador de Estratégia de Vestibular</div>
-              <div class="orient-bloco-sub">Descubra seus cursos sonho, possível e segurança com base na sua nota</div>
+              <div class="orient-bloco-titulo" style="color:#fff">Simulador de Estratégia de Vestibular</div>
+              <div class="orient-bloco-sub" style="color:rgba(255,255,255,0.7)">Explore carreiras recomendadas pelo Ismart e veja notas de corte, campus e cotas</div>
             </div>
           </div>
-
           <div class="simulador-form" id="simulador-form">
-            <p style="font-size:13px;color:var(--text2);margin:0 0 4px">Explore as carreiras recomendadas pelo Ismart e veja as notas de corte por universidade, campus e tipo de cota.</p>
-            <button class="wpp-btn" onclick="iniciarSimulador()">
+            <button class="wpp-btn" style="background:#fff;color:var(--navy)" onclick="iniciarSimulador()">
               🔍 Começar simulação
             </button>
           </div>
-
-          <div id="simulador-loading" style="display:none;text-align:center;padding:20px;color:var(--text2)">
-            ⏳ Buscando os melhores cursos para você...
+          <div id="simulador-loading" style="display:none;text-align:center;padding:20px;color:rgba(255,255,255,0.8)">
+            ⏳ Carregando...
           </div>
-
           <div id="simulador-resultado" style="display:none"></div>
         </div>
 
-        <!-- SOBRE O GUIA DE CARREIRAS -->
-        <div class="orient-bloco">
+        <!-- 3. CRITÉRIOS -->
+        <div class="orient-bloco orient-cinza">
           <div class="orient-bloco-header">
             <span class="orient-bloco-icon">📊</span>
             <div>
@@ -268,92 +300,43 @@
           <div class="orient-criterios">
             <div class="orient-criterio">
               <div class="orient-criterio-num">1</div>
-              <div>
-                <strong>Ranking Universitário Folha (RUF)</strong><br>
-                <span class="orient-criterio-desc">Avaliação anual das universidades em 5 dimensões: Ensino, Pesquisa, Mercado, Inovação e Internacionalização.</span>
-              </div>
+              <div><strong>Ranking Universitário Folha (RUF)</strong><br>
+              <span class="orient-criterio-desc">Ensino, Pesquisa, Mercado, Inovação e Internacionalização.</span></div>
             </div>
             <div class="orient-criterio">
               <div class="orient-criterio-num">2</div>
-              <div>
-                <strong>Índices IGC e CPC do MEC</strong><br>
-                <span class="orient-criterio-desc">Conceito Preliminar de Curso e Índice Geral de Cursos — instrumentos oficiais de qualidade do ensino superior.</span>
-              </div>
+              <div><strong>Índices IGC e CPC do MEC</strong><br>
+              <span class="orient-criterio-desc">Instrumentos oficiais de qualidade do ensino superior.</span></div>
             </div>
             <div class="orient-criterio">
               <div class="orient-criterio-num">3</div>
-              <div>
-                <strong>Dados dos Alumni Ismart</strong><br>
-                <span class="orient-criterio-desc">90% dos graduados estão trabalhando e 64% ganham acima da média em suas áreas. Carreiras de maior empregabilidade têm taxa de desemprego de apenas 2%.</span>
-              </div>
-            </div>
-          </div>
-          <div class="orient-areas">
-            <div class="orient-area exatas">📐 Exatas</div>
-            <div class="orient-area humanas">📖 Humanas</div>
-            <div class="orient-area biologicas">🔬 Biológicas</div>
-            <div class="orient-area interdisciplinar">🔀 Interdisciplinar</div>
-          </div>
-        </div>
-
-        <!-- DICAS DE ESTRATÉGIA -->
-        <div class="orient-bloco">
-          <div class="orient-bloco-header">
-            <span class="orient-bloco-icon">💡</span>
-            <div>
-              <div class="orient-bloco-titulo">Como montar sua estratégia de vestibular</div>
-              <div class="orient-bloco-sub">O que seu tutor orienta nas Rodadas de Estratégia</div>
-            </div>
-          </div>
-          <div class="orient-dicas">
-            <div class="orient-dica">
-              <div class="orient-dica-num">🌟</div>
-              <div>
-                <strong>Curso Sonho</strong><br>
-                <span class="orient-dica-desc">Aquele curso e universidade que você mais deseja — geralmente os mais concorridos. Coloque na sua lista mesmo que a nota de corte seja mais alta que a sua nota atual.</span>
-              </div>
-            </div>
-            <div class="orient-dica">
-              <div class="orient-dica-num">✅</div>
-              <div>
-                <strong>Curso Possível</strong><br>
-                <span class="orient-dica-desc">Cursos que você deseja e que estão próximos da sua nota. Com dedicação nos estudos, você tem grande chance de aprovação.</span>
-              </div>
-            </div>
-            <div class="orient-dica">
-              <div class="orient-dica-num">🔒</div>
-              <div>
-                <strong>Curso de Segurança</strong><br>
-                <span class="orient-dica-desc">Opções em que sua nota atual já estaria dentro da nota de corte. Garantem que você entre na universidade e pode continuar buscando outros cursos depois.</span>
-              </div>
-            </div>
-            <div class="orient-dica-destaque">
-              🗺️ <strong>Abra o mapa!</strong> Alunos que consideram outras cidades têm muito mais opções de aprovação. Os polos de SP, RJ e BH são os mais concorridos — vale sempre olhar outras regiões!
+              <div><strong>Dados dos Alumni Ismart</strong><br>
+              <span class="orient-criterio-desc">90% dos graduados empregados. 64% acima da média salarial. Taxa de desemprego de 2% nas melhores áreas.</span></div>
             </div>
           </div>
         </div>
 
-        <!-- ES ISMART -->
-        <div class="orient-bloco">
+        <!-- 4. ES ISMART -->
+        <div class="orient-bloco orient-verde">
           <div class="orient-bloco-header">
             <span class="orient-bloco-icon">🎓</span>
             <div>
-              <div class="orient-bloco-titulo">Ensino Superior Ismart</div>
+              <div class="orient-bloco-titulo">Programas do Ensino Superior Ismart</div>
               <div class="orient-bloco-sub">O Ismart continua com você na universidade</div>
             </div>
           </div>
           <div class="es-programas">
             <div class="es-programa">🤝 <strong>Apadrinhamento</strong> — veterano apoia calouro na adaptação</div>
-            <div class="es-programa">🚀 <strong>Start na Graduação</strong> — autoconhecimento e direcionamento acadêmico</div>
-            <div class="es-programa">📅 <strong>Encontro de Universitários</strong> — 2x por ano, networking e desenvolvimento</div>
+            <div class="es-programa">🚀 <strong>Start na Graduação</strong> — autoconhecimento e direcionamento</div>
+            <div class="es-programa">📅 <strong>Encontro de Universitários</strong> — 2x por ano, networking</div>
             <div class="es-programa">🧭 <strong>Coaching</strong> — sessões com profissionais experientes</div>
             <div class="es-programa">🏅 <strong>Trilhas de Carreira</strong> — preparação para o primeiro estágio</div>
-            <div class="es-programa">💼 <strong>Emprega Já</strong> — currículo, entrevistas e conexão com empresas</div>
+            <div class="es-programa">💼 <strong>Emprega Já</strong> — currículo, entrevistas e empresas parceiras</div>
             <div class="es-programa">🌟 <strong>Potência Gera Potência</strong> — mentoria com alumni de destaque</div>
             <div class="es-programa">🎓 <strong>Rede Alumni</strong> — comunidade de ex-bolsistas e graduados</div>
           </div>
-          <button class="wpp-btn outline" onclick="buscarFAQRapido('ensino superior')" style="margin-top:16px;width:100%">
-            Ver mais no FAQ ›
+          <button class="wpp-btn outline" onclick="trocarAba('faq'); setTimeout(() => buscarFAQRapido('ensino superior'), 300)" style="margin-top:14px;width:100%">
+            Ver detalhes no FAQ ›
           </button>
         </div>
 
@@ -361,21 +344,15 @@
     </div>
 
     <!-- ===== ABA: FAQ ===== -->
-
+    <div id="tab-faq" class="tab-content">
       <section class="section">
 
-        <!-- Busca inteligente -->
         <div class="faq-search-wrap">
           <div class="faq-search-box">
             <span class="faq-search-icon">🔍</span>
-            <input
-              type="text"
-              id="faqSearchInput"
-              class="faq-search-input"
+            <input type="text" id="faqSearchInput" class="faq-search-input"
               placeholder="Digite sua dúvida aqui... ex: não consigo acessar a Layers"
-              oninput="buscarFAQ(this.value)"
-              autocomplete="off"
-            >
+              oninput="buscarFAQ(this.value)" autocomplete="off">
             <button class="faq-search-clear" id="faqClearBtn" onclick="limparFAQ()" style="display:none">✕</button>
           </div>
           <div class="faq-sugestoes">
@@ -388,14 +365,12 @@
           </div>
         </div>
 
-        <!-- Resultado da busca -->
         <div id="faq-resultado" style="display:none">
           <div class="faq-resultado-titulo" id="faq-resultado-titulo"></div>
           <div id="faq-resultado-lista"></div>
           <button class="faq-ver-todos" onclick="limparFAQ()">Ver todas as perguntas</button>
         </div>
 
-        <!-- Lista completa -->
         <div id="faq-lista-wrap">
           <p class="section-intro">Perguntas frequentes dos alunos do IOL.</p>
           <div id="faq-lista"></div>
@@ -407,7 +382,8 @@
             <button class="wpp-btn outline" onclick="abrirWhatsApp()" style="flex:1;min-width:160px">
               💬 Falar com meu tutor
             </button>
-            <a href="https://bit.ly/ChamaNoForms2026" target="_blank" rel="noopener" class="wpp-btn outline" style="flex:1;min-width:160px;text-decoration:none;text-align:center">
+            <a href="https://bit.ly/ChamaNoForms2026" target="_blank" rel="noopener" class="wpp-btn outline"
+              style="flex:1;min-width:160px;text-decoration:none;text-align:center">
               📋 Formulário de atendimento
             </a>
           </div>
@@ -415,6 +391,7 @@
 
       </section>
     </div>
+
 
     <!-- ===== ABA: ATENDIMENTO ===== -->
     <div id="tab-atendimento" class="tab-content">
