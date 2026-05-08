@@ -457,6 +457,68 @@ const FAQ = [
     q: "Como funciona a Orientação Profissional no IOL?",
     a: "O Projeto de Orientação Profissional te ajuda a conhecer carreiras, entender o mercado de trabalho e traçar estratégias. Inclui Rodadas de Estratégias com tutores, o Guia de Carreiras e o TPV/TEP (Trabalho de Projeto/Escolha de Vida Profissional).",
     tags: "orientação profissional carreira trabalho futuro TEP TPV guia"
+  },
+
+  // ===== ENSINO SUPERIOR ISMART =====
+  {
+    q: "O que é o Ensino Superior Ismart (ES Ismart)?",
+    a: "O ES Ismart é o Programa de Desenvolvimento Universitário do Ismart — criado para ampliar o repertório dos estudantes ao longo de toda a graduação. Para ingressar é necessário: bom desempenho acadêmico, engajamento nas atividades do Ismart, aprovação em curso e universidade apoiados, e interesse em participar.",
+    tags: "ensino superior ES Ismart graduação universidade programa universitário"
+  },
+  {
+    q: "O que acontece quando entro na universidade? (Onboarding)",
+    a: "Ao ingressar na universidade você participa do Onboarding, que inclui reunião de boas-vindas, assinatura de contratos e manutenção de comunicação com a equipe do Ensino Superior. O objetivo é preparar, fortalecer e apoiar os universitários — momento ideal para tirar dúvidas sobre o programa, auxílio financeiro, transporte e outras questões.",
+    tags: "onboarding boas-vindas contrato entrada universidade primeiro ano"
+  },
+  {
+    q: "O que é o Start na Graduação?",
+    a: "Assim que você ingressar na universidade, vai perceber que existe um mundo de possibilidades: empresa júnior, atlética, pesquisa acadêmica e muito mais. O Start na Graduação são atividades e programas focados em autoconhecimento, desenvolvimento socioemocional e direcionamento acadêmico para te ajudar a escolher o melhor caminho.",
+    tags: "start graduação empresa júnior atlética pesquisa autoconhecimento direcionamento"
+  },
+  {
+    q: "O que é o Apadrinhamento?",
+    a: "No Apadrinhamento um veterano apadrinha um calouro, fornecendo orientação e apoio durante a adaptação ao ambiente universitário. Você terá a oportunidade de esclarecer dúvidas sobre como o veterano geriu suas finanças, organizou a rotina de estudos e os passos que seguiu para conquistar oportunidades.",
+    tags: "apadrinhamento veterano calouro mentoria orientação adaptação"
+  },
+  {
+    q: "O que é o Encontro de Universitários?",
+    a: "O Encontro de Universitários acontece duas vezes por ano e inclui talks de inspiração, dinâmicas de integração, debates e apresentações sobre temas como empregabilidade, organização financeira e desenvolvimento de competências. É um espaço de troca e novos aprendizados entre os universitários da rede Ismart.",
+    tags: "encontro universitários evento talks networking desenvolvimento"
+  },
+  {
+    q: "O que é o Coaching no ES Ismart?",
+    a: "O Coaching oferece sessões com profissionais experientes nas áreas de autoconfiança, autoconhecimento, gestão de tempo, criatividade, inteligência emocional e liderança. É um programa de desenvolvimento pessoal e profissional que apoia universitários e graduados a alcançarem seus objetivos de carreira.",
+    tags: "coaching desenvolvimento pessoal profissional autoconhecimento liderança gestão tempo"
+  },
+  {
+    q: "O que são os Clubes Ismart?",
+    a: "Os Clubes Ismart são grupos formados por universitários com interesses comuns que se reúnem para desenvolver projetos e atividades. Proporcionam um espaço para conexão, troca de ideias e construção de projetos entre os universitários.",
+    tags: "clubes ismart universitários projetos conexão networking interesses"
+  },
+  {
+    q: "O que são as Trilhas de Carreira?",
+    a: "As Trilhas de Carreira são programas focados no desenvolvimento de habilidades específicas e orientação profissional. O Ismart te ajuda a conquistar seu primeiro estágio com um programa completo pensado para facilitar os processos seletivos.",
+    tags: "trilhas carreira estágio emprego mercado trabalho habilidades seletivo"
+  },
+  {
+    q: "O que é o Potência Gera Potência?",
+    a: "É um programa de mentoria de seis meses com encontros mensais entre estudantes universitários e tutores Alumni que já estão em posição de destaque no mercado. Os tutores compartilham experiências sobre adaptação universitária, oportunidades de carreira, sentimento de pertencimento e estratégias para superar desafios.",
+    tags: "potência gera potência mentoria alumni mercado carreira pertencimento"
+  },
+  {
+    q: "O que é o Emprega Já?",
+    a: "O Emprega Já inclui preparação para entrevistas, construção de currículos e eventos com empresas parceiras. O programa facilita a empregabilidade dos universitários através de suporte na busca de emprego e desenvolvimento de competências.",
+    tags: "emprega já emprego estágio currículo entrevista empresas parceiras empregabilidade"
+  },
+  {
+    q: "O que é o Preparatório Líderes Estudar?",
+    a: "É uma iniciativa da Fundação Estudar voltada para identificar e apoiar financeiramente jovens talentos com grande potencial de liderança. O programa Líderes Estudar seleciona, apoia e desenvolve jovens de alto potencial com bolsas de estudos e acesso a uma comunidade que atua para transformar o mundo.",
+    tags: "líderes estudar fundação estudar bolsa liderança potencial jovens"
+  },
+  {
+    q: "O que acontece ao me tornar Alumni Ismart?",
+    a: "Ao finalizar o Ensino Superior você entra para a Rede Alumni, que inclui encontros anuais, mentoria e grupos de trabalho para planejamento e execução de atividades. A rede facilita a transição de universitários para alumni e promove troca de experiências e suporte contínuo.",
+    tags: "alumni rede graduado formado mentoria encontro atividades suporte"
   }
 ];
 
@@ -493,6 +555,7 @@ const SEARCH_INDEX = [
     texto: item.nome + " " + item.desc,
     acao: () => trocarAba("guias")
   }))),
+  { cat: "Seção", texto: "orientação profissional carreira vestibular simulador sisu enem cursos universidade ensino superior", acao: () => trocarAba("orientacao") },
   { cat: "Seção", texto: "agenda calendario formacao simulado prazo enem fuvest unicamp", acao: () => trocarAba("agenda") },
   { cat: "Seção", texto: "atendimento formulario ajuda suporte",                           acao: () => trocarAba("atendimento") },
   { cat: "Seção", texto: "perfil cadastro dados pessoais",                                 acao: () => trocarAba("perfil") },
