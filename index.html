@@ -232,110 +232,99 @@
       <section class="section">
 
         <!-- 1. ESTRATÉGIA -->
-        <div class="orient-bloco orient-azul">
-          <div class="orient-bloco-header">
-            <span class="orient-bloco-icon">💡</span>
+        <div style="background:#EBF4FF;border-radius:12px;padding:20px;margin-bottom:14px;border-left:4px solid #00BDF2">
+          <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px">
+            <span style="font-size:26px">💡</span>
             <div>
-              <div class="orient-bloco-titulo">Como montar sua estratégia de vestibular</div>
-              <div class="orient-bloco-sub">O que seu tutor orienta nas Rodadas de Estratégia</div>
+              <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:15px;color:#002561">Como montar sua estratégia de vestibular</div>
+              <div style="font-size:12px;color:#666;margin-top:3px">O que seu tutor orienta nas Rodadas de Estratégia</div>
             </div>
           </div>
-          <div class="orient-dicas">
-            <div class="orient-dica">
-              <span class="orient-dica-num">🌟</span>
-              <div>
-                <strong>Curso Sonho</strong>
-                <span class="orient-dica-desc"> — o curso que você mais deseja, mesmo que a nota de corte seja mais alta que a sua atual.</span>
-              </div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:#333">
+              <span style="font-size:18px;flex-shrink:0">🌟</span>
+              <div><strong>Curso Sonho</strong> — o que você mais deseja, mesmo que a nota de corte seja mais alta que a sua atual.</div>
             </div>
-            <div class="orient-dica">
-              <span class="orient-dica-num">✅</span>
-              <div>
-                <strong>Curso Possível</strong>
-                <span class="orient-dica-desc"> — cursos próximos da sua nota. Com dedicação, você tem grande chance de aprovação.</span>
-              </div>
+            <div style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:#333">
+              <span style="font-size:18px;flex-shrink:0">✅</span>
+              <div><strong>Curso Possível</strong> — próximos da sua nota. Com dedicação, você tem grande chance de aprovação.</div>
             </div>
-            <div class="orient-dica">
-              <span class="orient-dica-num">🔒</span>
-              <div>
-                <strong>Curso de Segurança</strong>
-                <span class="orient-dica-desc"> — sua nota já está dentro da nota de corte. Garante a entrada na universidade.</span>
-              </div>
+            <div style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:#333">
+              <span style="font-size:18px;flex-shrink:0">🔒</span>
+              <div><strong>Curso de Segurança</strong> — sua nota já está dentro da nota de corte. Garante a entrada na universidade.</div>
             </div>
           </div>
-          <div class="orient-dica-destaque">
-            🗺️ <strong>Abra o mapa!</strong> Considerar outras cidades aumenta muito suas chances. SP, RJ e BH são os mais concorridos — vale olhar outras regiões!
+          <div style="background:#fff;border-radius:8px;padding:10px 12px;font-size:13px;color:#002561;margin-top:12px;border-left:3px solid #00BDF2">
+            🗺️ <strong>Abra o mapa!</strong> Considerar outras cidades aumenta muito suas chances. SP, RJ e BH são os mais concorridos!
           </div>
         </div>
 
         <!-- 2. SIMULADOR -->
-        <div class="orient-bloco orient-navy" id="bloco-simulador">
-          <div class="orient-bloco-header">
-            <span class="orient-bloco-icon">🎯</span>
+        <div style="background:#002561;border-radius:12px;padding:20px;margin-bottom:14px" id="bloco-simulador">
+          <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px">
+            <span style="font-size:26px">🎯</span>
             <div>
-              <div class="orient-bloco-titulo" style="color:#fff">Simulador de Estratégia de Vestibular</div>
-              <div class="orient-bloco-sub" style="color:rgba(255,255,255,0.7)">Explore carreiras recomendadas pelo Ismart e veja notas de corte, campus e cotas</div>
+              <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:15px;color:#fff">Simulador de Estratégia de Vestibular</div>
+              <div style="font-size:12px;color:rgba(255,255,255,0.65);margin-top:3px">Explore carreiras recomendadas pelo Ismart — notas de corte, campus e cotas</div>
             </div>
           </div>
-          <div class="simulador-form" id="simulador-form">
-            <button class="wpp-btn" style="background:#fff;color:var(--navy)" onclick="iniciarSimulador()">
+          <div id="simulador-form">
+            <button onclick="iniciarSimulador()" style="width:100%;padding:12px;background:#00BDF2;color:#002561;border:none;border-radius:8px;font-family:Montserrat,sans-serif;font-weight:700;font-size:14px;cursor:pointer">
               🔍 Começar simulação
             </button>
           </div>
-          <div id="simulador-loading" style="display:none;text-align:center;padding:20px;color:rgba(255,255,255,0.8)">
+          <div id="simulador-loading" style="display:none;text-align:center;padding:16px;color:rgba(255,255,255,0.8);font-size:13px">
             ⏳ Carregando...
           </div>
           <div id="simulador-resultado" style="display:none"></div>
         </div>
 
         <!-- 3. CRITÉRIOS -->
-        <div class="orient-bloco orient-cinza">
-          <div class="orient-bloco-header">
-            <span class="orient-bloco-icon">📊</span>
+        <div style="background:#F8F9FA;border-radius:12px;padding:20px;margin-bottom:14px;border:1.5px solid #E5E7EB">
+          <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px">
+            <span style="font-size:26px">📊</span>
             <div>
-              <div class="orient-bloco-titulo">Como o Ismart escolhe as carreiras recomendadas?</div>
-              <div class="orient-bloco-sub">Critérios baseados em dados de mercado e alumni</div>
+              <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:15px;color:#002561">Como o Ismart escolhe as carreiras recomendadas?</div>
+              <div style="font-size:12px;color:#666;margin-top:3px">Critérios baseados em dados de mercado e alumni</div>
             </div>
           </div>
-          <div class="orient-criterios">
-            <div class="orient-criterio">
-              <div class="orient-criterio-num">1</div>
-              <div><strong>Ranking Universitário Folha (RUF)</strong><br>
-              <span class="orient-criterio-desc">Ensino, Pesquisa, Mercado, Inovação e Internacionalização.</span></div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:#333">
+              <div style="width:26px;height:26px;border-radius:50%;background:#00BDF2;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-family:Montserrat,sans-serif;font-size:12px;flex-shrink:0">1</div>
+              <div><strong>Ranking Universitário Folha (RUF)</strong><br><span style="color:#666;font-size:12px">Ensino, Pesquisa, Mercado, Inovação e Internacionalização.</span></div>
             </div>
-            <div class="orient-criterio">
-              <div class="orient-criterio-num">2</div>
-              <div><strong>Índices IGC e CPC do MEC</strong><br>
-              <span class="orient-criterio-desc">Instrumentos oficiais de qualidade do ensino superior.</span></div>
+            <div style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:#333">
+              <div style="width:26px;height:26px;border-radius:50%;background:#00BDF2;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-family:Montserrat,sans-serif;font-size:12px;flex-shrink:0">2</div>
+              <div><strong>Índices IGC e CPC do MEC</strong><br><span style="color:#666;font-size:12px">Instrumentos oficiais de qualidade do ensino superior.</span></div>
             </div>
-            <div class="orient-criterio">
-              <div class="orient-criterio-num">3</div>
-              <div><strong>Dados dos Alumni Ismart</strong><br>
-              <span class="orient-criterio-desc">90% dos graduados empregados. 64% acima da média salarial. Taxa de desemprego de 2% nas melhores áreas.</span></div>
+            <div style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:#333">
+              <div style="width:26px;height:26px;border-radius:50%;background:#00BDF2;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-family:Montserrat,sans-serif;font-size:12px;flex-shrink:0">3</div>
+              <div><strong>Dados dos Alumni Ismart</strong><br><span style="color:#666;font-size:12px">90% dos graduados empregados · 64% acima da média salarial · 2% de desemprego nas melhores áreas.</span></div>
             </div>
           </div>
         </div>
 
         <!-- 4. ES ISMART -->
-        <div class="orient-bloco orient-verde">
-          <div class="orient-bloco-header">
-            <span class="orient-bloco-icon">🎓</span>
+        <div style="background:#EAFAF0;border-radius:12px;padding:20px;margin-bottom:14px;border-left:4px solid #27AE60">
+          <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px">
+            <span style="font-size:26px">🎓</span>
             <div>
-              <div class="orient-bloco-titulo">Programas do Ensino Superior Ismart</div>
-              <div class="orient-bloco-sub">O Ismart continua com você na universidade</div>
+              <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:15px;color:#002561">Programas do Ensino Superior Ismart</div>
+              <div style="font-size:12px;color:#666;margin-top:3px">O Ismart continua com você na universidade</div>
             </div>
           </div>
-          <div class="es-programas">
-            <div class="es-programa">🤝 <strong>Apadrinhamento</strong> — veterano apoia calouro na adaptação</div>
-            <div class="es-programa">🚀 <strong>Start na Graduação</strong> — autoconhecimento e direcionamento</div>
-            <div class="es-programa">📅 <strong>Encontro de Universitários</strong> — 2x por ano, networking</div>
-            <div class="es-programa">🧭 <strong>Coaching</strong> — sessões com profissionais experientes</div>
-            <div class="es-programa">🏅 <strong>Trilhas de Carreira</strong> — preparação para o primeiro estágio</div>
-            <div class="es-programa">💼 <strong>Emprega Já</strong> — currículo, entrevistas e empresas parceiras</div>
-            <div class="es-programa">🌟 <strong>Potência Gera Potência</strong> — mentoria com alumni de destaque</div>
-            <div class="es-programa">🎓 <strong>Rede Alumni</strong> — comunidade de ex-bolsistas e graduados</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="background:#fff;border-radius:8px;padding:8px 12px;font-size:13px;color:#333;border-left:3px solid #27AE60">🤝 <strong>Apadrinhamento</strong> — veterano apoia calouro na adaptação</div>
+            <div style="background:#fff;border-radius:8px;padding:8px 12px;font-size:13px;color:#333;border-left:3px solid #27AE60">🚀 <strong>Start na Graduação</strong> — autoconhecimento e direcionamento</div>
+            <div style="background:#fff;border-radius:8px;padding:8px 12px;font-size:13px;color:#333;border-left:3px solid #27AE60">📅 <strong>Encontro de Universitários</strong> — 2x por ano, networking</div>
+            <div style="background:#fff;border-radius:8px;padding:8px 12px;font-size:13px;color:#333;border-left:3px solid #27AE60">🧭 <strong>Coaching</strong> — sessões com profissionais experientes</div>
+            <div style="background:#fff;border-radius:8px;padding:8px 12px;font-size:13px;color:#333;border-left:3px solid #27AE60">🏅 <strong>Trilhas de Carreira</strong> — preparação para o primeiro estágio</div>
+            <div style="background:#fff;border-radius:8px;padding:8px 12px;font-size:13px;color:#333;border-left:3px solid #27AE60">💼 <strong>Emprega Já</strong> — currículo, entrevistas e empresas parceiras</div>
+            <div style="background:#fff;border-radius:8px;padding:8px 12px;font-size:13px;color:#333;border-left:3px solid #27AE60">🌟 <strong>Potência Gera Potência</strong> — mentoria com alumni de destaque</div>
+            <div style="background:#fff;border-radius:8px;padding:8px 12px;font-size:13px;color:#333;border-left:3px solid #27AE60">🎓 <strong>Rede Alumni</strong> — comunidade de ex-bolsistas e graduados</div>
           </div>
-          <button class="wpp-btn outline" onclick="trocarAba('faq'); setTimeout(() => buscarFAQRapido('ensino superior'), 300)" style="margin-top:14px;width:100%">
+          <button onclick="trocarAba('faq'); setTimeout(() => buscarFAQRapido('ensino superior'), 300)"
+            style="width:100%;margin-top:14px;padding:10px;background:transparent;border:1.5px solid #27AE60;border-radius:8px;font-family:Montserrat,sans-serif;font-weight:700;font-size:13px;color:#27AE60;cursor:pointer">
             Ver detalhes no FAQ ›
           </button>
         </div>
