@@ -2101,3 +2101,192 @@ mark {
   border-radius: var(--r-sm);
   border-left: 3px solid var(--blue);
 }
+
+/* =============================================
+   SIMULADOR — NOVO FLUXO EM ETAPAS
+   ============================================= */
+
+.sim-etapa-header {
+  margin-bottom: 18px;
+}
+.sim-etapa-badge {
+  display: inline-block;
+  background: var(--blue);
+  color: #fff;
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.sim-etapa-titulo {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--navy);
+  margin-bottom: 4px;
+}
+.sim-etapa-sub { font-size: 12px; color: var(--text2); }
+
+/* Áreas */
+.sim-areas-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.sim-area-btn {
+  padding: 14px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--bg);
+  font-size: 13px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  color: var(--navy);
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+.sim-area-btn:hover  { background: #EBF4FF; border-color: var(--blue); }
+.sim-area-btn:active { transform: scale(0.97); }
+
+/* Carreiras */
+.sim-carreiras-lista { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.sim-carreira-btn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--bg);
+  font-size: 13px;
+  color: var(--text1);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  text-align: left;
+}
+.sim-carreira-btn:hover  { background: #EBF4FF; border-color: var(--blue); }
+.sim-carreira-arrow { color: var(--text2); font-size: 16px; }
+
+/* Estados */
+.sim-ufs-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.sim-uf-btn {
+  padding: 10px 6px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--bg);
+  font-size: 12px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  color: var(--navy);
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+.sim-uf-btn:hover  { background: #EBF4FF; border-color: var(--blue); }
+.sim-uf-btn:first-child { grid-column: 1 / -1; }
+
+/* Universidades */
+.sim-unis-lista { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+
+.sim-uni-card {
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+.sim-uni-card.open { border-color: var(--blue); }
+
+.sim-uni-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  background: var(--card);
+  user-select: none;
+}
+.sim-uni-info { flex: 1; }
+.sim-uni-sigla {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--navy);
+}
+.sim-uni-nome { font-size: 12px; color: var(--text2); margin-top: 1px; }
+.sim-uni-local { font-size: 11px; color: var(--text2); margin-top: 3px; }
+
+.sim-uni-right { text-align: right; flex-shrink: 0; }
+.sim-uni-nota-corte {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--blue);
+}
+.sim-uni-nota-label { font-size: 10px; color: var(--text2); }
+
+.sim-uni-detalhe {
+  display: none;
+  padding: 12px 14px;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+}
+.sim-mod-titulo {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-bottom: 8px;
+  font-family: 'Montserrat', sans-serif;
+}
+.sim-mod-item {
+  padding: 8px 10px;
+  border-radius: var(--r-sm);
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+.sim-mod-item.ampla { background: #EBF4FF; }
+.sim-mod-item.cota  { background: #EAFAF0; }
+
+.sim-mod-tipo {
+  font-weight: 700;
+  color: var(--navy);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+.sim-mod-dados { display: flex; gap: 16px; color: var(--text1); }
+
+.sim-cotas-aviso {
+  background: #FFF9E6;
+  border-radius: var(--r-sm);
+  padding: 8px 10px;
+  font-size: 12px;
+  color: #856404;
+  margin-top: 8px;
+  border-left: 3px solid #F0C040;
+}
+
+.sim-voltar {
+  background: none;
+  border: none;
+  color: var(--blue);
+  font-size: 13px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 6px 0;
+  display: block;
+  width: 100%;
+  text-align: left;
+}
+.sim-voltar:hover { text-decoration: underline; }
