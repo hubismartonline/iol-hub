@@ -18,7 +18,7 @@ const CALENDARIO_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vREl4x9Z
 const CADASTRO_URL = "https://script.google.com/macros/s/AKfycbxhwZfOXqWgsoxA0G7ZAcGEqgYaPXKAcnjLOg_iZ3STTOkSB5rrtvbKeOq48xSqNr1X/exec";
 
 // Simulador de Vestibular — Apps Script (Guia de Carreiras + SISU)
-const SIMULADOR_URL = "https://script.google.com/macros/s/AKfycbz0y6xajzzpRaXPBcu4B_uo71fpTwScEoZjhrD6iJBkJyqxR8IhM-DXqjKW4ZabAPJVOQ/exec";
+const SIMULADOR_URL = "https://script.google.com/macros/s/AKfycby2bv-dEQEoz3qtVSNjWY5sPQSTmyJ3L1wQv_ApX5bOzL-pls5UvrhKPHy1X6DQsmg8Dw/exec";
 
 // -------------------------------------------------------
 //  ESTADO GLOBAL
@@ -728,230 +728,309 @@ document.addEventListener("keydown", e => {
 });
 
 // =============================================================
-//  SIMULADOR DE VESTIBULAR — fluxo em etapas
-//  1. Aluno escolhe área
-//  2. Aluno escolhe carreira
-//  3. Aluno escolhe estado (opcional)
-//  4. Ver universidades + campus + cotas
+//  SIMULADOR DE VESTIBULAR
+//  0. Nota  1. Área  2. Carreira  3. Estado  4. Resultado
 // =============================================================
 
-// Chamada ao Apps Script via JSONP (resolve CORS)
-function chamarSimulador(params) {
-  return new Promise((resolve, reject) => {
-    const cbName = "_simCb_" + Date.now();
-    const url = SIMULADOR_URL + "?" + new URLSearchParams(params).toString() + "&callback=" + cbName;
-    window[cbName] = (data) => {
+function fetchSimulador(params) {
+  return new Promise(function(resolve, reject) {
+    var cbName = "_simCb_" + Date.now();
+    params.callback = cbName;
+    var url = SIMULADOR_URL + "?" + new URLSearchParams(params).toString();
+    window[cbName] = function(data) {
       delete window[cbName];
-      document.getElementById("_sim_script")?.remove();
+      var old = document.getElementById("_sim_jsonp");
+      if (old) old.remove();
       resolve(data);
     };
-    const script = document.createElement("script");
-    script.id = "_sim_script";
-    script.onerror = () => { delete window[cbName]; reject(new Error("Erro de rede")); };
+    var script = document.createElement("script");
+    script.id = "_sim_jsonp";
+    script.onerror = function() { delete window[cbName]; reject(new Error("Erro de rede")); };
     script.src = url;
     document.head.appendChild(script);
   });
 }
 
-// Alternativa fetch com no-cors fallback
-async function fetchSimulador(params) {
-  const url = SIMULADOR_URL + "?" + new URLSearchParams(params).toString();
-  try {
-    const resp = await fetch(url, { redirect: "follow" });
-    return await resp.json();
-  } catch(e) {
-    // tenta com mode no-cors como último recurso
-    throw e;
-  }
+let simEstado = { nota: 0, area: "", carreira: "", uf: "todas" };
+
+// --- ETAPA 0: Digitar nota ---
+function iniciarSimulador() {
+  if (!alunoAtual) { showToast("Identifique-se com seu RA primeiro."); return; }
+  const el = document.getElementById("simulador-resultado");
+  el.style.display = "block";
+  document.getElementById("simulador-form").style.display = "none";
+  document.getElementById("simulador-loading").style.display = "none";
+
+  el.innerHTML = `
+    <div style="margin-bottom:16px">
+      <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:15px;color:#fff;margin-bottom:6px">
+        Qual é a sua nota média? 📝
+      </div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.65);margin-bottom:14px;line-height:1.5">
+        Use sua nota da <strong style="color:#00BDF2">Prova Única mais recente</strong>
+        ou do <strong style="color:#00BDF2">ENEM Treineiro</strong> — quanto mais atual, melhor!
+      </div>
+      <input type="number" id="simNotaInput" placeholder="Ex: 620"
+        min="0" max="1000" step="0.1"
+        style="width:100%;padding:13px 14px;border-radius:8px;
+               border:2px solid rgba(255,255,255,0.25);
+               background:rgba(255,255,255,0.1);color:#fff;
+               font-size:16px;font-family:Lato,sans-serif;
+               box-sizing:border-box;outline:none"
+        oninput="this.style.borderColor=this.value?'#00BDF2':'rgba(255,255,255,0.25)'"
+        onkeydown="if(event.key==='Enter')confirmarNota()">
+      <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:5px">Escala de 0 a 1000 (mesma do ENEM)</div>
+    </div>
+    <button onclick="confirmarNota()"
+      style="width:100%;padding:12px;background:#00BDF2;color:#002561;border:none;
+             border-radius:8px;font-family:Montserrat,sans-serif;font-weight:700;
+             font-size:14px;cursor:pointer;margin-bottom:8px">
+      Continuar →
+    </button>
+    <button onclick="resetarSimulador()"
+      style="background:none;border:none;color:rgba(255,255,255,0.5);font-size:13px;
+             cursor:pointer;padding:4px 0;font-family:Montserrat,sans-serif;font-weight:700">
+      ← Cancelar
+    </button>
+  `;
+  setTimeout(() => document.getElementById("simNotaInput")?.focus(), 100);
 }
 
-// Estado do simulador
-let simEstado = { area: "", carreira: "", uf: "todas" };
-
-// --- ETAPA 1: Carregar áreas e mostrar formulário ---
-async function iniciarSimulador() {
-  if (!alunoAtual) { showToast("Identifique-se com seu RA primeiro."); return; }
-  simMostrarLoading("Carregando áreas de interesse...");
+async function confirmarNota() {
+  const input = document.getElementById("simNotaInput");
+  const nota = parseFloat(input?.value || "0");
+  if (!nota || nota < 100 || nota > 1000) {
+    if (input) { input.style.borderColor = "#EE2D67"; input.placeholder = "Digite entre 100 e 1000"; }
+    return;
+  }
+  simEstado.nota = nota;
+  simMostrarLoading("Carregando áreas...");
   try {
     const data = await fetchSimulador({ action: "areas" });
     simEsconderLoading();
     if (data.erro) { showToast(data.erro); return; }
     renderizarEtapa1(data.areas);
-  } catch(e) {
-    simEsconderLoading();
-    showToast("Erro ao conectar. Verifique sua conexão e tente novamente.");
-  }
+  } catch(e) { simEsconderLoading(); showToast("Erro ao conectar. Tente novamente."); }
 }
 
+// --- ETAPA 1: Área ---
 function renderizarEtapa1(areas) {
-  const el = document.getElementById("simulador-resultado");
-  el.style.display = "block";
-  document.getElementById("simulador-form").style.display = "none";
-
-  el.innerHTML = `
-    <div class="sim-etapa-header">
-      <span class="sim-etapa-badge">Passo 1 de 3</span>
-      <div class="sim-etapa-titulo">Qual área te interessa?</div>
-      <div class="sim-etapa-sub">Apenas carreiras recomendadas pelo Ismart para universidades públicas</div>
-    </div>
+  simGetEl().innerHTML = `
+    ${simTag("📊 Nota: " + simEstado.nota)}
+    <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:15px;color:#fff;margin-bottom:4px">Qual área te interessa?</div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:14px">Carreiras recomendadas pelo Ismart · universidades públicas</div>
     <div class="sim-areas-grid">
-      ${areas.map(a => `
-        <button class="sim-area-btn" onclick="escolherArea('${a}')">
-          ${iconeArea(a)} ${a}
-        </button>`).join("")}
+      ${areas.map(a => `<button class="sim-area-btn" onclick="escolherArea('${a}')">${iconeArea(a)} ${a}</button>`).join("")}
     </div>
-    <button class="sim-voltar" onclick="resetarSimulador()">← Voltar</button>
+    ${simVoltar("iniciarSimulador()", "Corrigir nota")}
   `;
 }
 
-function iconeArea(area) {
-  const mapa = { "Exatas": "📐", "Humanas": "📖", "Medicina": "⚕️", "Tecnologia": "💻", "Biológicas": "🔬", "Interdisciplinar": "🔀" };
-  return mapa[area] || "🎓";
+function iconeArea(a) {
+  return {"Exatas":"📐","Humanas":"📖","Medicina":"⚕️","Tecnologia":"💻","Biológicas":"🔬","Interdisciplinar":"🔀"}[a] || "🎓";
 }
 
-// --- ETAPA 2: Escolher carreira ---
+// --- ETAPA 2: Carreira ---
 async function escolherArea(area) {
   simEstado.area = area;
-  simMostrarLoading("Buscando carreiras de " + area + "...");
+  simMostrarLoading("Buscando carreiras...");
   try {
     const data = await fetchSimulador({ action: "carreiras", area });
     simEsconderLoading();
     if (data.erro) { showToast(data.erro); return; }
-    renderizarEtapa2(area, data.carreiras);
-  } catch(e) {
-    simEsconderLoading();
-    showToast("Erro ao buscar carreiras. Tente novamente.");
-  }
+    renderizarEtapa2(data.carreiras);
+  } catch(e) { simEsconderLoading(); showToast("Erro ao buscar carreiras. Tente novamente."); }
 }
 
-function renderizarEtapa2(area, carreiras) {
-  const el = document.getElementById("simulador-resultado");
-  el.innerHTML = `
-    <div class="sim-etapa-header">
-      <span class="sim-etapa-badge">Passo 2 de 3</span>
-      <div class="sim-etapa-titulo">Qual carreira você quer explorar?</div>
-      <div class="sim-etapa-sub">Área: <strong>${area}</strong></div>
-    </div>
+function renderizarEtapa2(carreiras) {
+  simGetEl().innerHTML = `
+    ${simTag("📊 " + simEstado.nota + " · " + simEstado.area)}
+    <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:15px;color:#fff;margin-bottom:14px">Qual carreira você quer explorar?</div>
     <div class="sim-carreiras-lista">
       ${carreiras.map(c => `
         <button class="sim-carreira-btn" onclick="escolherCarreira('${c.replace(/'/g,"\\'")}')">
           ${c} <span class="sim-carreira-arrow">›</span>
         </button>`).join("")}
     </div>
-    <button class="sim-voltar" onclick="iniciarSimulador()">← Voltar</button>
+    ${simVoltar("renderizarEtapa1(['" + simEstado.area + "'])", "Trocar área")}
   `;
 }
 
-// --- ETAPA 3: Escolher estado ---
+// --- ETAPA 3: Estado ---
 function escolherCarreira(carreira) {
   simEstado.carreira = carreira;
-  const el = document.getElementById("simulador-resultado");
-  el.innerHTML = `
-    <div class="sim-etapa-header">
-      <span class="sim-etapa-badge">Passo 3 de 3</span>
-      <div class="sim-etapa-titulo">Prefere algum estado?</div>
-      <div class="sim-etapa-sub">Carreira: <strong>${carreira}</strong></div>
-    </div>
+  simGetEl().innerHTML = `
+    ${simTag("📊 " + simEstado.nota + " · " + carreira)}
+    <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:15px;color:#fff;margin-bottom:4px">Prefere algum estado?</div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:14px">Ampliar para outros estados aumenta muito suas opções!</div>
     <div class="sim-ufs-grid">
-      ${["todas","SP","RJ","MG","RS","PR","SC","DF","BA","CE","PE","GO","SC"].map(uf => `
+      ${["todas","SP","RJ","MG","RS","PR","SC","DF","BA","CE","PE","GO"].map(uf => `
         <button class="sim-uf-btn" onclick="buscarUniversidades('${uf}')">
           ${uf === "todas" ? "🗺️ Qualquer estado" : uf}
         </button>`).join("")}
     </div>
-    <button class="sim-voltar" onclick="escolherArea('${simEstado.area}')">← Voltar</button>
+    ${simVoltar("escolherArea('" + simEstado.area + "')", "Trocar carreira")}
   `;
 }
 
-// --- RESULTADO: Universidades + campus + cotas ---
+// --- ETAPA 4: Resultado ---
 async function buscarUniversidades(uf) {
   simEstado.uf = uf;
   simMostrarLoading("Buscando universidades...");
   try {
-    const data = await fetchSimulador({
-      action: "universidades",
-      carreira: simEstado.carreira,
-      uf
-    });
+    const data = await fetchSimulador({ action: "universidades", carreira: simEstado.carreira, uf });
     simEsconderLoading();
     if (data.erro) { showToast(data.erro); return; }
     renderizarUniversidades(data);
-  } catch(e) {
-    simEsconderLoading();
-    showToast("Erro ao buscar universidades. Tente novamente.");
-  }
+  } catch(e) { simEsconderLoading(); showToast("Erro ao buscar universidades. Tente novamente."); }
+}
+
+function classificar(notaAluno, notaCorte) {
+  const d = notaAluno - notaCorte;
+  if (d > 10)        return { label:"🏆 Aprovando!",       cor:"#1A7A4A", bg:"#D4EFDF", diff:d };
+  if (d >= 0)        return { label:"✅ Dentro da nota",   cor:"#27AE60", bg:"#EAFAF0", diff:d };
+  if (d >= -10)      return { label:"⚠️ Próximo",          cor:"#E67E22", bg:"#FEF9E7", diff:d };
+  if (d >= -50)      return { label:"📚 Longe da nota",    cor:"#2980B9", bg:"#EBF4FF", diff:d };
+                     return { label:"🔄 Trocar urgente",   cor:"#C0392B", bg:"#FADBD8", diff:d };
 }
 
 function renderizarUniversidades(data) {
-  const el = document.getElementById("simulador-resultado");
   const { universidades, aviso } = data;
+  const nota = simEstado.nota;
   const ufLabel = simEstado.uf === "todas" ? "todos os estados" : simEstado.uf;
 
   if (!universidades || !universidades.length) {
-    el.innerHTML = `
-      <div class="sim-etapa-header">
-        <div class="sim-etapa-titulo">📋 ${simEstado.carreira}</div>
-        <div class="sim-etapa-sub">${aviso || "Nenhuma universidade encontrada para os critérios selecionados."}</div>
+    simGetEl().innerHTML = `
+      <div style="color:#fff;font-family:Montserrat,sans-serif;font-weight:700;font-size:15px;margin-bottom:8px">📋 ${simEstado.carreira}</div>
+      <div style="color:rgba(255,255,255,0.7);font-size:13px;margin-bottom:14px">${aviso || "Nenhuma universidade encontrada."}</div>
+      <div style="background:rgba(0,189,242,0.15);border-radius:8px;padding:12px;font-size:13px;color:rgba(255,255,255,0.8);margin-bottom:14px">
+        💡 Tente ampliar para outros estados!
       </div>
-      <div class="sim-dica-geo">💡 Tente ampliar para outros estados — há mais opções disponíveis!</div>
-      <button class="sim-voltar" onclick="escolherCarreira('${simEstado.carreira.replace(/'/g,"\\'")}')">← Escolher outro estado</button>
-      <button class="wpp-btn outline" onclick="resetarSimulador()" style="margin-top:10px;width:100%">🔄 Nova busca</button>
+      ${simVoltar("escolherCarreira('" + simEstado.carreira.replace(/'/g,"\\'") + "')", "Escolher outro estado")}
+      ${simBtnReset()}
     `;
     return;
   }
 
-  el.innerHTML = `
-    <div class="sim-etapa-header">
-      <div class="sim-etapa-titulo">📋 ${simEstado.carreira}</div>
-      <div class="sim-etapa-sub">${universidades.length} universidade(s) recomendada(s) pelo Ismart · ${ufLabel}</div>
+  // Agrupa por classificação
+  const grupos = [
+    { cor:"#1A7A4A", emoji:"🏆", titulo:"Aprovando!",          desc:"Mais de 10 pts acima da nota de corte",    min:10.01,  max:9999   },
+    { cor:"#27AE60", emoji:"✅", titulo:"Dentro da nota",       desc:"Igual ou até 10 pts acima da nota de corte", min:0,   max:10     },
+    { cor:"#E67E22", emoji:"⚠️", titulo:"Próximo",              desc:"Até 10 pts abaixo — chegando lá!",         min:-10,  max:-0.01  },
+    { cor:"#2980B9", emoji:"📚", titulo:"Longe da nota",        desc:"Entre 10 e 50 pts abaixo",                 min:-50,  max:-10.01 },
+    { cor:"#C0392B", emoji:"🔄", titulo:"Trocar urgente",       desc:"Mais de 50 pts abaixo — reveja essa opção",min:-9999,max:-50.01 },
+  ].map(g => ({
+    ...g,
+    lista: universidades.filter(u => {
+      const a = u.modalidades.find(m => m.tipo.toLowerCase().includes("ampla"));
+      if (!a) return false;
+      const d = nota - a.notaCorte;
+      return d >= g.min && d <= g.max;
+    })
+  })).filter(g => g.lista.length > 0);
+
+  simGetEl().innerHTML = `
+    <div style="margin-bottom:16px">
+      <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:15px;color:#fff;margin-bottom:8px">
+        📋 ${simEstado.carreira}
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <span style="background:rgba(0,189,242,0.2);border-radius:20px;padding:3px 10px;font-size:11px;color:#00BDF2;font-family:Montserrat,sans-serif;font-weight:700">
+          📊 Sua nota: ${nota}
+        </span>
+        <span style="background:rgba(255,255,255,0.1);border-radius:20px;padding:3px 10px;font-size:11px;color:rgba(255,255,255,0.7);font-family:Montserrat,sans-serif;font-weight:700">
+          🏛️ ${universidades.length} univ. · ${ufLabel}
+        </span>
+      </div>
     </div>
-    <div class="sim-unis-lista">
-      ${universidades.map((u, i) => {
-        const ampla = u.modalidades.find(m => m.tipo.toLowerCase().includes("ampla"));
-        const cotas = u.modalidades.filter(m => !m.tipo.toLowerCase().includes("ampla"));
-        return `
-        <div class="sim-uni-card" id="simuni-${i}">
-          <div class="sim-uni-header" onclick="toggleSimUni(${i})">
-            <div class="sim-uni-info">
-              <div class="sim-uni-sigla">${u.ies}</div>
-              <div class="sim-uni-nome">${u.nomeIES}</div>
-              <div class="sim-uni-local">📍 ${u.cidade} · ${u.uf}${u.turno ? " · " + u.turno : ""}</div>
-            </div>
-            <div class="sim-uni-right">
-              ${ampla ? `<div class="sim-uni-nota-corte">${ampla.notaCorte.toFixed(1)}</div><div class="sim-uni-nota-label">nota de corte</div>` : ""}
-              <span class="sim-cat-chevron">›</span>
-            </div>
+    ${grupos.map((g, gi) => `
+      <div style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span style="font-size:16px">${g.emoji}</span>
+          <div>
+            <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:13px;color:${g.cor}">${g.titulo}</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.5)">${g.desc}</div>
           </div>
-          <div class="sim-uni-detalhe" id="simuni-det-${i}">
-            <div class="sim-mod-titulo">Modalidades de concorrência:</div>
-            ${u.modalidades.map(m => `
-              <div class="sim-mod-item ${m.tipo.toLowerCase().includes("ampla") ? "ampla" : "cota"}">
-                <div class="sim-mod-tipo">${m.tipo}</div>
-                <div class="sim-mod-dados">
-                  <span>Nota de corte: <strong>${m.notaCorte.toFixed(1)}</strong></span>
-                  <span>Vagas: <strong>${m.vagas}</strong></span>
+        </div>
+        ${g.lista.map((u, i) => {
+          const ampla = u.modalidades.find(m => m.tipo.toLowerCase().includes("ampla"));
+          const cotas = u.modalidades.filter(m => !m.tipo.toLowerCase().includes("ampla"));
+          const cl = ampla ? classificar(nota, ampla.notaCorte) : null;
+          const uid = "u" + gi + "_" + i;
+          return `
+            <div style="background:#fff;border-radius:8px;margin-bottom:8px;overflow:hidden;border-left:4px solid ${g.cor}">
+              <div onclick="toggleSimUni('${uid}')" style="display:flex;align-items:center;gap:10px;padding:12px;cursor:pointer">
+                <div style="flex:1;min-width:0">
+                  <div style="font-family:Montserrat,sans-serif;font-weight:800;font-size:13px;color:#002561">${u.ies}</div>
+                  <div style="font-size:11px;color:#666;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${u.nomeIES}</div>
+                  <div style="font-size:11px;color:#999;margin-top:2px">📍 ${u.cidade}/${u.uf}${u.turno ? " · " + u.turno : ""}</div>
                 </div>
-              </div>`).join("")}
-            ${cotas.length ? `<div class="sim-cotas-aviso">✅ Esta universidade oferece ${cotas.length} modalidade(s) de cota — você pode se qualificar!</div>` : ""}
-          </div>
-        </div>`;
-      }).join("")}
+                <div style="text-align:right;flex-shrink:0">
+                  ${ampla ? `<div style="font-family:Montserrat,sans-serif;font-weight:800;font-size:15px;color:#002561">${ampla.notaCorte.toFixed(1)}</div>
+                  <div style="font-size:10px;color:#999">nota de corte</div>` : ""}
+                  ${cl ? `<div style="background:${cl.bg};color:${cl.cor};border-radius:20px;padding:2px 7px;font-size:11px;font-weight:700;font-family:Montserrat,sans-serif;margin-top:3px">
+                    ${cl.diff >= 0 ? "+" : ""}${cl.diff.toFixed(1)} pts
+                  </div>` : ""}
+                  <span style="color:#ccc;font-size:18px">›</span>
+                </div>
+              </div>
+              <div id="simdet-${uid}" style="display:none;padding:0 12px 12px;border-top:1px solid #f0f0f0">
+                <div style="font-size:11px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px;margin:10px 0 8px">Modalidades de concorrência</div>
+                ${u.modalidades.map(m => {
+                  const mc = classificar(nota, m.notaCorte);
+                  return `<div style="padding:8px 10px;border-radius:6px;margin-bottom:6px;background:${mc.bg}">
+                    <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:11px;color:#002561;margin-bottom:4px">${m.tipo}</div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#333;flex-wrap:wrap;gap:4px">
+                      <span>Corte: <strong>${m.notaCorte.toFixed(1)}</strong> · Vagas: <strong>${m.vagas}</strong></span>
+                      <span style="color:${mc.cor};font-weight:700;font-family:Montserrat,sans-serif;font-size:11px">
+                        ${mc.label} (${mc.diff >= 0 ? "+" : ""}${mc.diff.toFixed(1)})
+                      </span>
+                    </div>
+                  </div>`;
+                }).join("")}
+                ${cotas.length ? `<div style="background:#FEF9E7;border-radius:6px;padding:8px 10px;font-size:12px;color:#856404;margin-top:4px;border-left:3px solid #F0C040">
+                  ✅ ${cotas.length} modalidade(s) de cota disponível — verifique se você se qualifica!
+                </div>` : ""}
+              </div>
+            </div>`;
+        }).join("")}
+      </div>`).join("")}
+    <div style="background:rgba(0,189,242,0.12);border-radius:8px;padding:10px 12px;font-size:12px;color:rgba(255,255,255,0.75);margin-bottom:12px">
+      🗺️ Dica: considere ampliar para outros estados — mais opções, mais chances!
     </div>
-    <div class="sim-dica-geo">💡 Considere ampliar para outros estados — mais opções = mais chances de aprovação!</div>
-    <div style="display:flex;flex-direction:column;gap:8px;margin-top:16px">
-      <button class="sim-voltar" onclick="escolherCarreira('${simEstado.carreira.replace(/'/g,"\\'")}')">← Escolher outro estado</button>
-      <button class="wpp-btn outline" onclick="resetarSimulador()">🔄 Nova busca</button>
-    </div>
+    ${simVoltar("escolherCarreira('" + simEstado.carreira.replace(/'/g,"\\'") + "')", "Escolher outro estado")}
+    ${simBtnReset()}
   `;
 }
 
-function toggleSimUni(i) {
-  const det = document.getElementById(`simuni-det-${i}`);
-  const card = document.getElementById(`simuni-${i}`);
-  if (det) {
-    const aberto = det.style.display === "block";
-    det.style.display = aberto ? "none" : "block";
-    card?.classList.toggle("open", !aberto);
-  }
+// Helpers
+function simGetEl() {
+  const el = document.getElementById("simulador-resultado");
+  el.style.display = "block";
+  return el;
+}
+function simTag(texto) {
+  return `<div style="display:inline-flex;background:rgba(0,189,242,0.2);border-radius:20px;padding:3px 10px;margin-bottom:10px">
+    <span style="font-size:12px;color:#00BDF2;font-weight:700;font-family:Montserrat,sans-serif">${texto}</span>
+  </div>`;
+}
+function simVoltar(acao, label) {
+  return `<button onclick="${acao}" style="background:none;border:none;color:rgba(255,255,255,0.55);
+    font-size:13px;cursor:pointer;padding:6px 0;font-family:Montserrat,sans-serif;font-weight:700;display:block">
+    ← ${label || "Voltar"}
+  </button>`;
+}
+function simBtnReset() {
+  return `<button onclick="resetarSimulador()" style="width:100%;padding:10px;margin-top:6px;
+    background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.25);border-radius:8px;
+    color:#fff;font-family:Montserrat,sans-serif;font-weight:700;font-size:13px;cursor:pointer">
+    🔄 Nova busca
+  </button>`;
+}
+
+function toggleSimUni(uid) {
+  const d = document.getElementById("simdet-" + uid);
+  if (d) d.style.display = d.style.display === "block" ? "none" : "block";
 }
 
 function simMostrarLoading(msg) {
@@ -967,21 +1046,12 @@ function simEsconderLoading() {
 }
 
 function resetarSimulador() {
-  simEstado = { area: "", carreira: "", uf: "todas" };
+  simEstado = { nota: 0, area: "", carreira: "", uf: "todas" };
   document.getElementById("simulador-resultado").style.display = "none";
   document.getElementById("simulador-loading").style.display   = "none";
-  document.getElementById("simulador-form").style.display      = "flex";
+  document.getElementById("simulador-form").style.display      = "block";
 }
 
-function toggleSimCat(id) {
-  document.getElementById(`simcat-${id}`)?.classList.toggle("open");
-}
-
-function resetarSimulador() {
-  document.getElementById("simulador-resultado").style.display = "none";
-  document.getElementById("simulador-form").style.display      = "flex";
-  document.getElementById("simNota").value = "";
-}
 
 
 //  Busca por similaridade de palavras no FAQ
