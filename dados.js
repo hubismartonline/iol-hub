@@ -209,6 +209,56 @@ const AGENDA = [
   { dia: "30", mes: "MAI", titulo: "Início Inscrição Enem",                 subtitulo: "Fique atento ao prazo!",                         tipo: "prazo",    tipo_label: "PRAZO"    }
 ];
 
+// Calendário de Vestibulares 2026
+// Fonte: sites oficiais das instituições (atualizado maio/2026)
+const VESTIBULARES_2026 = [
+  // ENEM
+  { mes: "MAI", dia: "30", evento: "ENEM 2026 — Início das inscrições",        detalhe: "Acesse: enem.inep.gov.br",                          tipo: "enem"     },
+  { mes: "JUN", dia: "13", evento: "ENEM 2026 — Fim das inscrições",           detalhe: "Não perca o prazo!",                                tipo: "enem"     },
+  { mes: "NOV", dia: "08", evento: "ENEM 2026 — 1º dia de provas",             detalhe: "Linguagens, Ciências Humanas e Redação",             tipo: "enem"     },
+  { mes: "NOV", dia: "09", evento: "ENEM 2026 — 2º dia de provas",             detalhe: "Matemática e Ciências da Natureza",                  tipo: "enem"     },
+  // ENEM PPL
+  { mes: "NOV", dia: "11", evento: "ENEM PPL — 1º dia",                        detalhe: "Para privados de liberdade",                         tipo: "enem"     },
+  { mes: "NOV", dia: "12", evento: "ENEM PPL — 2º dia",                        detalhe: "Para privados de liberdade",                         tipo: "enem"     },
+  // FUVEST
+  { mes: "AGO", dia: "01", evento: "Fuvest 2026 — Início das inscrições",      detalhe: "USP e outras instituições · fuvest.br",             tipo: "fuvest"   },
+  { mes: "SET", dia: "15", evento: "Fuvest 2026 — Fim das inscrições",         detalhe: "fuvest.br",                                          tipo: "fuvest"   },
+  { mes: "NOV", dia: "22", evento: "Fuvest 2026 — 1ª fase",                    detalhe: "Prova objetiva · fuvest.br",                        tipo: "fuvest"   },
+  { mes: "JAN", dia: "03", evento: "Fuvest 2027 — 2ª fase (Dia 1)",            detalhe: "Provas discursivas · fuvest.br",                    tipo: "fuvest"   },
+  { mes: "JAN", dia: "04", evento: "Fuvest 2027 — 2ª fase (Dia 2)",            detalhe: "Provas discursivas + Redação · fuvest.br",          tipo: "fuvest"   },
+  // UNICAMP
+  { mes: "AGO", dia: "01", evento: "Unicamp 2027 — Início das inscrições",     detalhe: "comvest.unicamp.br",                                tipo: "unicamp"  },
+  { mes: "AGO", dia: "29", evento: "Unicamp 2027 — Fim das inscrições",        detalhe: "comvest.unicamp.br",                                tipo: "unicamp"  },
+  { mes: "OUT", dia: "18", evento: "Unicamp 2027 — 1ª fase",                   detalhe: "Prova objetiva · comvest.unicamp.br",               tipo: "unicamp"  },
+  { mes: "JAN", dia: "11", evento: "Unicamp 2027 — 2ª fase (Dia 1)",           detalhe: "comvest.unicamp.br",                                tipo: "unicamp"  },
+  { mes: "JAN", dia: "12", evento: "Unicamp 2027 — 2ª fase (Dia 2)",           detalhe: "comvest.unicamp.br",                                tipo: "unicamp"  },
+  // UNESP
+  { mes: "AGO", dia: "17", evento: "Unesp 2027 — Início das inscrições",       detalhe: "vunesp.com.br",                                     tipo: "unesp"    },
+  { mes: "SET", dia: "19", evento: "Unesp 2027 — Fim das inscrições",          detalhe: "vunesp.com.br",                                     tipo: "unesp"    },
+  { mes: "NOV", dia: "08", evento: "Unesp 2027 — 1ª fase",                     detalhe: "Prova objetiva · vunesp.com.br",                    tipo: "unesp"    },
+  { mes: "JAN", dia: "17", evento: "Unesp 2027 — 2ª fase (Dia 1)",             detalhe: "vunesp.com.br",                                     tipo: "unesp"    },
+  { mes: "JAN", dia: "18", evento: "Unesp 2027 — 2ª fase (Dia 2)",             detalhe: "vunesp.com.br",                                     tipo: "unesp"    },
+  // UFMG
+  { mes: "MAI", dia: "01", evento: "UFMG — Inscrição SISU",                    detalhe: "Resultado ENEM + SISU · sisu.mec.gov.br",           tipo: "federal"  },
+  // ITA
+  { mes: "AGO", dia: "01", evento: "ITA 2027 — Início das inscrições",         detalhe: "ita.br/vestibular",                                 tipo: "ita"      },
+  { mes: "SET", dia: "01", evento: "ITA 2027 — Fim das inscrições",            detalhe: "ita.br/vestibular",                                 tipo: "ita"      },
+  { mes: "OUT", dia: "24", evento: "ITA 2027 — 1ª fase",                       detalhe: "Prova objetiva · ita.br",                           tipo: "ita"      },
+  { mes: "DEZ", dia: "07", evento: "ITA 2027 — 2ª fase",                       detalhe: "Provas dissertativas · ita.br",                     tipo: "ita"      },
+  // IME
+  { mes: "AGO", dia: "01", evento: "IME 2027 — Início das inscrições",         detalhe: "ime.eb.br",                                         tipo: "ime"      },
+  { mes: "NOV", dia: "01", evento: "IME 2027 — Prova de 1ª fase",              detalhe: "ime.eb.br",                                         tipo: "ime"      },
+  // INSPER
+  { mes: "AGO", dia: "01", evento: "Insper 2027 — Início das inscrições",      detalhe: "insper.edu.br/vestibular",                          tipo: "privada"  },
+  { mes: "OUT", dia: "01", evento: "Insper 2027 — Prova de admissão",          detalhe: "insper.edu.br/vestibular",                          tipo: "privada"  },
+  // FGV
+  { mes: "AGO", dia: "01", evento: "FGV-SP 2027 — Início das inscrições",      detalhe: "fgv.br/vestibular",                                 tipo: "privada"  },
+  { mes: "NOV", dia: "15", evento: "FGV-SP 2027 — 1ª fase",                    detalhe: "fgv.br/vestibular",                                 tipo: "privada"  },
+  // SISU / ProUni / FIES
+  { mes: "JAN", dia: "01", evento: "SISU 2027 — Inscrições abertas",           detalhe: "Notas do ENEM 2026 · sisu.mec.gov.br",             tipo: "federal"  },
+  { mes: "FEV", dia: "01", evento: "ProUni 2027 — 1ª edição",                  detalhe: "Bolsas em faculdades privadas · prouni.mec.gov.br", tipo: "federal"  },
+];
+
 const FAQ = [
   // ===== PROGRAMA =====
   {
@@ -519,8 +569,49 @@ const FAQ = [
     q: "O que acontece ao me tornar Alumni Ismart?",
     a: "Ao finalizar o Ensino Superior você entra para a Rede Alumni, que inclui encontros anuais, mentoria e grupos de trabalho para planejamento e execução de atividades. A rede facilita a transição de universitários para alumni e promove troca de experiências e suporte contínuo.",
     tags: "alumni rede graduado formado mentoria encontro atividades suporte"
+  },
+
+  // ===== VESTIBULAR E ACESSO AO ENSINO SUPERIOR =====
+  {
+    q: "O que é o ENEM?",
+    a: "O ENEM (Exame Nacional do Ensino Médio) é a principal porta de entrada para o ensino superior no Brasil. A nota é usada no SISU (universidades públicas), ProUni e FIES (faculdades privadas). As provas acontecem em novembro, em dois dias. Para mais informações e inscrições: <a href='https://enem.inep.gov.br' target='_blank' rel='noopener' style='color:var(--blue)'>enem.inep.gov.br</a>",
+    tags: "enem exame nacional prova inscrição novembro nota"
+  },
+  {
+    q: "O que é o ENEM Treineiro e quem pode fazer?",
+    a: "O ENEM Treineiro é para estudantes que ainda não vão concluir o Ensino Médio no ano da prova — ou seja, alunos do 1º e 2º EM. A participação não conta para o processo seletivo das universidades, mas é uma excelente forma de treinar e obter uma nota de referência para o simulador de estratégia. A inscrição é feita pelo mesmo site do ENEM: <a href='https://enem.inep.gov.br' target='_blank' rel='noopener' style='color:var(--blue)'>enem.inep.gov.br</a>",
+    tags: "enem treineiro 1em 2em treino nota referência prova simulado"
+  },
+  {
+    q: "O que é o SISU?",
+    a: "O SISU (Sistema de Seleção Unificada) é o programa do MEC que seleciona estudantes para vagas em universidades e institutos federais públicos usando a nota do ENEM. As inscrições abrem em janeiro, logo após a divulgação dos resultados do ENEM. Você pode concorrer a até 2 opções de curso. Saiba mais em: <a href='https://sisu.mec.gov.br' target='_blank' rel='noopener' style='color:var(--blue)'>sisu.mec.gov.br</a>",
+    tags: "sisu universidade pública federal nota enem vagas inscrição janeiro"
+  },
+  {
+    q: "O que é o ProUni?",
+    a: "O ProUni (Programa Universidade para Todos) oferece bolsas de estudo integrais (100%) ou parciais (50%) em faculdades privadas para estudantes com renda familiar baixa. Para se candidatar você usa a nota do ENEM — é necessário ter feito o ENEM no ano do processo seletivo e não ter diploma de ensino superior. Saiba mais em: <a href='https://prouni.mec.gov.br' target='_blank' rel='noopener' style='color:var(--blue)'>prouni.mec.gov.br</a>",
+    tags: "prouni bolsa faculdade privada integral parcial renda enem"
+  },
+  {
+    q: "O que é o FIES?",
+    a: "O FIES (Fundo de Financiamento Estudantil) é um programa do governo federal que financia cursos de graduação em faculdades privadas para estudantes que não têm condições de arcar com as mensalidades. O pagamento é feito após a formatura, com condições especiais. Saiba mais em: <a href='https://fies.mec.gov.br' target='_blank' rel='noopener' style='color:var(--blue)'>fies.mec.gov.br</a>",
+    tags: "fies financiamento faculdade privada mensalidade graduação governo"
+  },
+  {
+    q: "Qual a diferença entre SISU, ProUni e FIES?",
+    a: "Os três usam a nota do ENEM, mas são programas diferentes: <br><br>• <strong>SISU</strong> — vagas em universidades <em>públicas</em> (gratuitas). Você compete pela nota.<br>• <strong>ProUni</strong> — <em>bolsas</em> em faculdades privadas (não precisa pagar).<br>• <strong>FIES</strong> — <em>financiamento</em> em faculdades privadas (paga depois de formado).<br><br>Um aluno pode tentar os três ao mesmo tempo! Converse com seu tutor para montar a melhor estratégia.",
+    tags: "sisu prouni fies diferença comparação universidade pública privada bolsa financiamento"
   }
 ];
+
+// Médias ENEM Projetado por série (atualizado 2026)
+const MEDIAS_ENEM_SERIE = {
+  "8EF":  621,
+  "9EF":  641,
+  "1EM":  686,
+  "2EM":  654,
+  "3EM":  655
+};
 
 // -------------------------------------------------------
 //  CONTATOS
