@@ -203,6 +203,12 @@ async function carregarCadastro(ra) {
       return;
     }
 
+    // Salva dados completos no alunoAtual para uso em outras funções
+    if (alunoAtual) {
+      Object.assign(alunoAtual, json.dados);
+      renderizarNotaAluno(alunoAtual);
+    }
+
     renderizarCadastro(json.dados, container);
   } catch(e) {
     container.innerHTML = `<div class="perfil-vazio">Erro ao carregar dados. Tente novamente.</div>`;
