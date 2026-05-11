@@ -181,6 +181,8 @@ function renderizarTudo(aluno) {
   renderizarContatos(aluno);
   carregarRecados(aluno.serie);
   carregarCalendario(aluno.serie);
+  renderizarNotaAluno(aluno);
+  renderizarCalendarioVestibulares();
 }
 
 // -------------------------------------------------------
@@ -728,6 +730,183 @@ document.addEventListener("keydown", e => {
 });
 
 // =============================================================
+//  NOTA DO ALUNO + CALENDÁRIO DE VESTIBULARES
+// =============================================================
+
+function normalizarSerie(s) {
+  if (!s) return "";
+  return s.toString().toUpperCase()
+    .replace(/[ºª°\s]/g, "")
+    .replace(/OITAVO|8EF|8°EF/, "8EF")
+    .replace(/NONO|9EF|9°EF/, "9EF")
+    .replace(/PRIMEIRO|1EM|1°EM/, "1EM")
+    .replace(/SEGUNDO|2EM|2°EM/, "2EM")
+    .replace(/TERCEIRO|3EM|3°EM/, "3EM");
+}
+
+function renderizarNotaAluno(aluno) {
+  const container = document.getElementById("orient-nota-aluno");
+  if (!container) return;
+
+  const serie = normalizarSerie(aluno.serie);
+  const notaAluno = parseFloat(aluno.Media_ENEM_Projetado || aluno.media_enem_projetado || "0");
+  const mediaSerieVal = MEDIAS_ENEM_SERIE[serie] || null;
+
+  // Só mostra para EM
+  const ehEM = ["1EM","2EM","3EM"].includes(serie);
+  if (!ehEM || !notaAluno) {
+    container.style.display = "none";
+    return;
+  }
+
+  const diff = mediaSerieVal ? (notaAluno - mediaSerieVal) : null;
+  const diffLabel = diff !== null
+    ? (diff >= 0
+        ? `<span style="color:#27AE60;font-weight:700">+${diff.toFixed(0)} pts acima da média</span>`
+        : `<span style="color:#E67E22;font-weight:700">${diff.toFixed(0)} pts abaixo da média</span>`)
+    : "";
+
+  const barraAluno = Math.min(100, Math.max(0, (notaAluno / 1000) * 100));
+  const barraMedia = mediaSerieVal ? Math.min(100, Math.max(0, (mediaSerieVal / 1000) * 100)) : null;
+
+  container.style.display = "block";
+  container.innerHTML = `
+    <div style="background:#EBF4FF;border-radius:12px;padding:20px;margin-bottom:14px;border-left:4px solid #008ED4">
+      <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px">
+        <span style="font-size:26px">📊</span>
+        <div>
+          <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:15px;color:#002561">
+            Seu ENEM Projetado
+          </div>
+          <div style="font-size:12px;color:#666;margin-top:2px">
+            Baseado na sua Prova Única mais recente
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:13px;color:#002561;font-weight:700;font-family:Montserrat,sans-serif">
+          Sua nota: <span style="font-size:22px;color:#008ED4">${notaAluno.toFixed(0)}</span>
+        </span>
+        ${mediaSerieVal ? `<span style="font-size:12px;color:#666">Média ${serie}: <strong>${mediaSerieVal}</strong></span>` : ""}
+      </div>
+
+      <div style="background:#fff;border-radius:8px;padding:10px 12px;margin-top:4px">
+        <div style="font-size:11px;color:#888;margin-bottom:8px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Comparativo</div>
+        <div style="margin-bottom:6px">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:#666;margin-bottom:3px">
+            <span>Sua nota</span><span>${notaAluno.toFixed(0)}</span>
+          </div>
+          <div style="height:8px;background:#E8F0FE;border-radius:4px;overflow:hidden">
+            <div style="height:100%;width:${barraAluno}%;background:#008ED4;border-radius:4px;transition:width 1s"></div>
+          </div>
+        </div>
+        ${barraMedia !== null ? `
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:#666;margin-bottom:3px">
+            <span>Média ${serie}</span><span>${mediaSerieVal}</span>
+          </div>
+          <div style="height:8px;background:#E8F0FE;border-radius:4px;overflow:hidden">
+            <div style="height:100%;width:${barraMedia}%;background:#AECEF5;border-radius:4px;transition:width 1s"></div>
+          </div>
+        </div>` : ""}
+      </div>
+
+      ${diff !== null ? `
+      <div style="margin-top:12px;text-align:center;font-size:13px;color:#444">
+        ${diffLabel} da sua série no IOL
+      </div>` : ""}
+
+      <div style="margin-top:12px;background:#fff;border-radius:8px;padding:10px 12px;font-size:12px;color:#555;border-left:3px solid #00BDF2">
+        💡 Use essa nota no simulador de estratégia para ver suas chances nas universidades recomendadas pelo Ismart.
+      </div>
+    </div>
+  `;
+}
+
+function renderizarCalendarioVestibulares() {
+  const container = document.getElementById("orient-calendario-vest");
+  if (!container || typeof VESTIBULARES_2026 === "undefined") return;
+
+  // Ordem dos meses
+  const ordemMes = ["JAN","FEV","MAR","ABR","MAI","JUN","JUL","AGO","SET","OUT","NOV","DEZ"];
+  const corTipo = {
+    enem:    { bg:"#FEF9E7", cor:"#B7950B", label:"ENEM"    },
+    fuvest:  { bg:"#EBF4FF", cor:"#1A5276", label:"FUVEST"  },
+    unicamp: { bg:"#EAFAF0", cor:"#1A7A4A", label:"UNICAMP" },
+    unesp:   { bg:"#FDF2F8", cor:"#7D3C98", label:"UNESP"   },
+    ita:     { bg:"#FDFEFE", cor:"#2C3E50", label:"ITA"      },
+    ime:     { bg:"#F0F3F4", cor:"#2C3E50", label:"IME"      },
+    federal: { bg:"#EBF5FB", cor:"#1A6FA0", label:"FEDERAL" },
+    privada: { bg:"#FEF5E7", cor:"#A04000", label:"PRIVADA" },
+  };
+
+  // Agrupa por mês
+  const porMes = {};
+  VESTIBULARES_2026.forEach(v => {
+    if (!porMes[v.mes]) porMes[v.mes] = [];
+    porMes[v.mes].push(v);
+  });
+
+  const mesesComDados = Object.keys(porMes).sort((a,b) => ordemMes.indexOf(a) - ordemMes.indexOf(b));
+
+  container.innerHTML = `
+    <div style="background:#F8F9FA;border-radius:12px;padding:20px;border:1.5px solid #E5E7EB">
+      <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px">
+        <span style="font-size:26px">📅</span>
+        <div>
+          <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:15px;color:#002561">
+            Calendário de Vestibulares 2026/2027
+          </div>
+          <div style="font-size:12px;color:#666;margin-top:2px">
+            Datas oficiais · Mantenha sempre atualizado com seu tutor
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px">
+        ${Object.entries(corTipo).map(([k,v]) => `
+          <span style="background:${v.bg};color:${v.cor};border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;font-family:Montserrat,sans-serif">
+            ${v.label}
+          </span>`).join("")}
+      </div>
+
+      ${mesesComDados.map(mes => `
+        <div style="margin-bottom:14px">
+          <div style="font-family:Montserrat,sans-serif;font-weight:800;font-size:12px;color:#002561;
+                      text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;padding-bottom:4px;
+                      border-bottom:2px solid #002561">
+            ${mes}
+          </div>
+          ${porMes[mes].map(v => {
+            const c = corTipo[v.tipo] || corTipo.federal;
+            return `
+              <div style="display:flex;align-items:flex-start;gap:10px;padding:8px 10px;
+                          background:${c.bg};border-radius:8px;margin-bottom:6px">
+                <div style="flex-shrink:0;width:28px;text-align:center">
+                  <div style="font-family:Montserrat,sans-serif;font-weight:800;font-size:14px;color:${c.cor}">${v.dia}</div>
+                </div>
+                <div style="flex:1">
+                  <div style="font-size:13px;font-weight:700;color:#002561;font-family:Montserrat,sans-serif">${v.evento}</div>
+                  <div style="font-size:11px;color:#666;margin-top:2px">${v.detalhe}</div>
+                </div>
+                <span style="background:${c.bg};color:${c.cor};border:1px solid ${c.cor};border-radius:20px;
+                             padding:2px 8px;font-size:10px;font-weight:700;font-family:Montserrat,sans-serif;
+                             flex-shrink:0;white-space:nowrap">
+                  ${c.label}
+                </span>
+              </div>`;
+          }).join("")}
+        </div>`).join("")}
+
+      <div style="background:#EBF4FF;border-radius:8px;padding:10px 12px;font-size:12px;color:#1A5276;margin-top:4px">
+        ⚠️ Datas sujeitas a alteração. Sempre confirme nos sites oficiais antes de se inscrever.
+      </div>
+    </div>
+  `;
+}
+
+// =============================================================
 //  SIMULADOR DE VESTIBULAR
 //  0. Nota  1. Área  2. Carreira  3. Estado  4. Resultado
 // =============================================================
@@ -767,8 +946,8 @@ function iniciarSimulador() {
         Qual é a sua nota média? 📝
       </div>
       <div style="font-size:12px;color:rgba(255,255,255,0.65);margin-bottom:14px;line-height:1.5">
-        Use sua nota da <strong style="color:#00BDF2">Prova Única mais recente</strong>
-        ou do <strong style="color:#00BDF2">ENEM Treineiro</strong> — quanto mais atual, melhor!
+        Use sua <strong style="color:#00BDF2">Prova Única mais recente</strong>
+        ou a <strong style="color:#00BDF2">nota do ENEM</strong> — quanto mais atual, melhor!
       </div>
       <input type="number" id="simNotaInput" placeholder="Ex: 620"
         min="0" max="1000" step="0.1"
