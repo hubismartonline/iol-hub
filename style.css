@@ -2511,3 +2511,232 @@ mark {
   color: var(--text2);
   line-height: 1.4;
 }
+
+/* =============================================
+   LAYOUT DESKTOP — MENU LATERAL
+   ============================================= */
+
+@media (min-width: 768px) {
+
+  /* Esconde o header mobile no desktop */
+  .header { display: none !important; }
+
+  /* Layout de duas colunas */
+  body {
+    display: flex;
+    min-height: 100vh;
+    background: #F0F2F5;
+  }
+
+  /* ---- SIDEBAR ---- */
+  #desktop-sidebar {
+    display: flex !important;
+    flex-direction: column;
+    width: 260px;
+    min-width: 260px;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    background: var(--navy);
+    padding: 24px 0 16px;
+    overflow-y: auto;
+    box-shadow: 2px 0 12px rgba(0,0,0,0.15);
+    z-index: 100;
+  }
+
+  /* Logo no sidebar */
+  .sidebar-logo {
+    padding: 0 20px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    margin-bottom: 8px;
+  }
+
+  .sidebar-logo img {
+    width: 120px;
+    height: auto;
+    filter: brightness(0) invert(1);
+  }
+
+  /* Perfil do aluno no sidebar */
+  .sidebar-perfil {
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    margin-bottom: 8px;
+  }
+
+  .sidebar-saudacao {
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 4px;
+    font-family: 'Lato', sans-serif;
+  }
+
+  .sidebar-nome {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    color: #fff;
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+
+  .sidebar-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .sidebar-badge {
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+  }
+
+  .sidebar-sair {
+    background: none;
+    border: 1px solid rgba(255,255,255,0.3);
+    color: rgba(255,255,255,0.7);
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-size: 11px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .sidebar-sair:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+  }
+
+  /* Navegação do sidebar */
+  .sidebar-nav {
+    flex: 1;
+    padding: 8px 12px;
+  }
+
+  .sidebar-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: rgba(255,255,255,0.7);
+    font-size: 13px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    text-decoration: none;
+  }
+
+  .sidebar-nav-item:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+  }
+
+  .sidebar-nav-item.active {
+    background: var(--blue);
+    color: #fff;
+  }
+
+  .sidebar-nav-item .nav-icon {
+    font-size: 16px;
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  /* Rodapé do sidebar */
+  .sidebar-footer {
+    padding: 16px 20px 0;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    font-size: 10px;
+    color: rgba(255,255,255,0.3);
+    font-family: 'Lato', sans-serif;
+    text-align: center;
+  }
+
+  /* ---- CONTEÚDO PRINCIPAL ---- */
+  #desktop-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    max-width: calc(100vw - 260px);
+  }
+
+  /* Busca global no topo do conteúdo */
+  #desktop-search {
+    display: flex !important;
+    background: #fff;
+    padding: 12px 24px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+
+  #desktop-search .search-wrap {
+    max-width: 600px;
+    width: 100%;
+  }
+
+  /* Conteúdo das abas */
+  #desktop-content {
+    flex: 1;
+    padding: 24px;
+    max-width: 800px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  /* Esconde a busca e tabs mobile */
+  .search-section,
+  .tabs-nav { display: none !important; }
+
+  /* Esconde elementos só-mobile */
+  .welcome-screen,
+  .fab-container { display: none !important; }
+
+  /* Faz o main ficar dentro do desktop-main */
+  #main-content {
+    display: contents !important;
+  }
+
+  /* Ajuste no section dentro das tabs */
+  .tab-content .section {
+    padding: 0;
+  }
+
+  /* Cards mais largos no desktop */
+  .recado-card,
+  .orient-bloco,
+  .agenda-item,
+  .faq-item {
+    max-width: 100%;
+  }
+
+  /* Grid de plataformas com mais colunas */
+  #platforms-home {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+}
+
+/* Esconde sidebar no mobile */
+#desktop-sidebar,
+#desktop-main,
+#desktop-search {
+  display: none;
+}
