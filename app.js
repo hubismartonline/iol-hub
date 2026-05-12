@@ -115,16 +115,62 @@ function parsearCSV(csv) {
   return mapa;
 }
 
+// Parser CSV completo — lida com células que contêm vírgulas e quebras de linha
+function parseCSVCompleto(texto) {
+  const rows = [];
+  let col = "", row = [], dentroAspas = false;
+
+  for (let i = 0; i < texto.length; i++) {
+    const ch = texto[i];
+    const prox = texto[i + 1];
+
+    if (ch === '"') {
+      if (dentroAspas && prox === '"') {
+        // Aspas escapadas ("") dentro de célula
+        col += '"';
+        i++;
+      } else {
+        dentroAspas = !dentroAspas;
+      }
+    } else if (ch === ',' && !dentroAspas) {
+      row.push(col.trim());
+      col = "";
+    } else if ((ch === '\n' || (ch === '\r' && prox === '\n')) && !dentroAspas) {
+      if (ch === '\r') i++; // pula o \n do \r\n
+      row.push(col.trim());
+      if (row.some(c => c !== "")) rows.push(row);
+      row = [];
+      col = "";
+    } else if (ch === '\r' && !dentroAspas) {
+      // \r sozinho
+      row.push(col.trim());
+      if (row.some(c => c !== "")) rows.push(row);
+      row = [];
+      col = "";
+    } else {
+      col += ch;
+    }
+  }
+  // Última célula/linha
+  if (col || row.length) {
+    row.push(col.trim());
+    if (row.some(c => c !== "")) rows.push(row);
+  }
+  return rows;
+}
+
+// Mantém parsearLinha para compatibilidade com outros usos
 function parsearLinha(linha) {
   const r = []; let a = "", d = false;
   for (const c of linha) {
     if (c === '"') d = !d;
-    else if (c === ',' && !d) { r.push(a); a = ""; }
+    else if (c === ',' && !d) { r.push(a.trim()); a = ""; }
     else a += c;
   }
-  r.push(a);
+  r.push(a.trim());
   return r;
 }
+
 
 function iniciais(nome) {
   const partes = nome.split(" ").filter(Boolean);
@@ -442,14 +488,15 @@ async function carregarRecados(serie) {
   try {
     const response = await fetch(RECADOS_URL);
     const csv = await response.text();
-    const linhas = csv.split("\n").slice(1).filter(l => l.trim());
+    const rows = parseCSVCompleto(csv);
     const sNorm = normalizarSerie(serie);
     const recados = [];
 
-    for (const linha of linhas) {
-      const cols = parsearLinha(linha);
+    // Pula cabeçalho (linha 0)
+    for (let i = 1; i < rows.length; i++) {
+      const cols = rows[i];
       if (cols.length < 2) continue;
-      const seriePlanilha = cols[0].trim().replace(/"/g, "");
+      const seriePlanilha = (cols[0] || "").replace(/"/g,"").trim();
 
       const paraEstaSerie =
         seriePlanilha.toLowerCase() === "todos" ||
@@ -458,20 +505,20 @@ async function carregarRecados(serie) {
         (seriePlanilha.toUpperCase() === "EM" && ["1EM","2EM","3EM"].includes(sNorm));
 
       if (paraEstaSerie) {
-        // Colunas: serie | titulo | texto | banner | imagem | texto_final | data | tag1 | item1 | tag2 | item2 | tag3 | item3
+        // serie | titulo | texto | banner | imagem | texto_final | data | tag1 | item1 | tag2 | item2 | tag3 | item3
         recados.push({
-          titulo:      cols[1]?.replace(/"/g,"").trim() || "",
-          texto:       cols[2]?.replace(/"/g,"").trim() || "",
-          banner:      cols[3]?.replace(/"/g,"").trim() || "",
-          imagem:      cols[4]?.replace(/"/g,"").trim() || "",
-          texto_final: cols[5]?.replace(/"/g,"").trim() || "",
-          data:        cols[6]?.replace(/"/g,"").trim() || "",
-          tag1:        cols[7]?.replace(/"/g,"").trim() || "",
-          item1:       cols[8]?.replace(/"/g,"").trim() || "",
-          tag2:        cols[9]?.replace(/"/g,"").trim() || "",
-          item2:       cols[10]?.replace(/"/g,"").trim() || "",
-          tag3:        cols[11]?.replace(/"/g,"").trim() || "",
-          item3:       cols[12]?.replace(/"/g,"").trim() || "",
+          titulo:      (cols[1]  || "").replace(/"/g,"").trim(),
+          texto:       (cols[2]  || "").replace(/"/g,"").trim(),
+          banner:      (cols[3]  || "").replace(/"/g,"").trim(),
+          imagem:      (cols[4]  || "").replace(/"/g,"").trim(),
+          texto_final: (cols[5]  || "").replace(/"/g,"").trim(),
+          data:        (cols[6]  || "").replace(/"/g,"").trim(),
+          tag1:        (cols[7]  || "").replace(/"/g,"").trim(),
+          item1:       (cols[8]  || "").replace(/"/g,"").trim(),
+          tag2:        (cols[9]  || "").replace(/"/g,"").trim(),
+          item2:       (cols[10] || "").replace(/"/g,"").trim(),
+          tag3:        (cols[11] || "").replace(/"/g,"").trim(),
+          item3:       (cols[12] || "").replace(/"/g,"").trim(),
         });
       }
     }
@@ -488,7 +535,8 @@ async function carregarRecados(serie) {
 function driveUrl(id) {
   if (!id) return "";
   if (id.startsWith("http")) return id;
-  return `https://lh3.googleusercontent.com/d/${id}`;
+  // Formato mais confiável para embed em sites externos
+  return `https://drive.google.com/thumbnail?id=${id}&sz=w800`;
 }
 
 function renderizarAvisos(destaque, extras) {
@@ -637,20 +685,17 @@ async function carregarCalendario(serie) {
   try {
     const response = await fetch(CALENDARIO_URL);
     const csv = await response.text();
-    const linhas = csv.split("\n").slice(1).filter(l => l.trim());
+    const rows = parseCSVCompleto(csv);
     const sNorm = normalizarSerie(serie);
     const eventos = [];
 
-    for (const linha of linhas) {
-      const cols = parsearLinha(linha);
+    for (let i = 1; i < rows.length; i++) {
+      const cols = rows[i];
       if (cols.length < 3) continue;
 
-      // Colunas: serie | titulo | texto | data | tag1 | item1 | tag2 | item2 | tag3 | item3
-      const serieCol = cols[0]?.replace(/"/g,"").trim().toLowerCase() || "";
+      const serieCol = (cols[0] || "").replace(/"/g,"").trim().toLowerCase();
       const isVestibular = serieCol === "vestibular";
 
-      // Vestibulares aparecem para todo mundo
-      // Eventos IOL aparecem por série
       const paraEstaSerie = isVestibular ||
         serieCol === "todos" ||
         normalizarSerie(serieCol) === sNorm ||
@@ -659,39 +704,32 @@ async function carregarCalendario(serie) {
 
       if (!paraEstaSerie) continue;
 
-      // Parseia a data para extrair dia e mês
-      const dataStr = cols[3]?.replace(/"/g,"").trim() || "";
+      const dataStr = (cols[3] || "").replace(/"/g,"").trim();
       const { dia, mes, dataISO } = parsearData(dataStr);
 
       eventos.push({
-        serie:    serieCol,
-        titulo:   cols[1]?.replace(/"/g,"").trim() || "",
-        texto:    cols[2]?.replace(/"/g,"").trim() || "",
-        data:     dataStr,
-        dataISO,
-        dia,
-        mes,
-        tag1:     cols[4]?.replace(/"/g,"").trim() || "",
-        item1:    cols[5]?.replace(/"/g,"").trim() || "",
-        tag2:     cols[6]?.replace(/"/g,"").trim() || "",
-        item2:    cols[7]?.replace(/"/g,"").trim() || "",
-        tag3:     cols[8]?.replace(/"/g,"").trim() || "",
-        item3:    cols[9]?.replace(/"/g,"").trim() || "",
-        tipo:     isVestibular ? "vestibular" : "iol",
+        serie:  serieCol,
+        titulo: (cols[1] || "").replace(/"/g,"").trim(),
+        texto:  (cols[2] || "").replace(/"/g,"").trim(),
+        data:   dataStr, dataISO, dia, mes,
+        tag1:   (cols[4] || "").replace(/"/g,"").trim(),
+        item1:  (cols[5] || "").replace(/"/g,"").trim(),
+        tag2:   (cols[6] || "").replace(/"/g,"").trim(),
+        item2:  (cols[7] || "").replace(/"/g,"").trim(),
+        tag3:   (cols[8] || "").replace(/"/g,"").trim(),
+        item3:  (cols[9] || "").replace(/"/g,"").trim(),
+        tipo:   isVestibular ? "vestibular" : "iol",
       });
     }
 
-    // Ordena por data
     eventos.sort((a, b) => {
       if (!a.dataISO) return 1;
       if (!b.dataISO) return -1;
       return a.dataISO.localeCompare(b.dataISO);
     });
 
-    // Salva globalmente para o filtro
     window._agendaEventos = eventos;
     window._agendaSerie   = serie;
-
     renderizarAgenda(eventos, "todos");
     verificarLembretesVestibular(eventos);
 
