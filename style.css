@@ -8,22 +8,24 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --blue:    #00BDF2;
-  --dark:    #008ED4;
-  --navy:    #002561;
-  --pink:    #EE2D67;
-  --yellow:  #EBEA70;
-  --bg:      #F4F7FD;
-  --white:   #FFFFFF;
-  --border:  #E2EAF4;
-  --text:    #1A2236;
-  --text2:   #5A6A85;
-  --text3:   #9AAABB;
-  --success: #18A76A;
-  --r-sm:    10px;
-  --r-md:    14px;
-  --r-lg:    18px;
-  --shadow:  0 2px 16px rgba(0,37,97,0.08);
+  --blue:      #00BDF2;
+  --dark:      #008ED4;
+  --dark-blue: #008ED4;  /* alias usado em vários lugares */
+  --navy:      #002561;
+  --pink:      #EE2D67;
+  --yellow:    #EBEA70;
+  --bg:        #F4F7FD;
+  --white:     #FFFFFF;
+  --card:      #FFFFFF;  /* fundo de cards */
+  --border:    #E2EAF4;
+  --text:      #1A2236;
+  --text1:     #1A2236;  /* alias de --text */
+  --text2:     #5A6A85;
+  --text3:     #9AAABB;
+  --r-sm:      10px;
+  --r-md:      14px;
+  --r-lg:      18px;
+  --shadow:    0 2px 16px rgba(0,37,97,0.08);
   --shadow-lg: 0 6px 32px rgba(0,37,97,0.13);
 }
 
@@ -2253,7 +2255,7 @@ mark {
 .aviso-tag {
   display: inline-block;
   background: var(--blue);
-  color: #fff;
+  color: var(--navy);
   border-radius: 20px;
   padding: 3px 10px;
   font-size: 11px;
@@ -2261,8 +2263,8 @@ mark {
   font-family: 'Montserrat', sans-serif;
 }
 
-.aviso-tag-2 { background: var(--dark-blue); }
-.aviso-tag-3 { background: var(--navy); }
+.aviso-tag-2 { background: var(--dark); color: #fff; }
+.aviso-tag-3 { background: var(--navy); color: #fff; }
 
 /* Recados secundários */
 .recados-extras {
@@ -2430,8 +2432,9 @@ mark {
 
   .sidebar-footer { padding: 16px 20px 0; border-top: 1px solid rgba(255,255,255,0.1); font-size: 10px; color: rgba(255,255,255,0.3); font-family: "Lato", sans-serif; text-align: center; }
 
-  /* Esconde acesso rápido (grid de 4) no home desktop — desnecessário com sidebar */
+  /* Esconde acesso rápido e tutor no home desktop (tutor fica só no rodapé das outras abas) */
   #tab-home > section[aria-label="Plataformas"] { display: none !important; }
+  #tab-home > section[aria-label="Seu tutor"] { display: none !important; }
 
   /* Tutor card: limitar largura no desktop */
   .tutor-card { max-width: 480px; }
