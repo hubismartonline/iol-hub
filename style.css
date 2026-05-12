@@ -25,6 +25,9 @@
   --r-lg:    18px;
   --shadow:  0 2px 16px rgba(0,37,97,0.08);
   --shadow-lg: 0 6px 32px rgba(0,37,97,0.13);
+  --card:      #FFFFFF;
+  --dark-blue: #008ED4;
+  --text1:     #1A2236;
 }
 
 html { scroll-behavior: smooth; }
@@ -2266,7 +2269,7 @@ mark {
 .aviso-tag {
   display: inline-block;
   background: var(--blue);
-  color: #fff;
+  color: var(--navy);
   border-radius: 20px;
   padding: 3px 10px;
   font-size: 11px;
@@ -2283,6 +2286,22 @@ mark {
   flex-direction: column;
   gap: 10px;
   margin-bottom: 14px;
+}
+.recados-extras-titulo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 0 8px;
+}
+.recados-extras-linha { flex: 1; height: 1px; background: var(--border); }
+.recados-extras-label {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 .recado-extra-item {
@@ -2373,7 +2392,7 @@ mark {
     border-bottom: 1px solid rgba(255,255,255,0.1);
     margin-bottom: 8px;
   }
-  .sidebar-logo img { width: 110px; height: auto; filter: brightness(0) invert(1); }
+  .sidebar-logo img { width: 110px; height: auto; }
 
   .sidebar-perfil {
     padding: 14px 20px;
