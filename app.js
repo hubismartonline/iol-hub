@@ -443,8 +443,6 @@ async function carregarRecados(serie) {
     const response = await fetch(RECADOS_URL);
     const csv = await response.text();
     const linhas = csv.split("\n").slice(1).filter(l => l.trim());
-
-    // Filtra por série do aluno
     const sNorm = normalizarSerie(serie);
     const recados = [];
 
@@ -453,7 +451,6 @@ async function carregarRecados(serie) {
       if (cols.length < 2) continue;
       const seriePlanilha = cols[0].trim().replace(/"/g, "");
 
-      // Verifica se o recado é para esta série
       const paraEstaSerie =
         seriePlanilha.toLowerCase() === "todos" ||
         normalizarSerie(seriePlanilha) === sNorm ||
@@ -461,16 +458,20 @@ async function carregarRecados(serie) {
         (seriePlanilha.toUpperCase() === "EM" && ["1EM","2EM","3EM"].includes(sNorm));
 
       if (paraEstaSerie) {
+        // Colunas: serie | titulo | texto | banner | imagem | texto_final | data | tag1 | item1 | tag2 | item2 | tag3 | item3
         recados.push({
-          titulo: cols[1]?.replace(/"/g,"").trim() || "",
-          texto:  cols[2]?.replace(/"/g,"").trim() || "",
-          data:   cols[3]?.replace(/"/g,"").trim() || "",
-          tag1:   cols[4]?.replace(/"/g,"").trim() || "",
-          item1:  cols[5]?.replace(/"/g,"").trim() || "",
-          tag2:   cols[6]?.replace(/"/g,"").trim() || "",
-          item2:  cols[7]?.replace(/"/g,"").trim() || "",
-          tag3:   cols[8]?.replace(/"/g,"").trim() || "",
-          item3:  cols[9]?.replace(/"/g,"").trim() || "",
+          titulo:      cols[1]?.replace(/"/g,"").trim() || "",
+          texto:       cols[2]?.replace(/"/g,"").trim() || "",
+          banner:      cols[3]?.replace(/"/g,"").trim() || "",
+          imagem:      cols[4]?.replace(/"/g,"").trim() || "",
+          texto_final: cols[5]?.replace(/"/g,"").trim() || "",
+          data:        cols[6]?.replace(/"/g,"").trim() || "",
+          tag1:        cols[7]?.replace(/"/g,"").trim() || "",
+          item1:       cols[8]?.replace(/"/g,"").trim() || "",
+          tag2:        cols[9]?.replace(/"/g,"").trim() || "",
+          item2:       cols[10]?.replace(/"/g,"").trim() || "",
+          tag3:        cols[11]?.replace(/"/g,"").trim() || "",
+          item3:       cols[12]?.replace(/"/g,"").trim() || "",
         });
       }
     }
@@ -480,42 +481,96 @@ async function carregarRecados(serie) {
     }
   } catch(e) {
     console.log("Usando avisos locais:", e);
-    renderizarAvisos(AVISOS.destaque, AVISOS.lista.map(a => ({tag1: a.tag, item1: a.texto})));
+    renderizarAvisos(AVISOS.destaque, []);
   }
+}
+
+function driveUrl(id) {
+  if (!id) return "";
+  // Se já for URL completa, retorna como está
+  if (id.startsWith("http")) return id;
+  // Se for só o ID, monta a URL do Drive
+  return `https://drive.google.com/uc?export=view&id=${id}`;
 }
 
 function renderizarAvisos(destaque, extras) {
   if (!destaque) return;
 
-  const setEl = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-  setEl("aviso-titulo", destaque.titulo || AVISOS.destaque.titulo);
-  setEl("aviso-texto",  destaque.texto  || AVISOS.destaque.texto);
-  setEl("aviso-data",   destaque.data   || AVISOS.destaque.data);
+  const container = document.getElementById("aviso-destaque-wrap");
+  if (!container) return;
 
-  const lista = document.getElementById("avisos-lista");
-  if (!lista) return;
+  const bannerUrl = driveUrl(destaque.banner);
+  const imagemUrl = driveUrl(destaque.imagem);
 
-  // Itens extras do recado principal
-  let itens = [];
-  if (destaque.tag1 && destaque.item1) itens.push({tag: destaque.tag1, texto: destaque.item1});
-  if (destaque.tag2 && destaque.item2) itens.push({tag: destaque.tag2, texto: destaque.item2});
-  if (destaque.tag3 && destaque.item3) itens.push({tag: destaque.tag3, texto: destaque.item3});
+  // Monta tags
+  const tags = [
+    destaque.tag1 ? `<span class="aviso-tag">${destaque.tag1}</span>` : "",
+    destaque.tag2 ? `<span class="aviso-tag aviso-tag-2">${destaque.tag2}</span>` : "",
+    destaque.tag3 ? `<span class="aviso-tag aviso-tag-3">${destaque.tag3}</span>` : "",
+  ].filter(Boolean).join("");
 
-  // Recados extras (outras séries/todos)
-  if (extras) {
-    extras.forEach(r => {
-      if (r.tag1 && r.item1) itens.push({tag: r.tag1, texto: r.item1});
-      if (r.tag2 && r.item2) itens.push({tag: r.tag2, texto: r.item2});
-      if (r.tag3 && r.item3) itens.push({tag: r.tag3, texto: r.item3});
-    });
-  }
+  // Monta itens extras
+  const itens = [
+    destaque.item1 ? `<div class="aviso-item-detalhe">${destaque.item1}</div>` : "",
+    destaque.item2 ? `<div class="aviso-item-detalhe">${destaque.item2}</div>` : "",
+    destaque.item3 ? `<div class="aviso-item-detalhe">${destaque.item3}</div>` : "",
+  ].filter(Boolean).join("");
 
-  lista.innerHTML = itens.map(a => `
-    <div class="aviso-item">
-      <div class="aviso-item-tag">${a.tag}</div>
-      <p class="aviso-item-texto">${a.texto}</p>
-    </div>`).join("");
+  container.innerHTML = `
+    <div class="recado-card">
+
+      <!-- 1. Banner temático -->
+      <div class="recado-banner">
+        ${bannerUrl
+          ? `<img src="${bannerUrl}" alt="banner" class="recado-banner-img"
+               onerror="this.parentNode.classList.add('recado-banner-fallback');this.remove()">`
+          : `<div class="recado-banner-fallback"><div class="recado-banner-logo">Ismart Online</div></div>`
+        }
+        ${destaque.data ? `<span class="recado-data-badge">${destaque.data}</span>` : ""}
+      </div>
+
+      <!-- 2. Texto principal -->
+      <div class="recado-corpo">
+        <div class="recado-titulo">${destaque.titulo}</div>
+        <div class="recado-texto">${destaque.texto}</div>
+        ${itens ? `<div class="recado-itens">${itens}</div>` : ""}
+      </div>
+
+      <!-- 3. Foto do evento -->
+      ${imagemUrl ? `
+      <div class="recado-foto-wrap">
+        <img src="${imagemUrl}" alt="imagem do recado" class="recado-foto"
+          onerror="this.parentNode.style.display='none'">
+      </div>` : ""}
+
+      <!-- 4. Texto de encerramento + tags -->
+      <div class="recado-rodape">
+        ${destaque.texto_final
+          ? `<div class="recado-texto-final">${destaque.texto_final}</div>`
+          : ""}
+        ${tags ? `<div class="recado-tags">${tags}</div>` : ""}
+      </div>
+
+    </div>
+
+    <!-- Recados secundários -->
+    ${extras && extras.length ? `
+    <div class="recados-extras">
+      ${extras.map(r => `
+        <div class="recado-extra-item">
+          ${r.banner ? `<img src="${driveUrl(r.banner)}" class="recado-extra-banner"
+            onerror="this.style.display='none'" alt="">` : ""}
+          <div class="recado-extra-corpo">
+            <div class="recado-extra-titulo">${r.titulo}</div>
+            ${r.texto ? `<div class="recado-extra-texto">${r.texto}</div>` : ""}
+            ${r.tag1 ? `<span class="aviso-tag" style="font-size:10px">${r.tag1}</span>` : ""}
+          </div>
+        </div>`).join("")}
+    </div>` : ""}
+  `;
 }
+
+
 
 function renderizarTutor(aluno) {
   // DEBUG temporário — remove após confirmar a série
@@ -590,51 +645,225 @@ async function carregarCalendario(serie) {
 
     for (const linha of linhas) {
       const cols = parsearLinha(linha);
-      if (cols.length < 5) continue;
+      if (cols.length < 3) continue;
 
-      const seriePlanilha = cols[0]?.replace(/"/g,"").trim() || "todos";
-      const paraEstaSerie =
-        seriePlanilha.toLowerCase() === "todos" ||
-        normalizarSerie(seriePlanilha) === sNorm ||
-        (seriePlanilha.toUpperCase() === "EF" && ["8EF","9EF"].includes(sNorm)) ||
-        (seriePlanilha.toUpperCase() === "EM" && ["1EM","2EM","3EM"].includes(sNorm));
+      // Colunas: serie | titulo | texto | data | tag1 | item1 | tag2 | item2 | tag3 | item3
+      const serieCol = cols[0]?.replace(/"/g,"").trim().toLowerCase() || "";
+      const isVestibular = serieCol === "vestibular";
 
-      if (paraEstaSerie) {
-        eventos.push({
-          dia:        cols[1]?.replace(/"/g,"").trim() || "",
-          mes:        cols[2]?.replace(/"/g,"").trim() || "",
-          titulo:     cols[3]?.replace(/"/g,"").trim() || "",
-          subtitulo:  cols[4]?.replace(/"/g,"").trim() || "",
-          tipo:       cols[5]?.replace(/"/g,"").trim() || "prazo",
-          tipo_label: cols[6]?.replace(/"/g,"").trim() || "EVENTO",
-        });
-      }
+      // Vestibulares aparecem para todo mundo
+      // Eventos IOL aparecem por série
+      const paraEstaSerie = isVestibular ||
+        serieCol === "todos" ||
+        normalizarSerie(serieCol) === sNorm ||
+        (serieCol === "ef" && ["8EF","9EF"].includes(sNorm)) ||
+        (serieCol === "em" && ["1EM","2EM","3EM"].includes(sNorm));
+
+      if (!paraEstaSerie) continue;
+
+      // Parseia a data para extrair dia e mês
+      const dataStr = cols[3]?.replace(/"/g,"").trim() || "";
+      const { dia, mes, dataISO } = parsearData(dataStr);
+
+      eventos.push({
+        serie:    serieCol,
+        titulo:   cols[1]?.replace(/"/g,"").trim() || "",
+        texto:    cols[2]?.replace(/"/g,"").trim() || "",
+        data:     dataStr,
+        dataISO,
+        dia,
+        mes,
+        tag1:     cols[4]?.replace(/"/g,"").trim() || "",
+        item1:    cols[5]?.replace(/"/g,"").trim() || "",
+        tag2:     cols[6]?.replace(/"/g,"").trim() || "",
+        item2:    cols[7]?.replace(/"/g,"").trim() || "",
+        tag3:     cols[8]?.replace(/"/g,"").trim() || "",
+        item3:    cols[9]?.replace(/"/g,"").trim() || "",
+        tipo:     isVestibular ? "vestibular" : "iol",
+      });
     }
 
-    renderizarAgenda(eventos.length > 0 ? eventos : AGENDA);
+    // Ordena por data
+    eventos.sort((a, b) => {
+      if (!a.dataISO) return 1;
+      if (!b.dataISO) return -1;
+      return a.dataISO.localeCompare(b.dataISO);
+    });
+
+    // Salva globalmente para o filtro
+    window._agendaEventos = eventos;
+    window._agendaSerie   = serie;
+
+    renderizarAgenda(eventos, "todos");
+    verificarLembretesVestibular(eventos);
+
   } catch(e) {
     console.log("Usando agenda local:", e);
-    renderizarAgenda(AGENDA);
+    window._agendaEventos = [];
+    renderizarAgendaFallback();
   }
 }
 
-function renderizarAgenda(eventos) {
+function parsearData(dataStr) {
+  // Aceita DD/MM/YYYY ou DD/MM/YY ou só mês/ano
+  if (!dataStr) return { dia: "—", mes: "—", dataISO: "" };
+  const partes = dataStr.split("/");
+  if (partes.length >= 3) {
+    const dia = partes[0].padStart(2, "0");
+    const mes = partes[1].padStart(2, "0");
+    const ano = partes[2].length === 2 ? "20" + partes[2] : partes[2];
+    const meses = ["","JAN","FEV","MAR","ABR","MAI","JUN","JUL","AGO","SET","OUT","NOV","DEZ"];
+    return {
+      dia,
+      mes: meses[parseInt(mes)] || mes,
+      dataISO: `${ano}-${mes}-${dia}`
+    };
+  }
+  return { dia: "—", mes: dataStr, dataISO: "" };
+}
+
+function filtrarAgenda(filtro) {
+  // Atualiza botões ativos
+  document.querySelectorAll(".agenda-filtro-btn").forEach(btn => {
+    btn.classList.toggle("ativo", btn.dataset.filtro === filtro);
+  });
+  const eventos = window._agendaEventos || [];
+  renderizarAgenda(eventos, filtro);
+}
+
+function renderizarAgenda(eventos, filtro) {
   const container = document.getElementById("agenda-lista");
   if (!container) return;
-  const lista = eventos || AGENDA;
-  container.innerHTML = lista.map(ev => `
-    <div class="agenda-item">
-      <div class="agenda-date">
-        <span class="agenda-day">${ev.dia}</span>
-        <span class="agenda-month">${ev.mes}</span>
-      </div>
-      <div class="agenda-info">
-        <div class="agenda-titulo">${ev.titulo}</div>
-        <div class="agenda-subtitulo">${ev.subtitulo}</div>
-        <span class="agenda-tipo tipo-${ev.tipo}">${ev.tipo_label}</span>
-      </div>
-    </div>`).join("");
+
+  // Renderiza filtros se ainda não existem
+  let filtrosEl = document.getElementById("agenda-filtros");
+  if (!filtrosEl) {
+    filtrosEl = document.createElement("div");
+    filtrosEl.id = "agenda-filtros";
+    filtrosEl.style.cssText = "display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap";
+    filtrosEl.innerHTML = `
+      <button class="agenda-filtro-btn ativo" data-filtro="todos"
+        onclick="filtrarAgenda('todos')"
+        style="padding:6px 14px;border-radius:20px;border:1.5px solid var(--blue);
+               background:var(--blue);color:#fff;font-size:12px;font-family:Montserrat,sans-serif;
+               font-weight:700;cursor:pointer">
+        Todos
+      </button>
+      <button class="agenda-filtro-btn" data-filtro="iol"
+        onclick="filtrarAgenda('iol')"
+        style="padding:6px 14px;border-radius:20px;border:1.5px solid var(--border);
+               background:var(--bg);color:var(--text1);font-size:12px;font-family:Montserrat,sans-serif;
+               font-weight:700;cursor:pointer">
+        📚 IOL
+      </button>
+      <button class="agenda-filtro-btn" data-filtro="vestibular"
+        onclick="filtrarAgenda('vestibular')"
+        style="padding:6px 14px;border-radius:20px;border:1.5px solid var(--border);
+               background:var(--bg);color:var(--text1);font-size:12px;font-family:Montserrat,sans-serif;
+               font-weight:700;cursor:pointer">
+        🎓 Vestibulares
+      </button>
+    `;
+    container.parentNode.insertBefore(filtrosEl, container);
+  }
+
+  // Atualiza estilo dos botões ativos
+  filtrosEl.querySelectorAll(".agenda-filtro-btn").forEach(btn => {
+    const ativo = btn.dataset.filtro === (filtro || "todos");
+    btn.style.background = ativo ? "var(--blue)" : "var(--bg)";
+    btn.style.color      = ativo ? "#fff" : "var(--text1)";
+    btn.style.borderColor= ativo ? "var(--blue)" : "var(--border)";
+  });
+
+  // Filtra eventos
+  const lista = filtro === "todos" ? eventos
+    : eventos.filter(ev => ev.tipo === filtro);
+
+  if (!lista.length) {
+    container.innerHTML = `<p style="color:var(--text2);font-size:13px;padding:16px 0;text-align:center">
+      Nenhum evento encontrado.
+    </p>`;
+    return;
+  }
+
+  container.innerHTML = lista.map(ev => {
+    const isVest = ev.tipo === "vestibular";
+    const tags = [
+      ev.tag1 ? `<span class="agenda-tipo tipo-${isVest ? "vestibular" : "prazo"}">${ev.tag1}</span>` : "",
+      ev.tag2 ? `<span class="agenda-tipo tipo-info">${ev.tag2}</span>` : "",
+      ev.tag3 ? `<span class="agenda-tipo tipo-mentoria">${ev.tag3}</span>` : "",
+    ].filter(Boolean).join("");
+
+    const itens = [ev.item1, ev.item2, ev.item3].filter(Boolean);
+    const itensHtml = itens.length
+      ? `<div style="font-size:11px;color:var(--text2);margin-top:4px">${itens.join(" · ")}</div>`
+      : "";
+
+    return `
+      <div class="agenda-item${isVest ? " agenda-item-vestibular" : ""}">
+        <div class="agenda-date">
+          <span class="agenda-day">${ev.dia}</span>
+          <span class="agenda-month">${ev.mes}</span>
+        </div>
+        <div class="agenda-info">
+          <div class="agenda-titulo">${ev.titulo}</div>
+          ${ev.texto ? `<div class="agenda-subtitulo">${ev.texto}</div>` : ""}
+          ${itensHtml}
+          <div style="margin-top:5px;display:flex;flex-wrap:wrap;gap:4px">${tags}</div>
+        </div>
+      </div>`;
+  }).join("");
 }
+
+function renderizarAgendaFallback() {
+  // Converte AGENDA estática para o novo formato e renderiza
+  const eventos = AGENDA.map(ev => ({
+    tipo: "iol", titulo: ev.titulo, texto: ev.subtitulo,
+    dia: ev.dia, mes: ev.mes, dataISO: "",
+    tag1: ev.tipo_label, item1: "", item2: "", item3: "",
+  }));
+  window._agendaEventos = eventos;
+  renderizarAgenda(eventos, "todos");
+}
+
+// Verifica se há inscrição de vestibular nos próximos 30 dias
+function verificarLembretesVestibular(eventos) {
+  const hoje = new Date();
+  const em30dias = new Date();
+  em30dias.setDate(hoje.getDate() + 30);
+
+  const proximos = eventos.filter(ev => {
+    if (ev.tipo !== "vestibular" || !ev.dataISO) return false;
+    const data = new Date(ev.dataISO);
+    return data >= hoje && data <= em30dias;
+  });
+
+  const container = document.getElementById("sim-lembrete-vest");
+  if (!container) return;
+
+  if (proximos.length > 0) {
+    const ev = proximos[0];
+    container.style.display = "block";
+    container.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;cursor:pointer"
+           onclick="trocarAba('agenda');setTimeout(()=>filtrarAgenda('vestibular'),300)">
+        <span style="font-size:18px">📅</span>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#fff;font-family:Montserrat,sans-serif">
+            ${ev.titulo} — ${ev.dia}/${ev.mes}
+          </div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.7);margin-top:1px">
+            Toque para ver todas as datas →
+          </div>
+        </div>
+      </div>
+    `;
+  } else {
+    container.style.display = "none";
+  }
+}
+
+
 
 function renderizarFAQ() {
   const container = document.getElementById("faq-lista");
