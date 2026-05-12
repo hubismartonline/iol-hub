@@ -31,18 +31,10 @@ let dadosCarregados = {};
 // -------------------------------------------------------
 document.addEventListener("DOMContentLoaded", () => {
   atualizarSaudacao();
-  const dadosSalvos = sessionStorage.getItem("iol_aluno");
-  if (dadosSalvos) {
-    try {
-      alunoAtual = JSON.parse(dadosSalvos);
-      document.body.classList.add("logado");
-      renderizarPerfil(alunoAtual);
-      renderizarTudo(alunoAtual);
-      carregarCadastro(alunoAtual.RA || alunoAtual.ra);
-    } catch(e) { sessionStorage.removeItem("iol_aluno"); }
-  } else {
-    setTimeout(() => document.getElementById("raInput")?.focus(), 400);
-  }
+  // Limpa sempre ao abrir — garante que não aparece aluno de sessão anterior
+  sessionStorage.removeItem("iol_aluno");
+  setTimeout(() => document.getElementById("raInputDesktop")?.focus(), 400);
+  setTimeout(() => document.getElementById("raInput")?.focus(), 400);
 });
 
 // -------------------------------------------------------
@@ -174,45 +166,45 @@ function parsearCSV(csv) {
 
 // Parser CSV completo — lida com células que contêm vírgulas e quebras de linha
 function parseCSVCompleto(texto) {
+  if (!texto || !texto.trim()) return [];
   const rows = [];
-  let col = "", row = [], dentroAspas = false;
 
+  // Detecta separador: tab ou vírgula
+  const primeiraLinha = texto.split("\n")[0];
+  const sepChar = primeiraLinha.includes("\t") ? "\t" : ",";
+
+  // Se for TSV, processa linha a linha de forma simples
+  if (sepChar === "\t") {
+    for (const linha of texto.split("\n")) {
+      if (!linha.trim()) continue;
+      const cols = linha.split("\t").map(c => c.replace(/\r$/, "").replace(/^"|"$/g, "").trim());
+      if (cols.some(c => c !== "")) rows.push(cols);
+    }
+    return rows;
+  }
+
+  // CSV com vírgula: parser completo com suporte a aspas e quebras de linha
+  let col = "", row = [], dentroAspas = false;
   for (let i = 0; i < texto.length; i++) {
     const ch = texto[i];
     const prox = texto[i + 1];
-
     if (ch === '"') {
-      if (dentroAspas && prox === '"') {
-        // Aspas escapadas ("") dentro de célula
-        col += '"';
-        i++;
-      } else {
-        dentroAspas = !dentroAspas;
-      }
+      if (dentroAspas && prox === '"') { col += '"'; i++; }
+      else dentroAspas = !dentroAspas;
     } else if (ch === ',' && !dentroAspas) {
-      row.push(col.trim());
-      col = "";
+      row.push(col.trim()); col = "";
     } else if ((ch === '\n' || (ch === '\r' && prox === '\n')) && !dentroAspas) {
-      if (ch === '\r') i++; // pula o \n do \r\n
+      if (ch === '\r') i++;
       row.push(col.trim());
       if (row.some(c => c !== "")) rows.push(row);
-      row = [];
-      col = "";
+      row = []; col = "";
     } else if (ch === '\r' && !dentroAspas) {
-      // \r sozinho
       row.push(col.trim());
       if (row.some(c => c !== "")) rows.push(row);
-      row = [];
-      col = "";
-    } else {
-      col += ch;
-    }
+      row = []; col = "";
+    } else { col += ch; }
   }
-  // Última célula/linha
-  if (col || row.length) {
-    row.push(col.trim());
-    if (row.some(c => c !== "")) rows.push(row);
-  }
+  if (col || row.length) { row.push(col.trim()); if (row.some(c => c !== "")) rows.push(row); }
   return rows;
 }
 
