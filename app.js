@@ -176,9 +176,13 @@ function parsearLinha(linha) {
 // Detecta URLs no texto e transforma em links clicáveis
 function linkificar(texto) {
   if (!texto) return "";
-  return texto.replace(/(https?:\/\/[^\s<]+|bit\.ly\/[^\s<]+|www\.[^\s<]+)/g, url => {
-    const href = url.startsWith("http") ? url : "https://" + url;
-    return `<a href="${href}" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:underline;word-break:break-all">${url}</a>`;
+  // Regex mais robusta: captura https, http, bit.ly, www — sem incluir pontuação final
+  return texto.replace(/(https?:\/\/[^\s<"')\]]+|bit\.ly\/[^\s<"')\]]+|www\.[^\s<"')\]]+)/g, url => {
+    // Remove pontuação no final da URL (ponto, vírgula, parênteses etc.)
+    const urlClean = url.replace(/[.,;:!?)\]'"]+$/, "");
+    const href = urlClean.startsWith("http") ? urlClean : "https://" + urlClean;
+    const resto = url.slice(urlClean.length); // pontuação que foi removida
+    return `<a href="${href}" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:underline;word-break:break-all">${urlClean}</a>${resto}`;
   });
 }
 
@@ -594,15 +598,7 @@ function abrirWhatsAppContato(wpp, msg) {
   window.open(`https://wa.me/${wpp}?text=${encodeURIComponent(msg)}`, "_blank", "noopener");
 }
 
-// -------------------------------------------------------
-//  NAVEGAÇÃO
-// -------------------------------------------------------
-function trocarAba(nomeAba) {
-  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.tab === nomeAba));
-  document.querySelectorAll(".tab-content").forEach(c => c.classList.toggle("active", c.id === `tab-${nomeAba}`));
-  fecharBusca();
-  document.getElementById("tabs-nav")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-}
+// trocarAba: definida acima, com sync do sidebar desktop
 
 // -------------------------------------------------------
 //  RENDERIZAÇÕES
@@ -798,7 +794,7 @@ function renderizarGuias(aluno) {
             <div class="guia-name">${item.nome}</div>
             <div class="guia-desc">${item.desc}</div>
           </div>
-          <span style="color:var(--text3);font-size:18px">›</span>
+          <span style="color:var(--blue);font-size:20px;font-weight:700;flex-shrink:0">›</span>
         </a>`).join("")}
     </div>`;
   }).join("") || `<p style="color:var(--text2);font-size:13px;padding:8px 0">Nenhum guia encontrado.</p>`;
