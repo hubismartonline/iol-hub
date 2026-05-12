@@ -244,28 +244,14 @@ function saudacao() {
 }
 
 function sincronizarDesktop() {
-  const desktopContent = document.getElementById("desktop-content");
-  if (!desktopContent) return;
-  if (window.innerWidth < 768) return;
-
-  // Encontra a aba ativa e clona o conteúdo
-  const abaAtiva = document.querySelector(".tab-content.active");
-  if (abaAtiva) {
-    desktopContent.innerHTML = "";
-    desktopContent.appendChild(abaAtiva.cloneNode(true));
-    // Remove o clone antigo para não duplicar IDs
-    desktopContent.querySelector(".tab-content")?.classList.add("active");
-  }
+  // Nada a fazer — conteúdo fica direto no main-content
 }
 
 function buscarRADesktop() {
   const input = document.getElementById("raInputDesktop");
   const ra = input?.value?.trim();
   const erro = document.getElementById("ra-error-desktop");
-
   if (!ra) return;
-
-  // Reutiliza a lógica de busca existente
   const aluno = dadosCarregados[ra];
   if (aluno) {
     if (erro) erro.style.display = "none";
@@ -273,8 +259,7 @@ function buscarRADesktop() {
     identificarAluno(aluno);
   } else {
     if (erro) erro.style.display = "block";
-    if (input) input.style.borderColor = "#EE2D67";
-    setTimeout(() => { if (input) input.style.borderColor = ""; }, 2000);
+    if (input) { input.style.borderColor = "#EE2D67"; setTimeout(() => { input.style.borderColor = ""; }, 2000); }
   }
 }
 
@@ -282,21 +267,14 @@ function trocarAba(nomeAba) {
   // Atualiza tabs mobile
   document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.tab === nomeAba));
   document.querySelectorAll(".tab-content").forEach(c => c.classList.toggle("active", c.id === `tab-${nomeAba}`));
-
   // Atualiza sidebar desktop
-  document.querySelectorAll(".sidebar-nav-item").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.tab === nomeAba);
-  });
-
+  document.querySelectorAll(".sidebar-nav-item").forEach(btn => btn.classList.toggle("active", btn.dataset.tab === nomeAba));
   fecharBusca();
-
-  // Mobile: scroll
+  // Scroll
   if (window.innerWidth < 768) {
     document.getElementById("tabs-nav")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   } else {
-    // Desktop: sincroniza conteúdo
-    sincronizarDesktop();
-    document.getElementById("desktop-main")?.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 }
 
