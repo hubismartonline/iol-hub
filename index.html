@@ -118,26 +118,15 @@
           <button class="link-btn" onclick="showToast('Em breve: todos os avisos!')">Ver todos</button>
         </div>
 
-        <div class="aviso-destaque">
-          <span class="aviso-tag">NOVO</span>
-          <h3 class="aviso-title" id="aviso-titulo">Simulado Nacional — 15 de junho</h3>
-          <p class="aviso-text" id="aviso-texto">Confirme sua presença e acesse o material preparatório na plataforma Evolucional.</p>
-          <span class="aviso-date" id="aviso-data">Publicado em 6 mai 2026</span>
+        <div id="aviso-destaque-wrap">
+          <!-- preenchido via JS com o novo layout banner+texto+imagem+encerramento -->
+          <div class="aviso-destaque">
+            <span class="aviso-tag">NOVO</span>
+            <h3 class="aviso-title" id="aviso-titulo">Carregando recados...</h3>
+            <p class="aviso-text" id="aviso-texto"></p>
+            <span class="aviso-date" id="aviso-data"></span>
+          </div>
         </div>
-
-        <div class="avisos-lista" id="avisos-lista">
-          <div class="aviso-item">
-            <div class="aviso-item-tag">📅 AGENDA</div>
-            <p class="aviso-item-texto">Mentoria coletiva de Matemática — quinta-feira, 19h</p>
-          </div>
-          <div class="aviso-item">
-            <div class="aviso-item-tag">📚 MATERIAL</div>
-            <p class="aviso-item-texto">Guia de estudos de maio disponível no Drive</p>
-          </div>
-          <div class="aviso-item">
-            <div class="aviso-item-tag">⚠️ LEMBRETE</div>
-            <p class="aviso-item-texto">Prazo de atividades Letrus: 30 de maio</p>
-          </div>
         </div>
       </section>
 
@@ -276,6 +265,8 @@
               🔍 Começar simulação
             </button>
           </div>
+          <!-- Lembrete de inscrição próxima (preenchido via JS) -->
+          <div id="sim-lembrete-vest" style="display:none;margin-top:12px;background:rgba(238,45,103,0.25);border-radius:8px;padding:10px 12px;border-left:3px solid #EE2D67"></div>
           <div id="simulador-loading" style="display:none;text-align:center;padding:16px;color:rgba(255,255,255,0.8);font-size:13px">
             ⏳ Carregando...
           </div>
