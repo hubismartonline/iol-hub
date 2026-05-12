@@ -943,29 +943,16 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
 }
 
 /* =============================================
-   TELA DE BOAS-VINDAS (desktop pré-login)
-   ============================================= */
-
+/* welcome-screen: escondida no mobile, gerenciada pelo bloco desktop @media 768px */
 .welcome-screen {
-  display: none; /* escondida no mobile */
+  display: none;
 }
 
 @media (min-width: 900px) {
-  .welcome-screen {
-    display: flex;
-    margin-left: 280px;
-    min-height: 100vh;
-    align-items: center;
-    justify-content: center;
-    padding: 40px;
-    background: var(--bg);
-  }
-
-  .welcome-screen.hidden { display: none; }
-
   .welcome-inner {
     text-align: center;
     max-width: 560px;
+    padding: 40px;
   }
 
   .welcome-owl {
@@ -1018,17 +1005,6 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
     color: var(--text3);
     font-style: italic;
   }
-
-  /* Quando logado, esconde welcome e mostra main */
-  #main-content {
-    margin-left: 280px;
-    min-height: 100vh;
-  }
-}
-
-@media (min-width: 1200px) {
-  .welcome-screen { margin-left: 300px; }
-  #main-content   { margin-left: 300px; }
 }
 
 /* Logo Ismart no header */
@@ -2285,6 +2261,28 @@ mark {
   margin-bottom: 14px;
 }
 
+/* Título separador "Outros recados" */
+.recados-extras-titulo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.recados-extras-linha {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.recados-extras-label {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
 .recado-extra-item {
   background: var(--card);
   border-radius: var(--r-sm);
@@ -2341,15 +2339,27 @@ mark {
   .header,
   .tabs-nav,
   .search-section,
-  .welcome-screen,
   .fab-container { display: none !important; }
 
   /* Main com margem para o sidebar */
   #main-content {
     margin-left: 260px;
     padding: 24px 32px;
-    display: block !important;
   }
+
+  /* Quando logado, o main fica visível (JS controla display) */
+  /* Quando não logado, mostra welcome no centro */
+  body:not(.logado) #main-content { display: none !important; }
+
+  /* Welcome screen no desktop (pré-login) */
+  .welcome-screen {
+    display: flex !important;
+    margin-left: 260px;
+    min-height: 100vh;
+    align-items: center;
+    justify-content: center;
+  }
+  .welcome-screen.hidden { display: none !important; }
 
   .section { padding: 0 0 24px; }
 
