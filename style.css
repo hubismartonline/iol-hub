@@ -658,10 +658,20 @@ h1, h2, h3, h4, .logo-name, .badge, .tab, .ra-btn, .wpp-btn, .section-title, .tu
   margin-bottom: 8px;
   cursor: pointer;
   text-decoration: none;
-  transition: box-shadow 0.2s;
+  transition: box-shadow 0.15s, transform 0.1s, border-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.guia-item:hover { box-shadow: var(--shadow); }
+.guia-item:hover {
+  box-shadow: var(--shadow);
+  border-color: var(--blue);
+  transform: translateX(2px);
+}
+
+.guia-item:active {
+  transform: scale(0.98);
+  background: #f0f8ff;
+}
 
 .guia-icon {
   width: 38px; height: 38px;
@@ -2129,10 +2139,10 @@ mark {
 
 .recado-banner-img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
   display: block;
-  min-height: 110px;
+  max-height: 300px;
+  object-fit: contain;
+  background: #001a4d;
 }
 
 .recado-banner-fallback {
@@ -2212,8 +2222,9 @@ mark {
 .recado-foto {
   width: 100%;
   display: block;
-  max-height: 220px;
-  object-fit: cover;
+  max-height: 400px;
+  object-fit: contain;
+  background: #f8f9fa;
 }
 
 /* 4. Rodapé */
@@ -2345,6 +2356,12 @@ mark {
   #main-content {
     margin-left: 260px;
     padding: 24px 32px;
+    max-width: 860px; /* evita conteúdo esticado em telas muito largas */
+  }
+
+  /* Limita largura do conteúdo de cada aba */
+  .tab-content .section {
+    max-width: 760px;
   }
 
   /* Quando logado, o main fica visível (JS controla display) */
@@ -2413,9 +2430,12 @@ mark {
 
   .sidebar-footer { padding: 16px 20px 0; border-top: 1px solid rgba(255,255,255,0.1); font-size: 10px; color: rgba(255,255,255,0.3); font-family: "Lato", sans-serif; text-align: center; }
 
-  /* Esconde tutor e acesso rápido do home no desktop */
-  #tab-home > section[aria-label="Seu tutor"],
+  /* Esconde acesso rápido (grid de 4) no home desktop — desnecessário com sidebar */
   #tab-home > section[aria-label="Plataformas"] { display: none !important; }
+
+  /* Tutor card: limitar largura no desktop */
+  .tutor-card { max-width: 480px; }
+  .wpp-btn { max-width: 480px; }
 
   /* Tutor no final de cada aba (exceto home e perfil) — injetado via JS */
   .tutor-rodape-desktop {
