@@ -31,10 +31,17 @@ let dadosCarregados = {};
 // -------------------------------------------------------
 document.addEventListener("DOMContentLoaded", () => {
   atualizarSaudacao();
-  // Limpa sempre ao abrir — garante que não aparece aluno de sessão anterior
-  sessionStorage.removeItem("iol_aluno");
-  setTimeout(() => document.getElementById("raInputDesktop")?.focus(), 400);
-  setTimeout(() => document.getElementById("raInput")?.focus(), 400);
+  const dadosSalvos = sessionStorage.getItem("iol_aluno");
+  if (dadosSalvos) {
+    try {
+      alunoAtual = JSON.parse(dadosSalvos);
+      renderizarPerfil(alunoAtual);
+      renderizarTudo(alunoAtual);
+      carregarCadastro(alunoAtual.RA || alunoAtual.ra);
+    } catch(e) { sessionStorage.removeItem("iol_aluno"); }
+  } else {
+    setTimeout(() => document.getElementById("raInput")?.focus(), 400);
+  }
 });
 
 // -------------------------------------------------------
@@ -63,36 +70,17 @@ async function buscarRA() {
   try {
     if (Object.keys(dadosCarregados).length === 0) {
       const response = await fetch(SHEET_URL);
-      if (!response.ok) throw new Error("planilha indisponivel");
+      if (!response.ok) throw new Error("Erro ao carregar planilha");
       const csv = await response.text();
       dadosCarregados = parsearCSV(csv);
     }
     processarBusca(ra, erro);
   } catch(e) {
-    // Planilha de tutores falhou — tenta via CADASTRO_URL (Apps Script) como fallback
-    try {
-      const resp = await fetch(`${CADASTRO_URL}?ra=${encodeURIComponent(ra)}`);
-      const json = await resp.json();
-      if (json.dados && (json.dados.RA || json.dados.Nome)) {
-        const d = json.dados;
-        const aluno = {
-          RA: d.RA || ra,
-          nome: d.Nome || "Aluno",
-          serie: d.Serie || "",
-          cidade: d.Cidade_mora || "",
-          tutor: d.Tutor || "",
-          tutor_wpp: d.Tutor_wpp || "",
-          tutor_iniciais: iniciais(d.Tutor || ""),
-          tutor_msg: `Oi, ${d.Tutor || "tutor"}! Sou ${d.Nome || ra} (${d.Serie || ""}). Preciso de ajuda com...`
-        };
-        dadosCarregados[ra] = aluno;
-        sessionStorage.setItem("iol_aluno", JSON.stringify(aluno));
-        identificarAluno(aluno);
-        if (erro) erro.style.display = "none";
-      } else {
-        if (erro) { erro.style.display = "block"; erro.textContent = "❌ RA não encontrado. Verifique e tente novamente."; }
-      }
-    } catch(e2) {
+    if (typeof ALUNOS !== "undefined" && ALUNOS[ra]) {
+      sessionStorage.setItem("iol_aluno", JSON.stringify(ALUNOS[ra]));
+      identificarAluno(ALUNOS[ra]);
+      if (erro) erro.style.display = "none";
+    } else {
       showToast("Erro de conexão. Tente novamente.");
       if (erro) { erro.style.display = "block"; erro.textContent = "❌ Erro ao conectar. Tente novamente."; }
     }
@@ -105,106 +93,69 @@ async function buscarRA() {
 //  PARSEAR CSV
 // -------------------------------------------------------
 function parsearCSV(csv) {
-  const linhas = csv.split("\n");
-  if (!linhas.length) return {};
-
-  // Detecta separador: tab ou vírgula
-  const primeiraLinha = linhas[0];
-  const sep = primeiraLinha.includes("\t") ? "\t" : ",";
-  console.log("[parsearCSV] separador detectado:", sep === "\t" ? "TAB" : "VÍRGULA");
-
-  // Função de split respeitando aspas (só necessária para vírgula)
-  const splitLinha = (linha) => {
-    if (sep === "\t") return linha.split("\t").map(c => c.trim().replace(/^"|"$/g, ""));
-    return parsearLinha(linha);
-  };
-
-  // Lê cabeçalho e mapeia colunas por nome
-  const header = splitLinha(primeiraLinha).map(h => h.toLowerCase().trim());
-  console.log("[parsearCSV] cabeçalhos:", header);
-
-  const idx = {
-    ra:        header.findIndex(h => h === "ra" || h === "cod_aluno" || h === "codigo"),
-    nome:      header.findIndex(h => h === "nome" || h.includes("nome")),
-    serie:     header.findIndex(h => h === "serie" || h === "série"),
-    cidade:    header.findIndex(h => h === "cidade" || h.includes("cidade")),
-    tutor:     header.findIndex(h => h === "tutor"),
-    tutor_wpp: header.findIndex(h => h === "tutor_wpp" || h.includes("wpp")),
-  };
-
-  // Fallback para posição fixa se cabeçalho não foi reconhecido
-  if (idx.ra < 0)        idx.ra = 0;
-  if (idx.nome < 0)      idx.nome = 1;
-  if (idx.serie < 0)     idx.serie = 2;
-  if (idx.cidade < 0)    idx.cidade = 3;
-  if (idx.tutor < 0)     idx.tutor = 4;
-  if (idx.tutor_wpp < 0) idx.tutor_wpp = 5;
-  console.log("[parsearCSV] índices:", idx);
-
+  const linhas = csv.split("\n").slice(1);
   const mapa = {};
-  for (const linha of linhas.slice(1)) {
+  for (const linha of linhas) {
     if (!linha.trim()) continue;
-    const cols = splitLinha(linha);
-    if (cols.length < 2) continue;
-    const ra = cols[idx.ra]?.trim().replace(/"/g, "");
-    if (!ra || !/^\d+$/.test(ra)) continue; // ignora linhas sem RA numérico
-    const tutor = cols[idx.tutor]?.trim().replace(/"/g, "") || "";
+    const cols = parsearLinha(linha);
+    if (cols.length < 5) continue;
+    const ra = cols[0].trim().replace(/"/g, "");
+    if (!ra) continue;
     mapa[ra] = {
       RA:             ra,
-      nome:           cols[idx.nome]?.trim().replace(/"/g, "") || "",
-      serie:          cols[idx.serie]?.trim().replace(/"/g, "") || "",
-      cidade:         cols[idx.cidade]?.trim().replace(/"/g, "") || "",
-      tutor:          tutor,
-      tutor_wpp:      cols[idx.tutor_wpp]?.trim().replace(/"/g, "") || "",
-      tutor_iniciais: iniciais(tutor),
-      tutor_msg:      `Oi, ${tutor || "tutor"}! Sou ${cols[idx.nome]?.trim()} (${cols[idx.serie]?.trim()}). Preciso de ajuda com...`
+      nome:           cols[1]?.trim().replace(/"/g, "") || "",
+      serie:          cols[2]?.trim().replace(/"/g, "") || "",
+      cidade:         cols[3]?.trim().replace(/"/g, "") || "",
+      tutor:          cols[4]?.trim().replace(/"/g, "") || "",
+      tutor_wpp:      cols[5]?.trim().replace(/"/g, "") || "",
+      tutor_iniciais: iniciais(cols[4]?.trim().replace(/"/g, "") || ""),
+      tutor_msg:      `Oi, ${cols[4]?.trim()}! Sou ${cols[1]?.trim()} (${cols[2]?.trim()}). Preciso de ajuda com...`
     };
   }
-  console.log("[parsearCSV] alunos carregados:", Object.keys(mapa).length);
   return mapa;
 }
 
 // Parser CSV completo — lida com células que contêm vírgulas e quebras de linha
 function parseCSVCompleto(texto) {
-  if (!texto || !texto.trim()) return [];
   const rows = [];
-
-  // Detecta separador: tab ou vírgula
-  const primeiraLinha = texto.split("\n")[0];
-  const sepChar = primeiraLinha.includes("\t") ? "\t" : ",";
-
-  // Se for TSV, processa linha a linha de forma simples
-  if (sepChar === "\t") {
-    for (const linha of texto.split("\n")) {
-      if (!linha.trim()) continue;
-      const cols = linha.split("\t").map(c => c.replace(/\r$/, "").replace(/^"|"$/g, "").trim());
-      if (cols.some(c => c !== "")) rows.push(cols);
-    }
-    return rows;
-  }
-
-  // CSV com vírgula: parser completo com suporte a aspas e quebras de linha
   let col = "", row = [], dentroAspas = false;
+
   for (let i = 0; i < texto.length; i++) {
     const ch = texto[i];
     const prox = texto[i + 1];
+
     if (ch === '"') {
-      if (dentroAspas && prox === '"') { col += '"'; i++; }
-      else dentroAspas = !dentroAspas;
+      if (dentroAspas && prox === '"') {
+        // Aspas escapadas ("") dentro de célula
+        col += '"';
+        i++;
+      } else {
+        dentroAspas = !dentroAspas;
+      }
     } else if (ch === ',' && !dentroAspas) {
-      row.push(col.trim()); col = "";
+      row.push(col.trim());
+      col = "";
     } else if ((ch === '\n' || (ch === '\r' && prox === '\n')) && !dentroAspas) {
-      if (ch === '\r') i++;
+      if (ch === '\r') i++; // pula o \n do \r\n
       row.push(col.trim());
       if (row.some(c => c !== "")) rows.push(row);
-      row = []; col = "";
+      row = [];
+      col = "";
     } else if (ch === '\r' && !dentroAspas) {
+      // \r sozinho
       row.push(col.trim());
       if (row.some(c => c !== "")) rows.push(row);
-      row = []; col = "";
-    } else { col += ch; }
+      row = [];
+      col = "";
+    } else {
+      col += ch;
+    }
   }
-  if (col || row.length) { row.push(col.trim()); if (row.some(c => c !== "")) rows.push(row); }
+  // Última célula/linha
+  if (col || row.length) {
+    row.push(col.trim());
+    if (row.some(c => c !== "")) rows.push(row);
+  }
   return rows;
 }
 
@@ -224,13 +175,9 @@ function parsearLinha(linha) {
 // Detecta URLs no texto e transforma em links clicáveis
 function linkificar(texto) {
   if (!texto) return "";
-  // Regex mais robusta: captura https, http, bit.ly, www — sem incluir pontuação final
-  return texto.replace(/(https?:\/\/[^\s<"')\]]+|bit\.ly\/[^\s<"')\]]+|www\.[^\s<"')\]]+)/g, url => {
-    // Remove pontuação no final da URL (ponto, vírgula, parênteses etc.)
-    const urlClean = url.replace(/[.,;:!?)\]'"]+$/, "");
-    const href = urlClean.startsWith("http") ? urlClean : "https://" + urlClean;
-    const resto = url.slice(urlClean.length); // pontuação que foi removida
-    return `<a href="${href}" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:underline;word-break:break-all">${urlClean}</a>${resto}`;
+  return texto.replace(/(https?:\/\/[^\s<]+|bit\.ly\/[^\s<]+|www\.[^\s<]+)/g, url => {
+    const href = url.startsWith("http") ? url : "https://" + url;
+    return `<a href="${href}" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:underline;word-break:break-all">${url}</a>`;
   });
 }
 
@@ -261,7 +208,6 @@ function processarBusca(ra, erro) {
 // -------------------------------------------------------
 function identificarAluno(aluno) {
   alunoAtual = aluno;
-  document.body.classList.add("logado");
   renderizarPerfil(aluno);
   renderizarTudo(aluno);
   carregarCadastro(aluno.RA || aluno.ra);
@@ -306,66 +252,23 @@ function saudacao() {
   return "Boa noite!";
 }
 
-// sincronizarDesktop: removida (sem uso)
+function sincronizarDesktop() {
+  // Nada a fazer — conteúdo fica direto no main-content
+}
 
-async function buscarRADesktop() {
+function buscarRADesktop() {
   const input = document.getElementById("raInputDesktop");
   const ra = input?.value?.trim();
   const erro = document.getElementById("ra-error-desktop");
-  const btn = document.querySelector("#desktop-sidebar button[onclick='buscarRADesktop()']") ||
-               document.querySelector("#sidebar-ra button");
   if (!ra) return;
-
-  if (btn) btn.textContent = "Buscando...";
-
-  // Tenta planilha de tutores primeiro
-  if (Object.keys(dadosCarregados).length === 0) {
-    try {
-      const response = await fetch(SHEET_URL);
-      if (!response.ok) throw new Error("planilha indisponivel");
-      const csv = await response.text();
-      dadosCarregados = parsearCSV(csv);
-    } catch(e) {
-      // fallback via CADASTRO_URL abaixo
-    }
-  }
-
-  if (btn) btn.textContent = "Entrar";
-
   const aluno = dadosCarregados[ra];
   if (aluno) {
     if (erro) erro.style.display = "none";
     sessionStorage.setItem("iol_aluno", JSON.stringify(aluno));
     identificarAluno(aluno);
-    return;
-  }
-
-  // Planilha não resolveu — tenta CADASTRO_URL como fallback
-  try {
-    const resp = await fetch(`${CADASTRO_URL}?ra=${encodeURIComponent(ra)}`);
-    const json = await resp.json();
-    if (json.dados && (json.dados.RA || json.dados.Nome)) {
-      const d = json.dados;
-      const alunoFallback = {
-        RA: d.RA || ra,
-        nome: d.Nome || "Aluno",
-        serie: d.Serie || "",
-        cidade: d.Cidade_mora || "",
-        tutor: d.Tutor || "",
-        tutor_wpp: d.Tutor_wpp || "",
-        tutor_iniciais: iniciais(d.Tutor || ""),
-        tutor_msg: `Oi, ${d.Tutor || "tutor"}! Sou ${d.Nome || ra} (${d.Serie || ""}). Preciso de ajuda com...`
-      };
-      dadosCarregados[ra] = alunoFallback;
-      sessionStorage.setItem("iol_aluno", JSON.stringify(alunoFallback));
-      identificarAluno(alunoFallback);
-      if (erro) erro.style.display = "none";
-    } else {
-      if (erro) { erro.style.display = "block"; erro.textContent = "❌ RA não encontrado."; }
-      if (input) { input.style.borderColor = "#EE2D67"; setTimeout(() => { input.style.borderColor = ""; }, 2000); }
-    }
-  } catch(e2) {
-    if (erro) { erro.style.display = "block"; erro.textContent = "❌ Erro de conexão. Tente novamente."; }
+  } else {
+    if (erro) erro.style.display = "block";
+    if (input) { input.style.borderColor = "#EE2D67"; setTimeout(() => { input.style.borderColor = ""; }, 2000); }
   }
 }
 
@@ -394,23 +297,8 @@ function renderizarTudo(aluno) {
   carregarRecados(aluno.serie);
   carregarCalendario(aluno.serie);
   renderizarNotaAluno(aluno);
-  renderizarOrientacaoEF(aluno);
+  renderizarCalendarioVestibulares();
   renderizarTutorRodape(aluno);
-}
-
-function renderizarOrientacaoEF(aluno) {
-  const serie = normalizarSerie(aluno.serie);
-  const ehEM = ["1EM","2EM","3EM"].includes(serie);
-  // Aba Orientação no sidebar: mostrar só para EM
-  const navOrientacao = document.querySelector(".sidebar-nav-item[data-tab='orientacao']");
-  const tabOrientacao = document.querySelector(".tab[data-tab='orientacao']");
-  if (!ehEM) {
-    if (navOrientacao) navOrientacao.style.display = "none";
-    if (tabOrientacao) tabOrientacao.style.display = "none";
-  } else {
-    if (navOrientacao) navOrientacao.style.display = "";
-    if (tabOrientacao) tabOrientacao.style.display = "";
-  }
 }
 
 function renderizarTutorRodape(aluno) {
@@ -646,21 +534,12 @@ function renderizarCadastro(d, container) {
 function sair() {
   sessionStorage.removeItem("iol_aluno");
   alunoAtual = null;
-  document.body.classList.remove("logado");
-  // Mobile
   document.getElementById("student-profile").style.display = "none";
   document.getElementById("ra-header-section").style.display = "block";
   document.getElementById("main-content").style.display = "none";
   document.getElementById("welcome-screen")?.classList.remove("hidden");
   document.getElementById("raInput").value = "";
   document.getElementById("ra-error").style.display = "none";
-  // Desktop sidebar reset
-  const sidebarPerfil = document.getElementById("sidebar-perfil");
-  const sidebarRa = document.getElementById("sidebar-ra");
-  const sidebarNav = document.getElementById("sidebar-nav");
-  if (sidebarPerfil) sidebarPerfil.style.display = "none";
-  if (sidebarRa) sidebarRa.style.display = "block";
-  if (sidebarNav) sidebarNav.style.display = "none";
   trocarAba("home");
   esconderFAB();
   showToast("Até logo! 👋");
@@ -694,7 +573,15 @@ function abrirWhatsAppContato(wpp, msg) {
   window.open(`https://wa.me/${wpp}?text=${encodeURIComponent(msg)}`, "_blank", "noopener");
 }
 
-// trocarAba: definida acima, com sync do sidebar desktop
+// -------------------------------------------------------
+//  NAVEGAÇÃO
+// -------------------------------------------------------
+function trocarAba(nomeAba) {
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.tab === nomeAba));
+  document.querySelectorAll(".tab-content").forEach(c => c.classList.toggle("active", c.id === `tab-${nomeAba}`));
+  fecharBusca();
+  document.getElementById("tabs-nav")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
 
 // -------------------------------------------------------
 //  RENDERIZAÇÕES
@@ -807,7 +694,7 @@ function renderizarAvisos(destaque, extras) {
       <!-- 4. Texto de encerramento + tags -->
       <div class="recado-rodape">
         ${destaque.texto_final
-          ? `<div class="recado-texto-final">${linkificar(destaque.texto_final)}</div>`
+          ? `<div class="recado-texto-final">${destaque.texto_final}</div>`
           : ""}
         ${tags ? `<div class="recado-tags">${tags}</div>` : ""}
       </div>
@@ -817,18 +704,13 @@ function renderizarAvisos(destaque, extras) {
     <!-- Recados secundários -->
     ${extras && extras.length ? `
     <div class="recados-extras">
-      <div class="recados-extras-titulo">
-        <span class="recados-extras-linha"></span>
-        <span class="recados-extras-label">Outros recados</span>
-        <span class="recados-extras-linha"></span>
-      </div>
       ${extras.map(r => `
         <div class="recado-extra-item">
           ${r.banner ? `<img src="${driveUrl(r.banner)}" class="recado-extra-banner"
             onerror="this.style.display='none'" alt="">` : ""}
           <div class="recado-extra-corpo">
             <div class="recado-extra-titulo">${r.titulo}</div>
-            ${r.texto ? `<div class="recado-extra-texto">${linkificar(r.texto)}</div>` : ""}
+            ${r.texto ? `<div class="recado-extra-texto">${r.texto}</div>` : ""}
             ${r.tag1 ? `<span class="aviso-tag" style="font-size:10px">${r.tag1}</span>` : ""}
           </div>
         </div>`).join("")}
@@ -839,17 +721,30 @@ function renderizarAvisos(destaque, extras) {
 
 
 function renderizarTutor(aluno) {
+  // DEBUG temporário — remove após confirmar a série
   console.log("Série do aluno:", JSON.stringify(aluno.serie));
+  showToast(`Série: "${aluno.serie}" → normalizada: "${normalizarSerie(aluno.serie)}"`);
   document.getElementById("tutor-avatar").textContent = aluno.tutor_iniciais || iniciais(aluno.tutor || "");
   document.getElementById("tutor-name").textContent   = aluno.tutor;
   document.getElementById("tutor-turma").textContent  = aluno.serie;
 }
 
-// normalizarSerie: definição única abaixo na linha ~1115
+// Normaliza série: "9º EF" ou "9EF" ou "9ºEF" → "9EF"
+function normalizarSerie(s) {
+  return (s || "").replace(/[°º ]/g, "").toUpperCase().trim();
+}
 
 function renderizarPlataformas(aluno) {
   const sNorm = normalizarSerie(aluno.serie);
   const filtradas = PLATAFORMAS.filter(p => p.series.some(s => normalizarSerie(s) === sNorm));
+
+  const gridHome = document.getElementById("platforms-home");
+  if (gridHome) gridHome.innerHTML = filtradas.slice(0, 4).map(p => `
+    <a class="platform-card" href="${p.url}" target="_blank" rel="noopener">
+      <div class="platform-icon" style="background:${p.cor_bg}">${p.icon}</div>
+      <div class="platform-name">${p.nome}</div>
+      <div class="platform-desc">${p.desc}</div>
+    </a>`).join("") || `<p style="color:var(--text2);font-size:13px;padding:8px 0;grid-column:1/-1">Nenhuma plataforma encontrada para "${aluno.serie}".</p>`;
 
   const full = document.getElementById("platforms-full");
   if (full) full.innerHTML = filtradas.map(p => `
@@ -879,7 +774,7 @@ function renderizarGuias(aluno) {
             <div class="guia-name">${item.nome}</div>
             <div class="guia-desc">${item.desc}</div>
           </div>
-          <span style="color:var(--blue);font-size:20px;font-weight:700;flex-shrink:0">›</span>
+          <span style="color:var(--text3);font-size:18px">›</span>
         </a>`).join("")}
     </div>`;
   }).join("") || `<p style="color:var(--text2);font-size:13px;padding:8px 0">Nenhum guia encontrado.</p>`;
@@ -1287,6 +1182,87 @@ function renderizarNotaAluno(aluno) {
   `;
 }
 
+function renderizarCalendarioVestibulares() {
+  const container = document.getElementById("orient-calendario-vest");
+  if (!container || typeof VESTIBULARES_2026 === "undefined") return;
+
+  // Ordem dos meses
+  const ordemMes = ["JAN","FEV","MAR","ABR","MAI","JUN","JUL","AGO","SET","OUT","NOV","DEZ"];
+  const corTipo = {
+    enem:    { bg:"#FEF9E7", cor:"#B7950B", label:"ENEM"    },
+    fuvest:  { bg:"#EBF4FF", cor:"#1A5276", label:"FUVEST"  },
+    unicamp: { bg:"#EAFAF0", cor:"#1A7A4A", label:"UNICAMP" },
+    unesp:   { bg:"#FDF2F8", cor:"#7D3C98", label:"UNESP"   },
+    ita:     { bg:"#FDFEFE", cor:"#2C3E50", label:"ITA"      },
+    ime:     { bg:"#F0F3F4", cor:"#2C3E50", label:"IME"      },
+    federal: { bg:"#EBF5FB", cor:"#1A6FA0", label:"FEDERAL" },
+    privada: { bg:"#FEF5E7", cor:"#A04000", label:"PRIVADA" },
+  };
+
+  // Agrupa por mês
+  const porMes = {};
+  VESTIBULARES_2026.forEach(v => {
+    if (!porMes[v.mes]) porMes[v.mes] = [];
+    porMes[v.mes].push(v);
+  });
+
+  const mesesComDados = Object.keys(porMes).sort((a,b) => ordemMes.indexOf(a) - ordemMes.indexOf(b));
+
+  container.innerHTML = `
+    <div style="background:#F8F9FA;border-radius:12px;padding:20px;border:1.5px solid #E5E7EB">
+      <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px">
+        <span style="font-size:26px">📅</span>
+        <div>
+          <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:15px;color:#002561">
+            Calendário de Vestibulares 2026/2027
+          </div>
+          <div style="font-size:12px;color:#666;margin-top:2px">
+            Datas oficiais · Mantenha sempre atualizado com seu tutor
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px">
+        ${Object.entries(corTipo).map(([k,v]) => `
+          <span style="background:${v.bg};color:${v.cor};border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;font-family:Montserrat,sans-serif">
+            ${v.label}
+          </span>`).join("")}
+      </div>
+
+      ${mesesComDados.map(mes => `
+        <div style="margin-bottom:14px">
+          <div style="font-family:Montserrat,sans-serif;font-weight:800;font-size:12px;color:#002561;
+                      text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;padding-bottom:4px;
+                      border-bottom:2px solid #002561">
+            ${mes}
+          </div>
+          ${porMes[mes].map(v => {
+            const c = corTipo[v.tipo] || corTipo.federal;
+            return `
+              <div style="display:flex;align-items:flex-start;gap:10px;padding:8px 10px;
+                          background:${c.bg};border-radius:8px;margin-bottom:6px">
+                <div style="flex-shrink:0;width:28px;text-align:center">
+                  <div style="font-family:Montserrat,sans-serif;font-weight:800;font-size:14px;color:${c.cor}">${v.dia}</div>
+                </div>
+                <div style="flex:1">
+                  <div style="font-size:13px;font-weight:700;color:#002561;font-family:Montserrat,sans-serif">${v.evento}</div>
+                  <div style="font-size:11px;color:#666;margin-top:2px">${v.detalhe}</div>
+                </div>
+                <span style="background:${c.bg};color:${c.cor};border:1px solid ${c.cor};border-radius:20px;
+                             padding:2px 8px;font-size:10px;font-weight:700;font-family:Montserrat,sans-serif;
+                             flex-shrink:0;white-space:nowrap">
+                  ${c.label}
+                </span>
+              </div>`;
+          }).join("")}
+        </div>`).join("")}
+
+      <div style="background:#EBF4FF;border-radius:8px;padding:10px 12px;font-size:12px;color:#1A5276;margin-top:4px">
+        ⚠️ Datas sujeitas a alteração. Sempre confirme nos sites oficiais antes de se inscrever.
+      </div>
+    </div>
+  `;
+}
 
 // =============================================================
 //  SIMULADOR DE VESTIBULAR
