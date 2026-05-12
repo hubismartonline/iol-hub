@@ -488,5 +488,94 @@
 
   <script src="dados.js"></script>
   <script src="app.js"></script>
+
+  <!-- ===================== LAYOUT DESKTOP ===================== -->
+  <!-- Sidebar (visível só em desktop via CSS) -->
+  <div id="desktop-sidebar">
+
+    <!-- Logo -->
+    <div class="sidebar-logo">
+      <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHEAAAB4CAYAAADFcR0YAAA0+0lEQVR4nO29eXxV1bX4v845904yk5CEhCEJkIQpIYSZAAkBwigiqChWrK2ttVqttfVpHZ7aVq2tWocqaq2t2lKrta222tpaq1WrVq1atWrVqlWrVq1atWrVqlWrVq1atWrVqlWrVq1atWrVqh" alt="Ismart Online" onerror="this.style.display='none'">
+      <div style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:15px;color:#fff;margin-top:8px">Ismart Online</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.5);font-family:'Lato',sans-serif">Hub do Aluno</div>
+    </div>
+
+    <!-- Perfil (preenchido via JS) -->
+    <div class="sidebar-perfil" id="sidebar-perfil" style="display:none">
+      <div class="sidebar-saudacao" id="sidebar-saudacao">Bom dia!</div>
+      <div class="sidebar-nome" id="sidebar-nome">—</div>
+      <div class="sidebar-badges">
+        <span class="sidebar-badge" id="sidebar-serie">—</span>
+      </div>
+      <button class="sidebar-sair" onclick="sair()">Sair</button>
+    </div>
+
+    <!-- Busca por RA (quando não logado) -->
+    <div id="sidebar-ra" class="sidebar-perfil">
+      <div class="sidebar-saudacao">Olá! 👋</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.7);margin-bottom:10px;font-family:'Lato',sans-serif">Digite seu RA para entrar</div>
+      <input id="raInputDesktop" type="number" placeholder="Seu RA..."
+        style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.3);
+               background:rgba(255,255,255,0.1);color:#fff;font-size:13px;
+               font-family:'Lato',sans-serif;box-sizing:border-box;margin-bottom:8px;outline:none"
+        onkeydown="if(event.key==='Enter')buscarRADesktop()">
+      <button onclick="buscarRADesktop()"
+        style="width:100%;padding:8px;background:var(--blue);color:var(--navy);border:none;
+               border-radius:6px;font-family:'Montserrat',sans-serif;font-weight:700;
+               font-size:13px;cursor:pointer">
+        Entrar
+      </button>
+      <div id="ra-error-desktop" style="display:none;color:#EE2D67;font-size:11px;margin-top:6px;font-family:'Lato',sans-serif">
+        ❌ RA não encontrado.
+      </div>
+    </div>
+
+    <!-- Navegação -->
+    <nav class="sidebar-nav" id="sidebar-nav" style="display:none">
+      <button class="sidebar-nav-item active" data-tab="home" onclick="trocarAba('home')">
+        <span class="nav-icon">🏠</span> Início
+      </button>
+      <button class="sidebar-nav-item" data-tab="plataformas" onclick="trocarAba('plataformas')">
+        <span class="nav-icon">🚀</span> Plataformas
+      </button>
+      <button class="sidebar-nav-item" data-tab="guias" onclick="trocarAba('guias')">
+        <span class="nav-icon">📚</span> Guias
+      </button>
+      <button class="sidebar-nav-item" data-tab="agenda" onclick="trocarAba('agenda')">
+        <span class="nav-icon">📅</span> Agenda
+      </button>
+      <button class="sidebar-nav-item" data-tab="orientacao" onclick="trocarAba('orientacao')">
+        <span class="nav-icon">🎯</span> Orientação
+      </button>
+      <button class="sidebar-nav-item" data-tab="faq" onclick="trocarAba('faq')">
+        <span class="nav-icon">❓</span> FAQ
+      </button>
+      <button class="sidebar-nav-item" data-tab="atendimento" onclick="trocarAba('atendimento')">
+        <span class="nav-icon">📋</span> Atendimento
+      </button>
+      <button class="sidebar-nav-item" data-tab="perfil" onclick="trocarAba('perfil')">
+        <span class="nav-icon">👤</span> Meu Perfil
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      © 2026 Ismart Online
+    </div>
+  </div>
+
+  <!-- Coluna direita: busca + conteúdo -->
+  <div id="desktop-main">
+    <!-- Busca global desktop -->
+    <div id="desktop-search">
+      <div class="search-wrap" style="max-width:600px;width:100%">
+        <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="search" id="searchInputDesktop" class="search-input"
+          placeholder="Buscar guias, plataformas, dúvidas..."
+          oninput="filtrarConteudo(this.value)">
+      </div>
+    </div>
+    <!-- Conteúdo das abas (apontado via JS) -->
+    <div id="desktop-content"></div>
+  </div>
 </body>
 </html>
