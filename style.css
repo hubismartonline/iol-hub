@@ -2348,7 +2348,6 @@ mark {
   #main-content {
     margin-left: 260px;
     padding: 24px 32px;
-    max-width: 860px;
     display: block !important;
   }
 
@@ -2404,9 +2403,16 @@ mark {
 
   .sidebar-footer { padding: 16px 20px 0; border-top: 1px solid rgba(255,255,255,0.1); font-size: 10px; color: rgba(255,255,255,0.3); font-family: "Lato", sans-serif; text-align: center; }
 
-  /* Esconde tutor e acesso rápido no home desktop */
+  /* Esconde tutor e acesso rápido do home no desktop */
   #tab-home > section[aria-label="Seu tutor"],
   #tab-home > section[aria-label="Plataformas"] { display: none !important; }
+
+  /* Tutor no final de cada aba (exceto home e perfil) — injetado via JS */
+  .tutor-rodape-desktop {
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
 
   /* Plataformas completas em grid */
   .platforms-full { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -2417,4 +2423,11 @@ mark {
 
   /* Plataformas acesso rápido em 4 colunas */
   #platforms-home { grid-template-columns: repeat(4, 1fr) !important; }
+}
+
+/* Tutor rodapé — só desktop */
+.tutor-rodape-injetado { display: none; }
+@media (min-width: 768px) {
+  .tutor-rodape-injetado { display: block; }
+  .tutor-rodape-desktop  { display: block; }
 }
