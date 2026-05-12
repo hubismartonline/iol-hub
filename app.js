@@ -35,6 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (dadosSalvos) {
     try {
       alunoAtual = JSON.parse(dadosSalvos);
+      document.body.classList.add("logado");
       renderizarPerfil(alunoAtual);
       renderizarTudo(alunoAtual);
       carregarCadastro(alunoAtual.RA || alunoAtual.ra);
@@ -208,6 +209,7 @@ function processarBusca(ra, erro) {
 // -------------------------------------------------------
 function identificarAluno(aluno) {
   alunoAtual = aluno;
+  document.body.classList.add("logado");
   renderizarPerfil(aluno);
   renderizarTudo(aluno);
   carregarCadastro(aluno.RA || aluno.ra);
@@ -256,18 +258,37 @@ function sincronizarDesktop() {
   // Nada a fazer — conteúdo fica direto no main-content
 }
 
-function buscarRADesktop() {
+async function buscarRADesktop() {
   const input = document.getElementById("raInputDesktop");
   const ra = input?.value?.trim();
   const erro = document.getElementById("ra-error-desktop");
+  const btn = document.querySelector("#desktop-sidebar button[onclick='buscarRADesktop()']") ||
+               document.querySelector("#sidebar-ra button");
   if (!ra) return;
+
+  // Se a planilha ainda não foi carregada, faz o fetch agora
+  if (Object.keys(dadosCarregados).length === 0) {
+    if (btn) btn.textContent = "Buscando...";
+    try {
+      const response = await fetch(SHEET_URL);
+      if (!response.ok) throw new Error("Erro ao carregar planilha");
+      const csv = await response.text();
+      dadosCarregados = parsearCSV(csv);
+    } catch(e) {
+      if (erro) { erro.style.display = "block"; erro.textContent = "❌ Erro de conexão. Tente novamente."; }
+      if (btn) btn.textContent = "Entrar";
+      return;
+    }
+    if (btn) btn.textContent = "Entrar";
+  }
+
   const aluno = dadosCarregados[ra];
   if (aluno) {
     if (erro) erro.style.display = "none";
     sessionStorage.setItem("iol_aluno", JSON.stringify(aluno));
     identificarAluno(aluno);
   } else {
-    if (erro) erro.style.display = "block";
+    if (erro) { erro.style.display = "block"; erro.textContent = "❌ RA não encontrado."; }
     if (input) { input.style.borderColor = "#EE2D67"; setTimeout(() => { input.style.borderColor = ""; }, 2000); }
   }
 }
@@ -297,7 +318,6 @@ function renderizarTudo(aluno) {
   carregarRecados(aluno.serie);
   carregarCalendario(aluno.serie);
   renderizarNotaAluno(aluno);
-  renderizarCalendarioVestibulares();
   renderizarTutorRodape(aluno);
 }
 
@@ -534,6 +554,7 @@ function renderizarCadastro(d, container) {
 function sair() {
   sessionStorage.removeItem("iol_aluno");
   alunoAtual = null;
+  document.body.classList.remove("logado");
   document.getElementById("student-profile").style.display = "none";
   document.getElementById("ra-header-section").style.display = "block";
   document.getElementById("main-content").style.display = "none";
@@ -704,6 +725,11 @@ function renderizarAvisos(destaque, extras) {
     <!-- Recados secundários -->
     ${extras && extras.length ? `
     <div class="recados-extras">
+      <div class="recados-extras-titulo">
+        <span class="recados-extras-linha"></span>
+        <span class="recados-extras-label">Outros recados</span>
+        <span class="recados-extras-linha"></span>
+      </div>
       ${extras.map(r => `
         <div class="recado-extra-item">
           ${r.banner ? `<img src="${driveUrl(r.banner)}" class="recado-extra-banner"
@@ -721,9 +747,7 @@ function renderizarAvisos(destaque, extras) {
 
 
 function renderizarTutor(aluno) {
-  // DEBUG temporário — remove após confirmar a série
   console.log("Série do aluno:", JSON.stringify(aluno.serie));
-  showToast(`Série: "${aluno.serie}" → normalizada: "${normalizarSerie(aluno.serie)}"`);
   document.getElementById("tutor-avatar").textContent = aluno.tutor_iniciais || iniciais(aluno.tutor || "");
   document.getElementById("tutor-name").textContent   = aluno.tutor;
   document.getElementById("tutor-turma").textContent  = aluno.serie;
@@ -834,6 +858,7 @@ async function carregarCalendario(serie) {
     window._agendaSerie   = serie;
     renderizarAgenda(eventos, "todos");
     verificarLembretesVestibular(eventos);
+    renderizarCalendarioVestibulares();
 
   } catch(e) {
     console.log("Usando agenda local:", e);
@@ -1183,7 +1208,7 @@ function renderizarNotaAluno(aluno) {
 }
 
 function renderizarCalendarioVestibulares() {
-  const container = document.getElementById("orient-calendario-vest");
+  const container = document.getElementById("agenda-calendario-vest");
   if (!container || typeof VESTIBULARES_2026 === "undefined") return;
 
   // Ordem dos meses
