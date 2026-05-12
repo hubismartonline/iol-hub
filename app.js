@@ -210,12 +210,94 @@ function identificarAluno(aluno) {
 }
 
 function renderizarPerfil(aluno) {
+  // Mobile
   document.getElementById("ra-header-section").style.display = "none";
   document.getElementById("welcome-screen")?.classList.add("hidden");
   document.getElementById("student-profile").style.display = "block";
   document.getElementById("student-name").textContent = aluno.nome;
+  document.getElementById("header-greeting").textContent = saudacao();
   document.getElementById("badge-serie").textContent = `${aluno.serie}${aluno.cidade ? " · " + aluno.cidade : ""}`;
   document.getElementById("main-content").style.display = "block";
+
+  // Desktop sidebar
+  const sidebarRa = document.getElementById("sidebar-ra");
+  const sidebarPerfil = document.getElementById("sidebar-perfil");
+  const sidebarNav = document.getElementById("sidebar-nav");
+  if (sidebarRa) sidebarRa.style.display = "none";
+  if (sidebarPerfil) {
+    sidebarPerfil.style.display = "block";
+    document.getElementById("sidebar-saudacao").textContent = saudacao() + " 👋";
+    document.getElementById("sidebar-nome").textContent = aluno.nome;
+    document.getElementById("sidebar-serie").textContent = `${aluno.serie}${aluno.cidade ? " · " + aluno.cidade : ""}`;
+  }
+  if (sidebarNav) sidebarNav.style.display = "block";
+
+  // No desktop, move o conteúdo para o desktop-content
+  sincronizarDesktop();
+}
+
+function saudacao() {
+  const h = new Date().getHours();
+  if (h < 12) return "Bom dia!";
+  if (h < 18) return "Boa tarde!";
+  return "Boa noite!";
+}
+
+function sincronizarDesktop() {
+  const desktopContent = document.getElementById("desktop-content");
+  if (!desktopContent) return;
+  if (window.innerWidth < 768) return;
+
+  // Encontra a aba ativa e clona o conteúdo
+  const abaAtiva = document.querySelector(".tab-content.active");
+  if (abaAtiva) {
+    desktopContent.innerHTML = "";
+    desktopContent.appendChild(abaAtiva.cloneNode(true));
+    // Remove o clone antigo para não duplicar IDs
+    desktopContent.querySelector(".tab-content")?.classList.add("active");
+  }
+}
+
+function buscarRADesktop() {
+  const input = document.getElementById("raInputDesktop");
+  const ra = input?.value?.trim();
+  const erro = document.getElementById("ra-error-desktop");
+
+  if (!ra) return;
+
+  // Reutiliza a lógica de busca existente
+  const aluno = dadosCarregados[ra];
+  if (aluno) {
+    if (erro) erro.style.display = "none";
+    sessionStorage.setItem("iol_aluno", JSON.stringify(aluno));
+    identificarAluno(aluno);
+  } else {
+    if (erro) erro.style.display = "block";
+    if (input) input.style.borderColor = "#EE2D67";
+    setTimeout(() => { if (input) input.style.borderColor = ""; }, 2000);
+  }
+}
+
+function trocarAba(nomeAba) {
+  // Atualiza tabs mobile
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.tab === nomeAba));
+  document.querySelectorAll(".tab-content").forEach(c => c.classList.toggle("active", c.id === `tab-${nomeAba}`));
+
+  // Atualiza sidebar desktop
+  document.querySelectorAll(".sidebar-nav-item").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.tab === nomeAba);
+  });
+
+  fecharBusca();
+
+  // Mobile: scroll
+  if (window.innerWidth < 768) {
+    document.getElementById("tabs-nav")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  } else {
+    // Desktop: sincroniza conteúdo
+    sincronizarDesktop();
+    document.getElementById("desktop-main")?.scrollTo({ top: 0, behavior: "smooth" });
+  }
 }
 
 function renderizarTudo(aluno) {
