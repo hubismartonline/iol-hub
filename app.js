@@ -71,17 +71,36 @@ async function buscarRA() {
   try {
     if (Object.keys(dadosCarregados).length === 0) {
       const response = await fetch(SHEET_URL);
-      if (!response.ok) throw new Error("Erro ao carregar planilha");
+      if (!response.ok) throw new Error("planilha indisponivel");
       const csv = await response.text();
       dadosCarregados = parsearCSV(csv);
     }
     processarBusca(ra, erro);
   } catch(e) {
-    if (typeof ALUNOS !== "undefined" && ALUNOS[ra]) {
-      sessionStorage.setItem("iol_aluno", JSON.stringify(ALUNOS[ra]));
-      identificarAluno(ALUNOS[ra]);
-      if (erro) erro.style.display = "none";
-    } else {
+    // Planilha de tutores falhou — tenta via CADASTRO_URL (Apps Script) como fallback
+    try {
+      const resp = await fetch(`${CADASTRO_URL}?ra=${encodeURIComponent(ra)}`);
+      const json = await resp.json();
+      if (json.dados && (json.dados.RA || json.dados.Nome)) {
+        const d = json.dados;
+        const aluno = {
+          RA: d.RA || ra,
+          nome: d.Nome || "Aluno",
+          serie: d.Serie || "",
+          cidade: d.Cidade_mora || "",
+          tutor: d.Tutor || "",
+          tutor_wpp: d.Tutor_wpp || "",
+          tutor_iniciais: iniciais(d.Tutor || ""),
+          tutor_msg: `Oi, ${d.Tutor || "tutor"}! Sou ${d.Nome || ra} (${d.Serie || ""}). Preciso de ajuda com...`
+        };
+        dadosCarregados[ra] = aluno;
+        sessionStorage.setItem("iol_aluno", JSON.stringify(aluno));
+        identificarAluno(aluno);
+        if (erro) erro.style.display = "none";
+      } else {
+        if (erro) { erro.style.display = "block"; erro.textContent = "❌ RA não encontrado. Verifique e tente novamente."; }
+      }
+    } catch(e2) {
       showToast("Erro de conexão. Tente novamente.");
       if (erro) { erro.style.display = "block"; erro.textContent = "❌ Erro ao conectar. Tente novamente."; }
     }
@@ -268,30 +287,56 @@ async function buscarRADesktop() {
                document.querySelector("#sidebar-ra button");
   if (!ra) return;
 
-  // Se a planilha ainda não foi carregada, faz o fetch agora
+  if (btn) btn.textContent = "Buscando...";
+
+  // Tenta planilha de tutores primeiro
   if (Object.keys(dadosCarregados).length === 0) {
-    if (btn) btn.textContent = "Buscando...";
     try {
       const response = await fetch(SHEET_URL);
-      if (!response.ok) throw new Error("Erro ao carregar planilha");
+      if (!response.ok) throw new Error("planilha indisponivel");
       const csv = await response.text();
       dadosCarregados = parsearCSV(csv);
     } catch(e) {
-      if (erro) { erro.style.display = "block"; erro.textContent = "❌ Erro de conexão. Tente novamente."; }
-      if (btn) btn.textContent = "Entrar";
-      return;
+      // fallback via CADASTRO_URL abaixo
     }
-    if (btn) btn.textContent = "Entrar";
   }
+
+  if (btn) btn.textContent = "Entrar";
 
   const aluno = dadosCarregados[ra];
   if (aluno) {
     if (erro) erro.style.display = "none";
     sessionStorage.setItem("iol_aluno", JSON.stringify(aluno));
     identificarAluno(aluno);
-  } else {
-    if (erro) { erro.style.display = "block"; erro.textContent = "❌ RA não encontrado."; }
-    if (input) { input.style.borderColor = "#EE2D67"; setTimeout(() => { input.style.borderColor = ""; }, 2000); }
+    return;
+  }
+
+  // Planilha não resolveu — tenta CADASTRO_URL como fallback
+  try {
+    const resp = await fetch(`${CADASTRO_URL}?ra=${encodeURIComponent(ra)}`);
+    const json = await resp.json();
+    if (json.dados && (json.dados.RA || json.dados.Nome)) {
+      const d = json.dados;
+      const alunoFallback = {
+        RA: d.RA || ra,
+        nome: d.Nome || "Aluno",
+        serie: d.Serie || "",
+        cidade: d.Cidade_mora || "",
+        tutor: d.Tutor || "",
+        tutor_wpp: d.Tutor_wpp || "",
+        tutor_iniciais: iniciais(d.Tutor || ""),
+        tutor_msg: `Oi, ${d.Tutor || "tutor"}! Sou ${d.Nome || ra} (${d.Serie || ""}). Preciso de ajuda com...`
+      };
+      dadosCarregados[ra] = alunoFallback;
+      sessionStorage.setItem("iol_aluno", JSON.stringify(alunoFallback));
+      identificarAluno(alunoFallback);
+      if (erro) erro.style.display = "none";
+    } else {
+      if (erro) { erro.style.display = "block"; erro.textContent = "❌ RA não encontrado."; }
+      if (input) { input.style.borderColor = "#EE2D67"; setTimeout(() => { input.style.borderColor = ""; }, 2000); }
+    }
+  } catch(e2) {
+    if (erro) { erro.style.display = "block"; erro.textContent = "❌ Erro de conexão. Tente novamente."; }
   }
 }
 
