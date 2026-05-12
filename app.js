@@ -303,7 +303,7 @@ function renderizarTudo(aluno) {
 
 function renderizarTutorRodape(aluno) {
   // Injeta card do tutor no rodapé de todas as abas exceto home
-  const abas = ["home","plataformas","guias","agenda","orientacao","faq","atendimento","perfil"];
+  const abas = ["plataformas","guias","agenda","orientacao","faq","atendimento","perfil"];
   const html = `
     <div class="tutor-rodape-desktop">
       <h2 class="section-title" style="font-size:13px;margin-bottom:10px">💬 Falar com seu tutor</h2>
