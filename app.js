@@ -297,7 +297,7 @@ function renderizarTudo(aluno) {
   carregarRecados(aluno.serie);
   carregarCalendario(aluno.serie);
   renderizarNotaAluno(aluno);
-  renderizarOrientacaoEF(aluno);
+  renderizarCalendarioVestibulares();
   renderizarTutorRodape(aluno);
 }
 
@@ -694,7 +694,7 @@ function renderizarAvisos(destaque, extras) {
       <!-- 4. Texto de encerramento + tags -->
       <div class="recado-rodape">
         ${destaque.texto_final
-          ? `<div class="recado-texto-final">${linkificar(destaque.texto_final)}</div>`
+          ? `<div class="recado-texto-final">${destaque.texto_final}</div>`
           : ""}
         ${tags ? `<div class="recado-tags">${tags}</div>` : ""}
       </div>
@@ -715,7 +715,7 @@ function renderizarAvisos(destaque, extras) {
             onerror="this.style.display='none'" alt="">` : ""}
           <div class="recado-extra-corpo">
             <div class="recado-extra-titulo">${r.titulo}</div>
-            ${r.texto ? `<div class="recado-extra-texto">${linkificar(r.texto)}</div>` : ""}
+            ${r.texto ? `<div class="recado-extra-texto">${r.texto}</div>` : ""}
             ${r.tag1 ? `<span class="aviso-tag" style="font-size:10px">${r.tag1}</span>` : ""}
           </div>
         </div>`).join("")}
@@ -724,20 +724,6 @@ function renderizarAvisos(destaque, extras) {
 }
 
 
-
-function renderizarOrientacaoEF(aluno) {
-  const serie = normalizarSerie(aluno.serie);
-  const ehEM = ["1EM","2EM","3EM"].includes(serie);
-  const navOrientacao = document.querySelector(".sidebar-nav-item[data-tab='orientacao']");
-  const tabOrientacao = document.querySelector(".tab[data-tab='orientacao']");
-  if (!ehEM) {
-    if (navOrientacao) navOrientacao.style.display = "none";
-    if (tabOrientacao) tabOrientacao.style.display = "none";
-  } else {
-    if (navOrientacao) navOrientacao.style.display = "";
-    if (tabOrientacao) tabOrientacao.style.display = "";
-  }
-}
 
 function renderizarTutor(aluno) {
   // DEBUG temporário — remove após confirmar a série
