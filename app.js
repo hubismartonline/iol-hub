@@ -172,6 +172,15 @@ function parsearLinha(linha) {
 }
 
 
+// Detecta URLs no texto e transforma em links clicáveis
+function linkificar(texto) {
+  if (!texto) return "";
+  return texto.replace(/(https?:\/\/[^\s<]+|bit\.ly\/[^\s<]+|www\.[^\s<]+)/g, url => {
+    const href = url.startsWith("http") ? url : "https://" + url;
+    return `<a href="${href}" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:underline;word-break:break-all">${url}</a>`;
+  });
+}
+
 function iniciais(nome) {
   const partes = nome.split(" ").filter(Boolean);
   if (partes.length >= 2) return (partes[0][0] + partes[1][0]).toUpperCase();
@@ -289,6 +298,39 @@ function renderizarTudo(aluno) {
   carregarCalendario(aluno.serie);
   renderizarNotaAluno(aluno);
   renderizarCalendarioVestibulares();
+  renderizarTutorRodape(aluno);
+}
+
+function renderizarTutorRodape(aluno) {
+  // Injeta card do tutor no rodapé de todas as abas exceto home
+  const abas = ["plataformas","guias","agenda","orientacao","faq","atendimento","perfil"];
+  const html = `
+    <div class="tutor-rodape-desktop">
+      <h2 class="section-title" style="font-size:13px;margin-bottom:10px">💬 Falar com seu tutor</h2>
+      <div style="display:flex;align-items:center;gap:12px;background:var(--card);border-radius:10px;padding:12px 16px;box-shadow:var(--shadow)">
+        <div class="tutor-avatar" style="width:36px;height:36px;font-size:13px" id="tutor-avatar-rodape">${aluno.tutor_iniciais || iniciais(aluno.tutor || "")}</div>
+        <div style="flex:1">
+          <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:13px;color:var(--navy)">${aluno.tutor || "Seu tutor"}</div>
+          <div style="font-size:11px;color:var(--text2)">${aluno.serie || ""}</div>
+        </div>
+        <button class="wpp-btn" onclick="abrirWhatsApp()" style="padding:8px 14px;font-size:12px">
+          💬 WhatsApp
+        </button>
+      </div>
+    </div>`;
+
+  abas.forEach(aba => {
+    const tab = document.getElementById(`tab-${aba}`);
+    if (!tab) return;
+    let rodape = tab.querySelector(".tutor-rodape-injetado");
+    if (!rodape) {
+      rodape = document.createElement("div");
+      rodape.className = "tutor-rodape-injetado";
+      const section = tab.querySelector(".section");
+      if (section) section.appendChild(rodape);
+    }
+    rodape.innerHTML = html;
+  });
 }
 
 // -------------------------------------------------------
@@ -617,9 +659,9 @@ function renderizarAvisos(destaque, extras) {
 
   // Monta itens extras
   const itens = [
-    destaque.item1 ? `<div class="aviso-item-detalhe">${destaque.item1}</div>` : "",
-    destaque.item2 ? `<div class="aviso-item-detalhe">${destaque.item2}</div>` : "",
-    destaque.item3 ? `<div class="aviso-item-detalhe">${destaque.item3}</div>` : "",
+    destaque.item1 ? `<div class="aviso-item-detalhe">${linkificar(destaque.item1)}</div>` : "",
+    destaque.item2 ? `<div class="aviso-item-detalhe">${linkificar(destaque.item2)}</div>` : "",
+    destaque.item3 ? `<div class="aviso-item-detalhe">${linkificar(destaque.item3)}</div>` : "",
   ].filter(Boolean).join("");
 
   container.innerHTML = `
@@ -638,7 +680,7 @@ function renderizarAvisos(destaque, extras) {
       <!-- 2. Texto principal -->
       <div class="recado-corpo">
         <div class="recado-titulo">${destaque.titulo}</div>
-        <div class="recado-texto">${destaque.texto}</div>
+        <div class="recado-texto">${linkificar(destaque.texto)}</div>
         ${itens ? `<div class="recado-itens">${itens}</div>` : ""}
       </div>
 
@@ -819,7 +861,6 @@ function parsearData(dataStr) {
 }
 
 function filtrarAgenda(filtro) {
-  // Atualiza botões ativos
   document.querySelectorAll(".agenda-filtro-btn").forEach(btn => {
     btn.classList.toggle("ativo", btn.dataset.filtro === filtro);
   });
@@ -831,7 +872,7 @@ function renderizarAgenda(eventos, filtro) {
   const container = document.getElementById("agenda-lista");
   if (!container) return;
 
-  // Renderiza filtros se ainda não existem
+  // Renderiza filtros acima do container se ainda não existem
   let filtrosEl = document.getElementById("agenda-filtros");
   if (!filtrosEl) {
     filtrosEl = document.createElement("div");
@@ -839,46 +880,26 @@ function renderizarAgenda(eventos, filtro) {
     filtrosEl.style.cssText = "display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap";
     filtrosEl.innerHTML = `
       <button class="agenda-filtro-btn ativo" data-filtro="todos"
-        onclick="filtrarAgenda('todos')"
-        style="padding:6px 14px;border-radius:20px;border:1.5px solid var(--blue);
-               background:var(--blue);color:#fff;font-size:12px;font-family:Montserrat,sans-serif;
-               font-weight:700;cursor:pointer">
-        Todos
-      </button>
+        onclick="filtrarAgenda('todos')" style="${estiloFiltro(true)}">Todos</button>
       <button class="agenda-filtro-btn" data-filtro="iol"
-        onclick="filtrarAgenda('iol')"
-        style="padding:6px 14px;border-radius:20px;border:1.5px solid var(--border);
-               background:var(--bg);color:var(--text1);font-size:12px;font-family:Montserrat,sans-serif;
-               font-weight:700;cursor:pointer">
-        📚 IOL
-      </button>
+        onclick="filtrarAgenda('iol')" style="${estiloFiltro(false)}">📚 IOL</button>
       <button class="agenda-filtro-btn" data-filtro="vestibular"
-        onclick="filtrarAgenda('vestibular')"
-        style="padding:6px 14px;border-radius:20px;border:1.5px solid var(--border);
-               background:var(--bg);color:var(--text1);font-size:12px;font-family:Montserrat,sans-serif;
-               font-weight:700;cursor:pointer">
-        🎓 Vestibulares
-      </button>
+        onclick="filtrarAgenda('vestibular')" style="${estiloFiltro(false)}">🎓 Vestibulares</button>
     `;
     container.parentNode.insertBefore(filtrosEl, container);
   }
 
-  // Atualiza estilo dos botões ativos
+  // Atualiza estilo dos botões
   filtrosEl.querySelectorAll(".agenda-filtro-btn").forEach(btn => {
     const ativo = btn.dataset.filtro === (filtro || "todos");
-    btn.style.background = ativo ? "var(--blue)" : "var(--bg)";
-    btn.style.color      = ativo ? "#fff" : "var(--text1)";
-    btn.style.borderColor= ativo ? "var(--blue)" : "var(--border)";
+    btn.style.cssText = estiloFiltro(ativo);
+    btn.dataset.filtro = btn.dataset.filtro; // preserva
   });
 
-  // Filtra eventos
-  const lista = filtro === "todos" ? eventos
-    : eventos.filter(ev => ev.tipo === filtro);
+  const lista = filtro === "todos" ? eventos : eventos.filter(ev => ev.tipo === filtro);
 
   if (!lista.length) {
-    container.innerHTML = `<p style="color:var(--text2);font-size:13px;padding:16px 0;text-align:center">
-      Nenhum evento encontrado.
-    </p>`;
+    container.innerHTML = `<p style="color:var(--text2);font-size:13px;padding:16px 0;text-align:center">Nenhum evento encontrado.</p>`;
     return;
   }
 
@@ -892,7 +913,7 @@ function renderizarAgenda(eventos, filtro) {
 
     const itens = [ev.item1, ev.item2, ev.item3].filter(Boolean);
     const itensHtml = itens.length
-      ? `<div style="font-size:11px;color:var(--text2);margin-top:4px">${itens.join(" · ")}</div>`
+      ? `<div style="font-size:11px;color:var(--text2);margin-top:4px">${itens.map(i => linkificar(i)).join(" · ")}</div>`
       : "";
 
     return `
@@ -903,12 +924,18 @@ function renderizarAgenda(eventos, filtro) {
         </div>
         <div class="agenda-info">
           <div class="agenda-titulo">${ev.titulo}</div>
-          ${ev.texto ? `<div class="agenda-subtitulo">${ev.texto}</div>` : ""}
+          ${ev.texto ? `<div class="agenda-subtitulo">${linkificar(ev.texto)}</div>` : ""}
           ${itensHtml}
           <div style="margin-top:5px;display:flex;flex-wrap:wrap;gap:4px">${tags}</div>
         </div>
       </div>`;
   }).join("");
+}
+
+function estiloFiltro(ativo) {
+  return ativo
+    ? "padding:6px 14px;border-radius:20px;border:1.5px solid var(--blue);background:var(--blue);color:#fff;font-size:12px;font-family:Montserrat,sans-serif;font-weight:700;cursor:pointer"
+    : "padding:6px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg);color:var(--text1);font-size:12px;font-family:Montserrat,sans-serif;font-weight:700;cursor:pointer";
 }
 
 function renderizarAgendaFallback() {
