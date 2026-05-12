@@ -487,10 +487,8 @@ async function carregarRecados(serie) {
 
 function driveUrl(id) {
   if (!id) return "";
-  // Se já for URL completa, retorna como está
   if (id.startsWith("http")) return id;
-  // Se for só o ID, monta a URL do Drive
-  return `https://drive.google.com/uc?export=view&id=${id}`;
+  return `https://lh3.googleusercontent.com/d/${id}`;
 }
 
 function renderizarAvisos(destaque, extras) {
