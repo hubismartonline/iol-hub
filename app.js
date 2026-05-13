@@ -726,12 +726,12 @@ function renderizarAvisos(destaque, extras) {
 
 
 function renderizarTutor(aluno) {
-  // DEBUG temporário — remove após confirmar a série
-  console.log("Série do aluno:", JSON.stringify(aluno.serie));
-  showToast(`Série: "${aluno.serie}" → normalizada: "${normalizarSerie(aluno.serie)}"`);
-  document.getElementById("tutor-avatar").textContent = aluno.tutor_iniciais || iniciais(aluno.tutor || "");
-  document.getElementById("tutor-name").textContent   = aluno.tutor;
-  document.getElementById("tutor-turma").textContent  = aluno.serie;
+  const avatar = document.getElementById("tutor-avatar");
+  const nome   = document.getElementById("tutor-name");
+  const turma  = document.getElementById("tutor-turma");
+  if (avatar) avatar.textContent = aluno.tutor_iniciais || iniciais(aluno.tutor || "");
+  if (nome)   nome.textContent   = aluno.tutor;
+  if (turma)  turma.textContent  = aluno.serie;
 }
 
 // Normaliza série: "9º EF" ou "9EF" ou "9ºEF" → "9EF"
