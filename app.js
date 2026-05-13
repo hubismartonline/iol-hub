@@ -704,6 +704,11 @@ function renderizarAvisos(destaque, extras) {
     <!-- Recados secundários -->
     ${extras && extras.length ? `
     <div class="recados-extras">
+      <div class="recados-extras-titulo">
+        <span class="recados-extras-linha"></span>
+        <span class="recados-extras-label">Outros recados</span>
+        <span class="recados-extras-linha"></span>
+      </div>
       ${extras.map(r => `
         <div class="recado-extra-item">
           ${r.banner ? `<img src="${driveUrl(r.banner)}" class="recado-extra-banner"
