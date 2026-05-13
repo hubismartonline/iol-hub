@@ -2278,12 +2278,10 @@ mark {
 .aviso-tag-3 { background: var(--navy); }
 
 /* Recados secundários */
-.recados-extras {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 14px;
-}
+.recados-extras { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+.recados-extras-titulo { display: flex; align-items: center; gap: 10px; margin: 4px 0 8px; }
+.recados-extras-linha { flex: 1; height: 1px; background: var(--border); }
+.recados-extras-label { font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
 
 .recado-extra-item {
   background: var(--card);
