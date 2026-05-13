@@ -210,53 +210,18 @@ const AGENDA = [
 ];
 
 // Calendário de Vestibulares 2026
-// Fonte: sites oficiais das instituições (atualizado maio/2026)
+// Apenas datas OFICIALMENTE confirmadas (atualizado maio/2026)
 const VESTIBULARES_2026 = [
-  // ENEM
-  { mes: "MAI", dia: "30", evento: "ENEM 2026 — Início das inscrições",        detalhe: "Acesse: enem.inep.gov.br",                          tipo: "enem"     },
-  { mes: "JUN", dia: "13", evento: "ENEM 2026 — Fim das inscrições",           detalhe: "Não perca o prazo!",                                tipo: "enem"     },
-  { mes: "NOV", dia: "08", evento: "ENEM 2026 — 1º dia de provas",             detalhe: "Linguagens, Ciências Humanas e Redação",             tipo: "enem"     },
-  { mes: "NOV", dia: "09", evento: "ENEM 2026 — 2º dia de provas",             detalhe: "Matemática e Ciências da Natureza",                  tipo: "enem"     },
-  // ENEM PPL
-  { mes: "NOV", dia: "11", evento: "ENEM PPL — 1º dia",                        detalhe: "Para privados de liberdade",                         tipo: "enem"     },
-  { mes: "NOV", dia: "12", evento: "ENEM PPL — 2º dia",                        detalhe: "Para privados de liberdade",                         tipo: "enem"     },
-  // FUVEST
-  { mes: "AGO", dia: "01", evento: "Fuvest 2026 — Início das inscrições",      detalhe: "USP e outras instituições · fuvest.br",             tipo: "fuvest"   },
-  { mes: "SET", dia: "15", evento: "Fuvest 2026 — Fim das inscrições",         detalhe: "fuvest.br",                                          tipo: "fuvest"   },
-  { mes: "NOV", dia: "22", evento: "Fuvest 2026 — 1ª fase",                    detalhe: "Prova objetiva · fuvest.br",                        tipo: "fuvest"   },
-  { mes: "JAN", dia: "03", evento: "Fuvest 2027 — 2ª fase (Dia 1)",            detalhe: "Provas discursivas · fuvest.br",                    tipo: "fuvest"   },
-  { mes: "JAN", dia: "04", evento: "Fuvest 2027 — 2ª fase (Dia 2)",            detalhe: "Provas discursivas + Redação · fuvest.br",          tipo: "fuvest"   },
-  // UNICAMP
-  { mes: "AGO", dia: "01", evento: "Unicamp 2027 — Início das inscrições",     detalhe: "comvest.unicamp.br",                                tipo: "unicamp"  },
-  { mes: "AGO", dia: "29", evento: "Unicamp 2027 — Fim das inscrições",        detalhe: "comvest.unicamp.br",                                tipo: "unicamp"  },
-  { mes: "OUT", dia: "18", evento: "Unicamp 2027 — 1ª fase",                   detalhe: "Prova objetiva · comvest.unicamp.br",               tipo: "unicamp"  },
-  { mes: "JAN", dia: "11", evento: "Unicamp 2027 — 2ª fase (Dia 1)",           detalhe: "comvest.unicamp.br",                                tipo: "unicamp"  },
-  { mes: "JAN", dia: "12", evento: "Unicamp 2027 — 2ª fase (Dia 2)",           detalhe: "comvest.unicamp.br",                                tipo: "unicamp"  },
-  // UNESP
-  { mes: "AGO", dia: "17", evento: "Unesp 2027 — Início das inscrições",       detalhe: "vunesp.com.br",                                     tipo: "unesp"    },
-  { mes: "SET", dia: "19", evento: "Unesp 2027 — Fim das inscrições",          detalhe: "vunesp.com.br",                                     tipo: "unesp"    },
-  { mes: "NOV", dia: "08", evento: "Unesp 2027 — 1ª fase",                     detalhe: "Prova objetiva · vunesp.com.br",                    tipo: "unesp"    },
-  { mes: "JAN", dia: "17", evento: "Unesp 2027 — 2ª fase (Dia 1)",             detalhe: "vunesp.com.br",                                     tipo: "unesp"    },
-  { mes: "JAN", dia: "18", evento: "Unesp 2027 — 2ª fase (Dia 2)",             detalhe: "vunesp.com.br",                                     tipo: "unesp"    },
-  // UFMG
-  { mes: "MAI", dia: "01", evento: "UFMG — Inscrição SISU",                    detalhe: "Resultado ENEM + SISU · sisu.mec.gov.br",           tipo: "federal"  },
-  // ITA
-  { mes: "AGO", dia: "01", evento: "ITA 2027 — Início das inscrições",         detalhe: "ita.br/vestibular",                                 tipo: "ita"      },
-  { mes: "SET", dia: "01", evento: "ITA 2027 — Fim das inscrições",            detalhe: "ita.br/vestibular",                                 tipo: "ita"      },
-  { mes: "OUT", dia: "24", evento: "ITA 2027 — 1ª fase",                       detalhe: "Prova objetiva · ita.br",                           tipo: "ita"      },
-  { mes: "DEZ", dia: "07", evento: "ITA 2027 — 2ª fase",                       detalhe: "Provas dissertativas · ita.br",                     tipo: "ita"      },
-  // IME
-  { mes: "AGO", dia: "01", evento: "IME 2027 — Início das inscrições",         detalhe: "ime.eb.br",                                         tipo: "ime"      },
-  { mes: "NOV", dia: "01", evento: "IME 2027 — Prova de 1ª fase",              detalhe: "ime.eb.br",                                         tipo: "ime"      },
-  // INSPER
-  { mes: "AGO", dia: "01", evento: "Insper 2027 — Início das inscrições",      detalhe: "insper.edu.br/vestibular",                          tipo: "privada"  },
-  { mes: "OUT", dia: "01", evento: "Insper 2027 — Prova de admissão",          detalhe: "insper.edu.br/vestibular",                          tipo: "privada"  },
-  // FGV
-  { mes: "AGO", dia: "01", evento: "FGV-SP 2027 — Início das inscrições",      detalhe: "fgv.br/vestibular",                                 tipo: "privada"  },
-  { mes: "NOV", dia: "15", evento: "FGV-SP 2027 — 1ª fase",                    detalhe: "fgv.br/vestibular",                                 tipo: "privada"  },
-  // SISU / ProUni / FIES
-  { mes: "JAN", dia: "01", evento: "SISU 2027 — Inscrições abertas",           detalhe: "Notas do ENEM 2026 · sisu.mec.gov.br",             tipo: "federal"  },
-  { mes: "FEV", dia: "01", evento: "ProUni 2027 — 1ª edição",                  detalhe: "Bolsas em faculdades privadas · prouni.mec.gov.br", tipo: "federal"  },
+  // ENEM 2026 — datas oficiais (Portaria INEP)
+  { mes: "MAI", dia: "30", evento: "ENEM 2026 — Início das inscrições",   detalhe: "enem.inep.gov.br",                  tipo: "enem" },
+  { mes: "JUN", dia: "13", evento: "ENEM 2026 — Fim das inscrições",      detalhe: "enem.inep.gov.br",                  tipo: "enem" },
+  { mes: "NOV", dia: "08", evento: "ENEM 2026 — 1º dia de provas",        detalhe: "Linguagens, Humanas e Redação",      tipo: "enem" },
+  { mes: "NOV", dia: "09", evento: "ENEM 2026 — 2º dia de provas",        detalhe: "Matemática e Ciências da Natureza",  tipo: "enem" },
+  { mes: "NOV", dia: "11", evento: "ENEM PPL 2026 — 1º dia",              detalhe: "Para privados de liberdade",         tipo: "enem" },
+  { mes: "NOV", dia: "12", evento: "ENEM PPL 2026 — 2º dia",              detalhe: "Para privados de liberdade",         tipo: "enem" },
+  // SISU/ProUni/FIES — previsão baseada no calendário histórico do MEC
+  { mes: "JAN", dia: "—",  evento: "SISU 2027 — previsão de abertura",    detalhe: "Aguardando confirmação oficial · sisu.mec.gov.br",   tipo: "federal" },
+  { mes: "JAN", dia: "—",  evento: "ProUni 2027 — previsão 1ª edição",    detalhe: "Aguardando confirmação oficial · prouni.mec.gov.br",  tipo: "federal" },
 ];
 
 const FAQ = [
