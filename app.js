@@ -321,7 +321,6 @@ function renderizarTudo(aluno) {
   carregarRecados(aluno.serie);
   carregarCalendario(aluno.serie);
   renderizarNotaAluno(aluno);
-  renderizarCalendarioVestibulares();
   renderizarTutorRodape(aluno);
 }
 
@@ -883,6 +882,7 @@ async function carregarCalendario(serie) {
     window._agendaSerie   = serie;
     renderizarAgenda(eventos, "todos");
     verificarLembretesVestibular(eventos);
+    renderizarLembretesOrientacao();
 
   } catch(e) {
     console.log("Usando agenda local:", e);
@@ -1231,83 +1231,69 @@ function renderizarNotaAluno(aluno) {
   `;
 }
 
-function renderizarCalendarioVestibulares() {
-  const container = document.getElementById("orient-calendario-vest");
-  if (!container || typeof VESTIBULARES_2026 === "undefined") return;
+function renderizarLembretesOrientacao() {
+  const container = document.getElementById("orient-lembretes-vest");
+  if (!container) return;
 
-  // Ordem dos meses
-  const ordemMes = ["JAN","FEV","MAR","ABR","MAI","JUN","JUL","AGO","SET","OUT","NOV","DEZ"];
-  const corTipo = {
-    enem:    { bg:"#FEF9E7", cor:"#B7950B", label:"ENEM"    },
-    fuvest:  { bg:"#EBF4FF", cor:"#1A5276", label:"FUVEST"  },
-    unicamp: { bg:"#EAFAF0", cor:"#1A7A4A", label:"UNICAMP" },
-    unesp:   { bg:"#FDF2F8", cor:"#7D3C98", label:"UNESP"   },
-    ita:     { bg:"#FDFEFE", cor:"#2C3E50", label:"ITA"      },
-    ime:     { bg:"#F0F3F4", cor:"#2C3E50", label:"IME"      },
-    federal: { bg:"#EBF5FB", cor:"#1A6FA0", label:"FEDERAL" },
-    privada: { bg:"#FEF5E7", cor:"#A04000", label:"PRIVADA" },
-  };
+  const eventos = window._agendaEventos || [];
+  const hoje = new Date();
+  const em60dias = new Date();
+  em60dias.setDate(hoje.getDate() + 60);
 
-  // Agrupa por mês
-  const porMes = {};
-  VESTIBULARES_2026.forEach(v => {
-    if (!porMes[v.mes]) porMes[v.mes] = [];
-    porMes[v.mes].push(v);
-  });
+  // Filtra eventos de vestibular nos próximos 60 dias
+  const proximos = eventos
+    .filter(ev => ev.tipo === "vestibular" && ev.dataISO)
+    .filter(ev => {
+      const data = new Date(ev.dataISO);
+      return data >= hoje && data <= em60dias;
+    })
+    .slice(0, 3);
 
-  const mesesComDados = Object.keys(porMes).sort((a,b) => ordemMes.indexOf(a) - ordemMes.indexOf(b));
+  if (!proximos.length) {
+    container.style.display = "none";
+    return;
+  }
 
+  container.style.display = "block";
   container.innerHTML = `
-    <div style="background:#F8F9FA;border-radius:12px;padding:20px;border:1.5px solid #E5E7EB">
-      <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px">
-        <span style="font-size:26px">📅</span>
+    <div style="background:#FDF2F8;border-radius:12px;padding:16px;border-left:4px solid #EE2D67">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <span style="font-size:22px">⏰</span>
         <div>
-          <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:15px;color:#002561">
-            Calendário de Vestibulares 2026/2027
+          <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:14px;color:#002561">
+            Prazos chegando!
           </div>
           <div style="font-size:12px;color:#666;margin-top:2px">
-            Datas oficiais · Mantenha sempre atualizado com seu tutor
+            Fique de olho nas datas importantes
           </div>
         </div>
       </div>
-
-      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px">
-        ${Object.entries(corTipo).map(([k,v]) => `
-          <span style="background:${v.bg};color:${v.cor};border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;font-family:Montserrat,sans-serif">
-            ${v.label}
-          </span>`).join("")}
-      </div>
-
-      ${mesesComDados.map(mes => `
-        <div style="margin-bottom:14px">
-          <div style="font-family:Montserrat,sans-serif;font-weight:800;font-size:12px;color:#002561;
-                      text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;padding-bottom:4px;
-                      border-bottom:2px solid #002561">
-            ${mes}
+      ${proximos.map(ev => `
+        <div style="background:#fff;border-radius:8px;padding:10px 12px;margin-bottom:8px;
+                    display:flex;align-items:center;justify-content:space-between;gap:10px;
+                    cursor:pointer;border:1px solid #f0d0e0"
+             onclick="trocarAba('agenda');setTimeout(()=>filtrarAgenda('vestibular'),300)">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="background:#EE2D67;color:#fff;border-radius:8px;
+                        padding:4px 8px;text-align:center;min-width:40px;flex-shrink:0">
+              <div style="font-family:Montserrat,sans-serif;font-weight:800;font-size:14px;line-height:1">${ev.dia}</div>
+              <div style="font-size:9px;opacity:0.85">${ev.mes}</div>
+            </div>
+            <div>
+              <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:13px;color:#002561">
+                ${ev.titulo}
+              </div>
+              ${ev.texto ? `<div style="font-size:11px;color:#666;margin-top:2px">${ev.texto}</div>` : ""}
+            </div>
           </div>
-          ${porMes[mes].map(v => {
-            const c = corTipo[v.tipo] || corTipo.federal;
-            return `
-              <div style="display:flex;align-items:flex-start;gap:10px;padding:8px 10px;
-                          background:${c.bg};border-radius:8px;margin-bottom:6px">
-                <div style="flex-shrink:0;width:28px;text-align:center">
-                  <div style="font-family:Montserrat,sans-serif;font-weight:800;font-size:14px;color:${c.cor}">${v.dia}</div>
-                </div>
-                <div style="flex:1">
-                  <div style="font-size:13px;font-weight:700;color:#002561;font-family:Montserrat,sans-serif">${v.evento}</div>
-                  <div style="font-size:11px;color:#666;margin-top:2px">${v.detalhe}</div>
-                </div>
-                <span style="background:${c.bg};color:${c.cor};border:1px solid ${c.cor};border-radius:20px;
-                             padding:2px 8px;font-size:10px;font-weight:700;font-family:Montserrat,sans-serif;
-                             flex-shrink:0;white-space:nowrap">
-                  ${c.label}
-                </span>
-              </div>`;
-          }).join("")}
+          <span style="color:#EE2D67;font-size:16px;flex-shrink:0">›</span>
         </div>`).join("")}
-
-      <div style="background:#EBF4FF;border-radius:8px;padding:10px 12px;font-size:12px;color:#1A5276;margin-top:4px">
-        ⚠️ Datas sujeitas a alteração. Sempre confirme nos sites oficiais antes de se inscrever.
+      <div style="text-align:center;margin-top:4px">
+        <button onclick="trocarAba('agenda');setTimeout(()=>filtrarAgenda('vestibular'),300)"
+          style="background:none;border:none;color:#EE2D67;font-family:Montserrat,sans-serif;
+                 font-weight:700;font-size:12px;cursor:pointer;text-decoration:underline">
+          Ver todos na agenda →
+        </button>
       </div>
     </div>
   `;
