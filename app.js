@@ -222,6 +222,18 @@ function identificarAluno(aluno) {
   alunoAtual = aluno;
   renderizarPerfil(aluno);
   renderizarTudo(aluno);
+  // Skeleton loading na nota enquanto cadastro carrega
+  const notaContainer = document.getElementById("orient-nota-aluno");
+  if (notaContainer && ["1EM","2EM","3EM"].includes(normalizarSerie(aluno.serie))) {
+    notaContainer.style.display = "block";
+    notaContainer.innerHTML = `
+      <div class="skeleton-nota">
+        <div class="skeleton-linha" style="width:60%;height:18px;margin-bottom:10px"></div>
+        <div class="skeleton-linha" style="width:40%;height:14px;margin-bottom:14px"></div>
+        <div class="skeleton-linha" style="width:100%;height:8px;margin-bottom:6px"></div>
+        <div class="skeleton-linha" style="width:100%;height:8px"></div>
+      </div>`;
+  }
   carregarCadastro(aluno.RA || aluno.ra);
   const main = document.getElementById("main-content");
   main.style.cssText = "display:block;opacity:0;transform:translateY(10px);transition:opacity 0.4s,transform 0.4s";
