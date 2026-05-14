@@ -2132,11 +2132,12 @@ mark {
    ============================================= */
 
 .recado-card {
-  background: var(--card);
+  background: #ffffff;
   border-radius: var(--r-md);
   overflow: hidden;
-  box-shadow: var(--shadow);
+  box-shadow: 0 2px 20px rgba(0,37,97,0.12);
   margin-bottom: 14px;
+  border: 1.5px solid var(--border);
 }
 
 /* 1. Banner temático */
@@ -2272,9 +2273,11 @@ mark {
 }
 
 .aviso-tag {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   background: var(--blue);
-  color: #fff;
+  color: var(--navy);
   border-radius: 20px;
   padding: 3px 10px;
   font-size: 11px;
@@ -2282,8 +2285,8 @@ mark {
   font-family: 'Montserrat', sans-serif;
 }
 
-.aviso-tag-2 { background: var(--dark-blue); }
-.aviso-tag-3 { background: var(--navy); }
+.aviso-tag-2 { background: #FEF3C7; color: #92400E; } /* PRAZO — amarelo legível */
+.aviso-tag-3 { background: var(--navy); color: #fff; }
 
 /* Recados secundários */
 .recados-extras {
@@ -2310,10 +2313,10 @@ mark {
 }
 
 .recado-extra-item {
-  background: var(--card);
+  background: #F0F7FF;
   border-radius: var(--r-sm);
   overflow: hidden;
-  box-shadow: var(--shadow);
+  border-left: 3px solid var(--blue);
   display: flex;
   align-items: stretch;
 }
