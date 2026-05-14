@@ -809,11 +809,23 @@ async function carregarCalendario(serie) {
     const sNorm = normalizarSerie(serie);
     const eventos = [];
 
+    // Detecta estrutura da planilha pelo cabeçalho (linha 0)
+    const header = rows[0] ? rows[0].map(h => (h||"").replace(/"/g,"").trim().toLowerCase()) : [];
+    const idxSerie  = header.findIndex(h => h === "serie" || h === "série");
+    const idxTitulo = header.findIndex(h => h === "titulo" || h === "título");
+    const idxTexto  = header.findIndex(h => h === "texto");
+    const idxData   = header.findIndex(h => h === "data");
+    const idxDia    = header.findIndex(h => h === "dia");
+    const idxMes    = header.findIndex(h => h === "mes" || h === "mês");
+    console.log("[Agenda] cabeçalhos:", header);
+    console.log("[Agenda] índices — serie:", idxSerie, "titulo:", idxTitulo, "data:", idxData, "dia:", idxDia, "mes:", idxMes);
+
     for (let i = 1; i < rows.length; i++) {
       const cols = rows[i];
-      if (cols.length < 3) continue;
+      if (!cols || cols.length < 3) continue;
 
-      const serieCol = (cols[0] || "").replace(/"/g,"").trim().toLowerCase();
+      // Lê série — pelo índice do cabeçalho ou fallback posição 0
+      const serieCol = (cols[idxSerie >= 0 ? idxSerie : 0] || "").replace(/"/g,"").trim().toLowerCase();
       const isVestibular = serieCol === "vestibular";
 
       const paraEstaSerie = isVestibular ||
@@ -824,21 +836,38 @@ async function carregarCalendario(serie) {
 
       if (!paraEstaSerie) continue;
 
-      const dataStr = (cols[3] || "").replace(/"/g,"").trim();
-      const { dia, mes, dataISO } = parsearData(dataStr);
+      // Se planilha tem colunas dia/mes separadas, monta a data
+      let dia, mes, dataISO;
+      if (idxDia >= 0 && idxMes >= 0) {
+        dia = (cols[idxDia] || "").replace(/"/g,"").trim();
+        mes = (cols[idxMes] || "").replace(/"/g,"").trim().toUpperCase();
+        // Monta dataISO para ordenação
+        const mesesNum = {JAN:"01",FEV:"02",MAR:"03",ABR:"04",MAI:"05",JUN:"06",JUL:"07",AGO:"08",SET:"09",OUT:"10",NOV:"11",DEZ:"12"};
+        const mesNum = mesesNum[mes] || "01";
+        const diaNum = dia.padStart(2,"0");
+        dataISO = `2026-${mesNum}-${diaNum}`;
+      } else {
+        const dataStr = (cols[idxData >= 0 ? idxData : 3] || "").replace(/"/g,"").trim();
+        ({ dia, mes, dataISO } = parsearData(dataStr));
+      }
+
+      const titulo = (cols[idxTitulo >= 0 ? idxTitulo : 2] || "").replace(/"/g,"").trim();
+      const texto  = (cols[idxTexto  >= 0 ? idxTexto  : 3] || "").replace(/"/g,"").trim();
+
+      // Tags e itens — pega as colunas restantes após as principais
+      const extras = cols.filter((_, ci) => ![idxSerie, idxTitulo, idxTexto, idxData, idxDia, idxMes].includes(ci));
 
       eventos.push({
         serie:  serieCol,
-        titulo: (cols[1] || "").replace(/"/g,"").trim(),
-        texto:  (cols[2] || "").replace(/"/g,"").trim(),
-        data:   dataStr, dataISO, dia, mes,
-        tag1:   (cols[4] || "").replace(/"/g,"").trim(),
-        item1:  (cols[5] || "").replace(/"/g,"").trim(),
-        tag2:   (cols[6] || "").replace(/"/g,"").trim(),
-        item2:  (cols[7] || "").replace(/"/g,"").trim(),
-        tag3:   (cols[8] || "").replace(/"/g,"").trim(),
-        item3:  (cols[9] || "").replace(/"/g,"").trim(),
-        tipo:   isVestibular ? "vestibular" : "iol",
+        titulo, texto,
+        dia, mes, dataISO,
+        tag1:  (extras[0] || "").replace(/"/g,"").trim(),
+        item1: (extras[1] || "").replace(/"/g,"").trim(),
+        tag2:  (extras[2] || "").replace(/"/g,"").trim(),
+        item2: (extras[3] || "").replace(/"/g,"").trim(),
+        tag3:  (extras[4] || "").replace(/"/g,"").trim(),
+        item3: (extras[5] || "").replace(/"/g,"").trim(),
+        tipo:  isVestibular ? "vestibular" : "iol",
       });
     }
 
