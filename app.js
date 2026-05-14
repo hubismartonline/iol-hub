@@ -698,7 +698,6 @@ function renderizarAvisos(destaque, extras) {
       <div class="recado-corpo">
         <div class="recado-titulo">${destaque.titulo}</div>
         <div class="recado-texto">${linkificar(destaque.texto)}</div>
-        ${itens ? `<div class="recado-itens">${itens}</div>` : ""}
       </div>
 
       <!-- 3. Foto do evento -->
@@ -708,12 +707,13 @@ function renderizarAvisos(destaque, extras) {
           onerror="this.parentNode.style.display='none'">
       </div>` : ""}
 
-      <!-- 4. Texto de encerramento + tags -->
+      <!-- 4. Texto de encerramento + tags + lembretes -->
       <div class="recado-rodape">
         ${destaque.texto_final
-          ? `<div class="recado-texto-final">${destaque.texto_final}</div>`
+          ? `<div class="recado-texto-final">${linkificar(destaque.texto_final)}</div>`
           : ""}
         ${tags ? `<div class="recado-tags">${tags}</div>` : ""}
+        ${itens ? `<div class="recado-itens" style="margin-top:10px">${itens}</div>` : ""}
       </div>
 
     </div>
@@ -721,6 +721,11 @@ function renderizarAvisos(destaque, extras) {
     <!-- Recados secundários -->
     ${extras && extras.length ? `
     <div class="recados-extras">
+      <div class="recados-extras-titulo">
+        <span class="recados-extras-linha"></span>
+        <span class="recados-extras-label">Outros recados</span>
+        <span class="recados-extras-linha"></span>
+      </div>
       ${extras.map(r => `
         <div class="recado-extra-item">
           ${r.banner ? `<img src="${driveUrl(r.banner)}" class="recado-extra-banner"
