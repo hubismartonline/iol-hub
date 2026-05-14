@@ -20,6 +20,21 @@ const CADASTRO_URL = "https://script.google.com/macros/s/AKfycbxhwZfOXqWgsoxA0G7
 // Simulador de Vestibular — Apps Script (Guia de Carreiras + SISU)
 const SIMULADOR_URL = "https://script.google.com/macros/s/AKfycby2bv-dEQEoz3qtVSNjWY5sPQSTmyJ3L1wQv_ApX5bOzL-pls5UvrhKPHy1X6DQsmg8Dw/exec";
 
+// URLs das planilhas de Melhores Oportunidades (MOs)
+const MO_URLS = {
+  SP:        "https://docs.google.com/spreadsheets/d/e/2PACX-1vT0m3gCD1gYND8bEJ5e_AhMubECUyU9uW0u1W-Ak59GxrNDnI7iGJ_wk9tb1EAXOyNZ6AsDIkc44qWN/pub?gid=652524075&single=true&output=csv",
+  SJC:       "https://docs.google.com/spreadsheets/d/e/2PACX-1vT0m3gCD1gYND8bEJ5e_AhMubECUyU9uW0u1W-Ak59GxrNDnI7iGJ_wk9tb1EAXOyNZ6AsDIkc44qWN/pub?gid=281322626&single=true&output=csv",
+  BH:        "https://docs.google.com/spreadsheets/d/e/2PACX-1vT0m3gCD1gYND8bEJ5e_AhMubECUyU9uW0u1W-Ak59GxrNDnI7iGJ_wk9tb1EAXOyNZ6AsDIkc44qWN/pub?gid=1276152342&single=true&output=csv",
+  RJ:        "https://docs.google.com/spreadsheets/d/e/2PACX-1vT0m3gCD1gYND8bEJ5e_AhMubECUyU9uW0u1W-Ak59GxrNDnI7iGJ_wk9tb1EAXOyNZ6AsDIkc44qWN/pub?gid=514789890&single=true&output=csv",
+  Pesquisas: "https://docs.google.com/spreadsheets/d/e/2PACX-1vT0m3gCD1gYND8bEJ5e_AhMubECUyU9uW0u1W-Ak59GxrNDnI7iGJ_wk9tb1EAXOyNZ6AsDIkc44qWN/pub?gid=1425876178&single=true&output=csv",
+};
+
+// Cache de dados carregados
+let moCache = {};
+// Interesses salvos localmente (sessionStorage)
+let moInteresses = {};
+
+
 // -------------------------------------------------------
 //  ESTADO GLOBAL
 // -------------------------------------------------------
@@ -327,6 +342,7 @@ function renderizarTudo(aluno) {
   carregarRecados(aluno.serie);
   carregarCalendario(aluno.serie);
   renderizarNotaAluno(aluno);
+  renderizarMOs(aluno);
   renderizarTutorRodape(aluno);
 }
 
@@ -1918,4 +1934,769 @@ function buscarFABFaq(query) {
 
 function toggleFabItem(i) {
   document.getElementById(`fab-item-${i}`)?.classList.toggle("aberto");
+}
+
+// =============================================================
+//  MELHORES OPORTUNIDADES — EF
+// =============================================================
+
+async function renderizarMOs(aluno) {
+  const container = document.getElementById("mo-container");
+  if (!container) return;
+
+  const serie = normalizarSerie(aluno.serie);
+  if (!["8EF","9EF"].includes(serie)) {
+    container.style.display = "none";
+    return;
+  }
+  container.style.display = "block";
+
+  // Mostra mapa (só SP por enquanto)
+  renderizarMapaMO(aluno.RA);
+
+  // Mostra painel de acompanhamento
+  const painelWrap = document.getElementById("mo-painel-wrap");
+  if (painelWrap) painelWrap.style.display = "block";
+  renderizarPainelMO(aluno.RA);
+
+  // Cidade do aluno para filtro padrão
+  const cidadeAluno = (aluno.cidade || "").toUpperCase();
+  let cidadePadrao = "SP";
+  if (cidadeAluno.includes("SÃO JOSÉ") || cidadeAluno.includes("SAO JOSE")) cidadePadrao = "SJC";
+  else if (cidadeAluno.includes("BELO HORIZONTE") || cidadeAluno.includes("BH")) cidadePadrao = "BH";
+  else if (cidadeAluno.includes("RIO DE JANEIRO") || cidadeAluno.includes("RIO")) cidadePadrao = "RJ";
+
+  // Carrega interesses salvos
+  try {
+    const salvo = sessionStorage.getItem("mo_interesses_" + aluno.RA);
+    if (salvo) moInteresses = JSON.parse(salvo);
+  } catch(e) { moInteresses = {}; }
+
+  container.innerHTML = `
+    <div style="margin-bottom:16px">
+      <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:15px;color:var(--navy);margin-bottom:4px">
+        🏫 Melhores Oportunidades de Ensino Médio
+      </div>
+      <div style="font-size:12px;color:var(--text2)">
+        Escolas recomendadas pelo Ismart para o seu próximo passo
+      </div>
+    </div>
+
+    <!-- Filtros de cidade -->
+    <div id="mo-filtros-cidade" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+      ${["SP","SJC","BH","RJ"].map(c => `
+        <button class="mo-cidade-btn${c === cidadePadrao ? " ativo" : ""}"
+          onclick="carregarMOCidade('${c}', '${aluno.RA}')"
+          data-cidade="${c}">
+          ${c === "SP" ? "São Paulo" : c === "SJC" ? "São José dos Campos" : c === "BH" ? "Belo Horizonte" : "Rio de Janeiro"}
+        </button>`).join("")}
+    </div>
+
+    <!-- Filtro de tipo -->
+    <div id="mo-filtros-tipo" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+      <button class="mo-tipo-btn ativo" data-tipo="todos" onclick="filtrarMOTipo('todos')">Todas</button>
+      <button class="mo-tipo-btn" data-tipo="publico" onclick="filtrarMOTipo('publico')">🏛️ Públicas</button>
+      <button class="mo-tipo-btn" data-tipo="privado" onclick="filtrarMOTipo('privado')">🏫 Privadas</button>
+      <button class="mo-tipo-btn" data-tipo="federal" onclick="filtrarMOTipo('federal')">🎓 Federais</button>
+    </div>
+
+    <!-- Lista de escolas -->
+    <div id="mo-lista">
+      <div class="mo-loading">
+        <div class="skeleton-linha" style="width:100%;height:80px;margin-bottom:8px;border-radius:10px"></div>
+        <div class="skeleton-linha" style="width:100%;height:80px;margin-bottom:8px;border-radius:10px"></div>
+        <div class="skeleton-linha" style="width:100%;height:80px;border-radius:10px"></div>
+      </div>
+    </div>
+
+    <!-- Contador de interesses -->
+    <div id="mo-contador" style="display:none;margin-top:12px;background:#EBF4FF;border-radius:10px;padding:12px 16px;font-size:13px;color:var(--navy);font-family:Montserrat,sans-serif;font-weight:700">
+      ❤️ <span id="mo-contador-num">0</span> escola(s) na sua lista de interesse
+    </div>
+  `;
+
+  // Carrega cidade padrão
+  await carregarMOCidade(cidadePadrao, aluno.RA);
+}
+
+async function carregarMOCidade(cidade, ra) {
+  // Atualiza botões de cidade
+  document.querySelectorAll(".mo-cidade-btn").forEach(btn => {
+    btn.classList.toggle("ativo", btn.dataset.cidade === cidade);
+  });
+
+  // Reseta filtro de tipo
+  document.querySelectorAll(".mo-tipo-btn").forEach(btn => {
+    btn.classList.toggle("ativo", btn.dataset.tipo === "todos");
+  });
+
+  window._moCidadeAtual = cidade;
+
+  const lista = document.getElementById("mo-lista");
+  if (!lista) return;
+
+  // Verifica cache
+  if (moCache[cidade]) {
+    renderizarMOLista(moCache[cidade], ra);
+    return;
+  }
+
+  lista.innerHTML = `
+    <div class="mo-loading">
+      <div class="skeleton-linha" style="width:100%;height:80px;margin-bottom:8px;border-radius:10px"></div>
+      <div class="skeleton-linha" style="width:100%;height:80px;margin-bottom:8px;border-radius:10px"></div>
+      <div class="skeleton-linha" style="width:100%;height:80px;border-radius:10px"></div>
+    </div>`;
+
+  try {
+    // SP usa aba Pesquisas (mais completa)
+    const url = cidade === "SP" ? MO_URLS.Pesquisas : MO_URLS[cidade];
+    const response = await fetch(url);
+    const csv = await response.text();
+    const rows = parseCSVCompleto(csv);
+
+    const escolas = [];
+    for (let i = 1; i < rows.length; i++) {
+      const cols = rows[i];
+      if (!cols || cols.length < 2) continue;
+
+      if (cidade === "SP") {
+        // Aba Pesquisas: Nº | Nome | Tipo | Bairro | Bolsas | Cursos | Desempenho
+        const nome = (cols[1] || "").replace(/"/g,"").trim();
+        if (!nome) continue;
+        escolas.push({
+          nome,
+          tipo:       (cols[2] || "").replace(/"/g,"").trim(),
+          bairro:     (cols[3] || "").replace(/"/g,"").trim(),
+          bolsas:     (cols[4] || "").replace(/"/g,"").trim(),
+          cursos:     (cols[5] || "").replace(/"/g,"").trim(),
+          desempenho: (cols[6] || "").replace(/"/g,"").trim(),
+          link:       "",
+          cidade,
+        });
+      } else {
+        // Abas SJC/BH/RJ: Nome | INEP | Tipo | IDEB | ENEM2024 | ENEM2019 | Bolsa | Link | ...
+        const nome = (cols[0] || "").replace(/"/g,"").trim();
+        if (!nome || nome.toLowerCase() === "nome da escola") continue;
+        escolas.push({
+          nome,
+          tipo:       (cols[2] || "").replace(/"/g,"").trim(),
+          bairro:     "",
+          bolsas:     (cols[6] || "").replace(/"/g,"").trim(),
+          cursos:     "",
+          desempenho: (cols[4] || "").replace(/"/g,"").trim() ? `ENEM médio: ${(cols[4] || "").replace(/"/g,"").trim()}` : "",
+          link:       (cols[7] || "").replace(/"/g,"").trim(),
+          cidade,
+        });
+      }
+    }
+
+    moCache[cidade] = escolas;
+    renderizarMOLista(escolas, ra);
+
+  } catch(e) {
+    lista.innerHTML = `<p style="color:var(--text2);font-size:13px;padding:16px;text-align:center">Erro ao carregar escolas. Tente novamente.</p>`;
+  }
+}
+
+function filtrarMOTipo(tipo) {
+  document.querySelectorAll(".mo-tipo-btn").forEach(btn => {
+    btn.classList.toggle("ativo", btn.dataset.tipo === tipo);
+  });
+  window._moTipoAtual = tipo;
+
+  const cidade = window._moCidadeAtual || "SP";
+  const ra = window._alunoRA || "";
+  const escolas = moCache[cidade] || [];
+
+  const filtradas = tipo === "todos" ? escolas : escolas.filter(e => {
+    const t = (e.tipo || "").toLowerCase();
+    if (tipo === "publico")  return t.includes("público") || t.includes("publ");
+    if (tipo === "privado")  return t.includes("privad");
+    if (tipo === "federal")  return t.includes("federal");
+    return true;
+  });
+
+  renderizarMOLista(filtradas, ra, true);
+}
+
+function renderizarMOLista(escolas, ra, jafiltrado) {
+  const lista = document.getElementById("mo-lista");
+  if (!lista) return;
+
+  // Aplica filtro de tipo se houver
+  const tipoAtual = window._moTipoAtual || "todos";
+  const filtradas = (jafiltrado || tipoAtual === "todos") ? escolas : escolas.filter(e => {
+    const t = (e.tipo || "").toLowerCase();
+    if (tipoAtual === "publico")  return t.includes("público") || t.includes("publ");
+    if (tipoAtual === "privado")  return t.includes("privad");
+    if (tipoAtual === "federal")  return t.includes("federal");
+    return true;
+  });
+
+  window._alunoRA = ra;
+
+  if (!filtradas.length) {
+    lista.innerHTML = `<p style="color:var(--text2);font-size:13px;padding:16px;text-align:center">Nenhuma escola encontrada.</p>`;
+    return;
+  }
+
+  lista.innerHTML = filtradas.map((e, idx) => {
+    const chaveInteresse = `${e.cidade}_${e.nome}`;
+    const temInteresse = moInteresses[chaveInteresse];
+    const tipoColor = e.tipo?.toLowerCase().includes("federal") ? "#1A5276" :
+                      e.tipo?.toLowerCase().includes("priv")    ? "#7D3C98" : "#1A7A4A";
+    const tipoBg    = e.tipo?.toLowerCase().includes("federal") ? "#EBF4FF" :
+                      e.tipo?.toLowerCase().includes("priv")    ? "#FDF2F8" : "#EAFAF0";
+
+    return `
+      <div class="mo-card" id="mo-card-${idx}">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+          <div style="flex:1;min-width:0">
+            <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:13px;color:var(--navy);margin-bottom:6px;line-height:1.3">
+              ${e.nome}
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+              ${e.tipo ? `<span style="background:${tipoBg};color:${tipoColor};border-radius:20px;padding:2px 9px;font-size:11px;font-weight:700;font-family:Montserrat,sans-serif">${e.tipo}</span>` : ""}
+              ${e.bairro ? `<span style="background:#F8F9FA;color:var(--text2);border-radius:20px;padding:2px 9px;font-size:11px;border:1px solid var(--border)">📍 ${e.bairro}</span>` : ""}
+            </div>
+            ${e.bolsas ? `<div style="font-size:12px;color:var(--text2);margin-bottom:4px">💰 ${e.bolsas}</div>` : ""}
+            ${e.cursos ? `<div style="font-size:12px;color:var(--text2);margin-bottom:4px">📚 ${e.cursos}</div>` : ""}
+            ${e.desempenho ? `<div style="font-size:11px;color:var(--text3)">📊 ${e.desempenho}</div>` : ""}
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
+            <button class="mo-interesse-btn${temInteresse ? " ativo" : ""}"
+              onclick="toggleMOInteresse('${chaveInteresse}', '${e.nome}', '${ra}', ${idx})"
+              id="mo-btn-${idx}"
+              title="${temInteresse ? "Remover interesse" : "Marcar interesse"}">
+              ${temInteresse ? "❤️" : "🤍"}
+            </button>
+            ${e.link ? `<a href="${e.link}" target="_blank" rel="noopener"
+              style="font-size:11px;color:var(--blue);text-decoration:none;font-family:Montserrat,sans-serif;font-weight:700">
+              Site ↗
+            </a>` : ""}
+          </div>
+        </div>
+      </div>`;
+  }).join("");
+
+  atualizarContadorMO(ra);
+}
+
+function toggleMOInteresse(chave, nomeEscola, ra, idx) {
+  const plano = carregarMOPlano(ra);
+
+  if (moInteresses[chave]) {
+    delete moInteresses[chave];
+    delete plano[chave];
+  } else {
+    moInteresses[chave] = { nome: nomeEscola, data: new Date().toISOString() };
+    plano[chave] = { nome: nomeEscola, etapa: "interesse", data_atualizacao: new Date().toISOString() };
+    showToast("Adicionado ao seu plano! 🎉");
+  }
+
+  // Salva no sessionStorage
+  try {
+    sessionStorage.setItem("mo_interesses_" + ra, JSON.stringify(moInteresses));
+  } catch(e) {}
+  salvarMOPlano(ra, plano);
+
+  // Atualiza botão
+  const btn = document.getElementById(`mo-btn-${idx}`);
+  if (btn) {
+    const temInteresse = moInteresses[chave];
+    btn.textContent = temInteresse ? "❤️" : "🤍";
+    btn.classList.toggle("ativo", !!temInteresse);
+  }
+
+  atualizarContadorMO(ra);
+  renderizarPainelMO(ra);
+}
+
+function atualizarContadorMO(ra) {
+  const total = Object.keys(moInteresses).length;
+  const contador = document.getElementById("mo-contador");
+  const num = document.getElementById("mo-contador-num");
+  if (contador) contador.style.display = total > 0 ? "block" : "none";
+  if (num) num.textContent = total;
+}
+
+// =============================================================
+//  PAINEL MO — Acompanhamento do aluno
+// =============================================================
+
+const MO_ETAPAS = [
+  { id: "interesse",  emoji: "🔍", label: "Tenho interesse"  },
+  { id: "inscrito",   emoji: "📋", label: "Me inscrevi"      },
+  { id: "prova",      emoji: "📝", label: "Fiz a prova"      },
+  { id: "aprovado",   emoji: "✅", label: "Fui aprovado!"    },
+  { id: "nao_aprovado", emoji: "💪", label: "Não aprovado"   },
+];
+
+function salvarMOPlano(ra, plano) {
+  try {
+    sessionStorage.setItem("mo_plano_" + ra, JSON.stringify(plano));
+  } catch(e) {}
+}
+
+function carregarMOPlano(ra) {
+  try {
+    const salvo = sessionStorage.getItem("mo_plano_" + ra);
+    return salvo ? JSON.parse(salvo) : {};
+  } catch(e) { return {}; }
+}
+
+function renderizarPainelMO(ra) {
+  const container = document.getElementById("mo-painel");
+  if (!container) return;
+
+  const plano = carregarMOPlano(ra);
+  const escolas = Object.entries(plano);
+
+  if (!escolas.length) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:24px;color:var(--text2);font-size:13px">
+        <div style="font-size:32px;margin-bottom:10px">🏫</div>
+        Você ainda não marcou interesse em nenhuma escola.<br>
+        <span style="font-size:12px">Explore as escolas acima e clique em ❤️ para adicionar ao seu plano!</span>
+      </div>`;
+    return;
+  }
+
+  // Campo: quantas escolas planeja se candidatar
+  const meta = plano._meta || "";
+
+  container.innerHTML = `
+    <div style="margin-bottom:16px">
+      <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:14px;color:var(--navy);margin-bottom:12px">
+        🎯 Quantas escolas você planeja se candidatar?
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${[1,2,3,4,"5+"].map(n => `
+          <button class="mo-meta-btn${meta == n ? " ativo" : ""}"
+            onclick="definirMetaMO('${ra}', '${n}')">
+            ${n}
+          </button>`).join("")}
+      </div>
+    </div>
+
+    <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:14px;color:var(--navy);margin-bottom:12px">
+      📋 Minhas escolas (${escolas.filter(([k]) => k !== "_meta").length})
+    </div>
+
+    ${escolas.filter(([k]) => k !== "_meta").map(([chave, dados]) => {
+      const etapaAtual = dados.etapa || "interesse";
+      const nomeEscola = dados.nome || chave.split("_").slice(1).join(" ");
+      const cidade = chave.split("_")[0];
+
+      return `
+        <div class="mo-plano-card">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:12px">
+            <div>
+              <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:13px;color:var(--navy)">${nomeEscola}</div>
+              <div style="font-size:11px;color:var(--text2);margin-top:2px">${cidade}</div>
+            </div>
+            <button onclick="removerMOInteresse('${chave}', '${ra}')"
+              style="background:none;border:none;font-size:16px;cursor:pointer;color:var(--text3);padding:0;flex-shrink:0"
+              title="Remover">✕</button>
+          </div>
+
+          <!-- Etapas -->
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            ${MO_ETAPAS.filter(e => e.id !== "nao_aprovado").map(etapa => `
+              <button class="mo-etapa-btn${etapaAtual === etapa.id ? " ativo" : ""}"
+                onclick="atualizarEtapaMO('${chave}', '${etapa.id}', '${ra}')">
+                ${etapa.emoji} ${etapa.label}
+              </button>`).join("")}
+            <button class="mo-etapa-btn mo-etapa-nao${etapaAtual === "nao_aprovado" ? " ativo" : ""}"
+              onclick="atualizarEtapaMO('${chave}', 'nao_aprovado', '${ra}')">
+              💪 Não aprovado
+            </button>
+          </div>
+
+          ${dados.data_atualizacao ? `
+          <div style="font-size:10px;color:var(--text3);margin-top:8px">
+            Atualizado em ${new Date(dados.data_atualizacao).toLocaleDateString("pt-BR")}
+          </div>` : ""}
+        </div>`;
+    }).join("")}
+  `;
+}
+
+function definirMetaMO(ra, meta) {
+  const plano = carregarMOPlano(ra);
+  plano._meta = meta;
+  salvarMOPlano(ra, plano);
+  renderizarPainelMO(ra);
+}
+
+function atualizarEtapaMO(chave, etapaId, ra) {
+  const plano = carregarMOPlano(ra);
+  if (plano[chave]) {
+    plano[chave].etapa = etapaId;
+    plano[chave].data_atualizacao = new Date().toISOString();
+    salvarMOPlano(ra, plano);
+    renderizarPainelMO(ra);
+
+    // Feedback visual
+    const msgs = {
+      inscrito:     "Ótimo! Inscrição registrada! 📋",
+      prova:        "Arrasou na prova! 📝",
+      aprovado:     "PARABÉNS! Você foi aprovado! 🎉",
+      nao_aprovado: "Não foi dessa vez, mas você tentou! Continue firme 💪",
+    };
+    if (msgs[etapaId]) showToast(msgs[etapaId]);
+  }
+}
+
+function removerMOInteresse(chave, ra) {
+  const plano = carregarMOPlano(ra);
+  delete plano[chave];
+  salvarMOPlano(ra, plano);
+
+  // Também remove dos moInteresses
+  delete moInteresses[chave];
+  try { sessionStorage.setItem("mo_interesses_" + ra, JSON.stringify(moInteresses)); } catch(e) {}
+
+  renderizarPainelMO(ra);
+  atualizarContadorMO(ra);
+
+  // Atualiza botão de interesse na lista se visível
+  const lista = document.getElementById("mo-lista");
+  if (lista) {
+    lista.querySelectorAll(".mo-interesse-btn").forEach(btn => {
+      const onclick = btn.getAttribute("onclick") || "";
+      if (onclick.includes(chave)) {
+        btn.textContent = "🤍";
+        btn.classList.remove("ativo");
+      }
+    });
+  }
+}
+
+// =============================================================
+//  MAPA DE ESCOLAS — SP (OpenStreetMap + Leaflet)
+// =============================================================
+
+let mapaLeaflet = null;
+let mapaMarcadores = [];
+
+async function renderizarMapaMO(ra) {
+  const container = document.getElementById("mo-mapa-wrap");
+  if (!container) return;
+  container.style.display = "block";
+
+  container.innerHTML = `
+    <div style="background:#fff;border:1.5px solid var(--border);border-radius:var(--r-md);padding:16px;margin-bottom:16px">
+      <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:14px;color:var(--navy);margin-bottom:12px">
+        🗺️ Escolas próximas a você — São Paulo
+      </div>
+
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <input type="text" id="mo-endereco-input"
+          placeholder="Digite seu endereço em SP (ex: Rua das Flores, 100, Vila Madalena)"
+          style="flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);
+                 font-size:13px;font-family:Lato,sans-serif;outline:none"
+          onkeydown="if(event.key==='Enter') buscarEnderecoMO()">
+        <button onclick="buscarEnderecoMO()"
+          style="padding:10px 16px;background:var(--blue);color:var(--navy);border:none;
+                 border-radius:var(--r-sm);font-family:Montserrat,sans-serif;font-weight:700;
+                 font-size:13px;cursor:pointer;white-space:nowrap">
+          Buscar
+        </button>
+        <button onclick="usarLocalizacaoMO()"
+          style="padding:10px 12px;background:var(--bg);border:1.5px solid var(--border);
+                 border-radius:var(--r-sm);font-size:16px;cursor:pointer;white-space:nowrap"
+          title="Usar minha localização">
+          📍
+        </button>
+      </div>
+
+      <div id="mo-mapa" style="height:380px;border-radius:var(--r-sm);overflow:hidden;border:1px solid var(--border)">
+        <div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:13px">
+          Digite seu endereço para ver as escolas no mapa
+        </div>
+      </div>
+
+      <div id="mo-mapa-lista" style="margin-top:12px"></div>
+    </div>
+  `;
+
+  // Carrega Leaflet se ainda não carregado
+  if (!window.L) {
+    await carregarLeaflet();
+  }
+}
+
+function carregarLeaflet() {
+  return new Promise(resolve => {
+    // CSS
+    if (!document.getElementById("leaflet-css")) {
+      const link = document.createElement("link");
+      link.id = "leaflet-css";
+      link.rel = "stylesheet";
+      link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+      document.head.appendChild(link);
+    }
+    // JS
+    if (!document.getElementById("leaflet-js")) {
+      const script = document.createElement("script");
+      script.id = "leaflet-js";
+      script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+      script.onload = resolve;
+      document.head.appendChild(script);
+    } else {
+      resolve();
+    }
+  });
+}
+
+async function buscarEnderecoMO() {
+  const input = document.getElementById("mo-endereco-input");
+  const endereco = input?.value?.trim();
+  if (!endereco) return;
+
+  input.disabled = true;
+  input.value = "Buscando...";
+
+  try {
+    // Geocodifica com Nominatim (OpenStreetMap)
+    const query = encodeURIComponent(endereco + ", São Paulo, Brasil");
+    const resp = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`, {
+      headers: { "Accept-Language": "pt-BR" }
+    });
+    const data = await resp.json();
+
+    if (!data.length) {
+      showToast("Endereço não encontrado. Tente ser mais específico.");
+      input.disabled = false;
+      input.value = endereco;
+      return;
+    }
+
+    const lat = parseFloat(data[0].lat);
+    const lon = parseFloat(data[0].lon);
+    input.value = endereco;
+    input.disabled = false;
+
+    await inicializarMapaMO(lat, lon);
+
+  } catch(e) {
+    showToast("Erro ao buscar endereço. Tente novamente.");
+    input.disabled = false;
+    input.value = endereco;
+  }
+}
+
+function usarLocalizacaoMO() {
+  if (!navigator.geolocation) {
+    showToast("Geolocalização não disponível no seu dispositivo.");
+    return;
+  }
+  showToast("Obtendo sua localização...");
+  navigator.geolocation.getCurrentPosition(
+    async pos => {
+      await inicializarMapaMO(pos.coords.latitude, pos.coords.longitude);
+      const input = document.getElementById("mo-endereco-input");
+      if (input) input.value = "Minha localização atual";
+    },
+    () => showToast("Não foi possível obter sua localização.")
+  );
+}
+
+async function inicializarMapaMO(latAluno, lonAluno) {
+  if (!window.L) await carregarLeaflet();
+
+  const mapaEl = document.getElementById("mo-mapa");
+  if (!mapaEl) return;
+
+  // Destrói mapa anterior se existir
+  if (mapaLeaflet) {
+    mapaLeaflet.remove();
+    mapaLeaflet = null;
+  }
+  mapaEl.innerHTML = "";
+
+  // Cria mapa
+  mapaLeaflet = L.map("mo-mapa").setView([latAluno, lonAluno], 13);
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "© OpenStreetMap contributors"
+  }).addTo(mapaLeaflet);
+
+  // Pin do aluno
+  const iconAluno = L.divIcon({
+    html: `<div style="background:#EE2D67;width:16px;height:16px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3)"></div>`,
+    className: "",
+    iconSize: [16, 16],
+    iconAnchor: [8, 8],
+  });
+  L.marker([latAluno, lonAluno], { icon: iconAluno })
+    .addTo(mapaLeaflet)
+    .bindPopup("<strong>Você está aqui</strong>")
+    .openPopup();
+
+  // Carrega escolas de SP se não estiver em cache
+  if (!moCache["SP"]) {
+    await carregarMOCidade("SP", window._alunoRA || "");
+  }
+
+  const escolas = moCache["SP"] || [];
+
+  // Geocodifica escolas por bairro (batch, com delay para não sobrecarregar Nominatim)
+  const escolasComCoord = [];
+  const distancias = [];
+
+  // Usa coordenadas pré-definidas dos bairros principais de SP
+  const coordsBairros = {
+    "pinheiros": [-23.5663, -46.6904],
+    "perdizes": [-23.5362, -46.6695],
+    "alto de pinheiros": [-23.5441, -46.7101],
+    "morumbi": [-23.6186, -46.7178],
+    "vila mariana": [-23.5883, -46.6367],
+    "higienópolis": [-23.5457, -46.6568],
+    "jardim paulista": [-23.5680, -46.6599],
+    "jardim américa": [-23.5714, -46.6673],
+    "mooca": [-23.5495, -46.5993],
+    "vila madalena": [-23.5554, -46.6897],
+    "centro": [-23.5505, -46.6333],
+    "ipiranga": [-23.5906, -46.6117],
+    "cambuci": [-23.5697, -46.6167],
+    "são bernardo do campo": [-23.6939, -46.5650],
+    "cidade jardim": [-23.5890, -46.6980],
+    "usp": [-23.5595, -46.7310],
+    "são paulo (várias unidades)": [-23.5505, -46.6333],
+    "são paulo (varios bairros)": [-23.5505, -46.6333],
+    "são paulo (zona norte)": [-23.4947, -46.6382],
+    "são paulo (zona sul)": [-23.6500, -46.6667],
+    "são paulo (zona oeste)": [-23.5500, -46.7200],
+    "cidade universitária": [-23.5595, -46.7310],
+    "vários bairros": [-23.5505, -46.6333],
+  };
+
+  mapaMarcadores = [];
+
+  escolas.forEach((escola, idx) => {
+    const bairroKey = (escola.bairro || "").toLowerCase().trim();
+    let coords = null;
+
+    // Tenta encontrar coordenadas pelo bairro
+    for (const [key, val] of Object.entries(coordsBairros)) {
+      if (bairroKey.includes(key) || key.includes(bairroKey)) {
+        coords = val;
+        break;
+      }
+    }
+
+    if (!coords) return; // pula escolas sem bairro conhecido
+
+    // Calcula distância
+    const dist = calcularDistanciaKm(latAluno, lonAluno, coords[0], coords[1]);
+
+    const temInteresse = moInteresses[`SP_${escola.nome}`];
+    const iconEscola = L.divIcon({
+      html: `<div style="background:${temInteresse ? "#EE2D67" : "#002561"};color:#fff;
+                         border-radius:50%;width:28px;height:28px;
+                         display:flex;align-items:center;justify-content:center;
+                         font-size:13px;border:2px solid #fff;
+                         box-shadow:0 2px 6px rgba(0,0,0,0.3);
+                         font-family:Montserrat,sans-serif;font-weight:700">
+               ${temInteresse ? "❤️" : (idx + 1)}
+             </div>`,
+      className: "",
+      iconSize: [28, 28],
+      iconAnchor: [14, 14],
+    });
+
+    const marker = L.marker(coords, { icon: iconEscola })
+      .addTo(mapaLeaflet)
+      .bindPopup(`
+        <div style="font-family:Montserrat,sans-serif;min-width:180px">
+          <div style="font-weight:700;font-size:13px;margin-bottom:4px">${escola.nome}</div>
+          <div style="font-size:11px;color:#666;margin-bottom:4px">📍 ${escola.bairro}</div>
+          <div style="font-size:11px;color:#666;margin-bottom:4px">📏 ${dist.toFixed(1)} km de você</div>
+          ${escola.bolsas ? `<div style="font-size:11px;color:#333;margin-bottom:6px">💰 ${escola.bolsas}</div>` : ""}
+          ${escola.link ? `<a href="${escola.link}" target="_blank" style="font-size:11px;color:#00BDF2;font-weight:700">Ver site ↗</a>` : ""}
+        </div>
+      `);
+
+    mapaMarcadores.push(marker);
+    escolasComCoord.push({ ...escola, coords, dist });
+    distancias.push({ escola, dist, coords });
+  });
+
+  // Ordena por distância e mostra lista
+  distancias.sort((a, b) => a.dist - b.dist);
+  renderizarListaProximas(distancias.slice(0, 8), latAluno, lonAluno);
+}
+
+function calcularDistanciaKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function renderizarListaProximas(escolas, latAluno, lonAluno) {
+  const container = document.getElementById("mo-mapa-lista");
+  if (!container || !escolas.length) return;
+
+  container.innerHTML = `
+    <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:13px;color:var(--navy);margin-bottom:10px">
+      📍 Escolas mais próximas
+    </div>
+    ${escolas.map(({ escola, dist }) => {
+      const chave = `SP_${escola.nome}`;
+      const temInteresse = moInteresses[chave];
+      return `
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;
+                    background:#fff;border:1.5px solid var(--border);border-radius:var(--r-sm);
+                    margin-bottom:8px">
+          <div style="background:${temInteresse ? "#FDF2F8" : "var(--bg)"};
+                      border-radius:8px;padding:6px 10px;text-align:center;min-width:50px;flex-shrink:0">
+            <div style="font-family:Montserrat,sans-serif;font-weight:800;font-size:14px;color:var(--navy)">${dist.toFixed(1)}</div>
+            <div style="font-size:9px;color:var(--text2)">km</div>
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:12px;color:var(--navy)">${escola.nome}</div>
+            <div style="font-size:11px;color:var(--text2)">📍 ${escola.bairro} · ${escola.tipo}</div>
+            ${escola.bolsas ? `<div style="font-size:11px;color:var(--text2)">💰 ${escola.bolsas}</div>` : ""}
+          </div>
+          <button class="mo-interesse-btn${temInteresse ? " ativo" : ""}"
+            onclick="toggleMOInteresseRapido('${chave}', '${escola.nome}', '${window._alunoRA || ""}')"
+            style="flex-shrink:0">
+            ${temInteresse ? "❤️" : "🤍"}
+          </button>
+        </div>`;
+    }).join("")}
+  `;
+}
+
+function toggleMOInteresseRapido(chave, nome, ra) {
+  const idx = -1; // sem idx específico
+  if (moInteresses[chave]) {
+    delete moInteresses[chave];
+    const plano = carregarMOPlano(ra);
+    delete plano[chave];
+    salvarMOPlano(ra, plano);
+  } else {
+    moInteresses[chave] = { nome, data: new Date().toISOString() };
+    const plano = carregarMOPlano(ra);
+    plano[chave] = { nome, etapa: "interesse", data_atualizacao: new Date().toISOString() };
+    salvarMOPlano(ra, plano);
+    showToast("Adicionado ao seu plano! 🎉");
+  }
+  try { sessionStorage.setItem("mo_interesses_" + ra, JSON.stringify(moInteresses)); } catch(e) {}
+  atualizarContadorMO(ra);
+  renderizarPainelMO(ra);
+  // Re-renderiza lista
+  const btn = event?.target;
+  if (btn) {
+    const tem = moInteresses[chave];
+    btn.textContent = tem ? "❤️" : "🤍";
+    btn.classList.toggle("ativo", !!tem);
+  }
 }
