@@ -849,7 +849,11 @@ async function carregarCalendario(serie) {
     });
 
     console.log("[Agenda] total rows:", rows.length, "| eventos filtrados:", eventos.length, "| série:", serie, "→", sNorm);
-    if (rows.length > 1) console.log("[Agenda] primeiras séries na planilha:", rows.slice(1,5).map(r => r[0]));
+    if (rows.length > 1) {
+      console.log("[Agenda] primeiras séries na planilha:", rows.slice(1,5).map(r => r[0]));
+      console.log("[Agenda] linha 1 completa (cols):", rows[1]);
+      console.log("[Agenda] linha 1 length:", rows[1]?.length);
+    }
     window._agendaEventos = eventos;
     window._agendaSerie   = serie;
     renderizarAgenda(eventos, "todos");
