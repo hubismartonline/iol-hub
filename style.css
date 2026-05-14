@@ -2292,8 +2292,13 @@ mark {
 .recados-extras {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   margin-bottom: 14px;
+  background: #ffffff;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+  box-shadow: 0 2px 20px rgba(0,37,97,0.08);
 }
 .recados-extras-titulo {
   display: flex;
