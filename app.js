@@ -93,23 +93,25 @@ async function buscarRA() {
 //  PARSEAR CSV
 // -------------------------------------------------------
 function parsearCSV(csv) {
-  const linhas = csv.split("\n").slice(1);
   const mapa = {};
-  for (const linha of linhas) {
-    if (!linha.trim()) continue;
-    const cols = parsearLinha(linha);
-    if (cols.length < 5) continue;
-    const ra = cols[0].trim().replace(/"/g, "");
-    if (!ra) continue;
+  // Usa parseCSVCompleto() que lida com aspas, quebras de linha e \r\n
+  const rows = parseCSVCompleto(csv);
+  // Pula cabeçalho (linha 0)
+  for (let i = 1; i < rows.length; i++) {
+    const cols = rows[i];
+    if (!cols || cols.length < 5) continue;
+    const ra = (cols[0] || "").replace(/"/g, "").trim();
+    if (!ra || !/^\d+$/.test(ra)) continue;
+    const tutor = (cols[4] || "").replace(/"/g, "").trim();
     mapa[ra] = {
       RA:             ra,
-      nome:           cols[1]?.trim().replace(/"/g, "") || "",
-      serie:          cols[2]?.trim().replace(/"/g, "") || "",
-      cidade:         cols[3]?.trim().replace(/"/g, "") || "",
-      tutor:          cols[4]?.trim().replace(/"/g, "") || "",
-      tutor_wpp:      cols[5]?.trim().replace(/"/g, "") || "",
-      tutor_iniciais: iniciais(cols[4]?.trim().replace(/"/g, "") || ""),
-      tutor_msg:      `Oi, ${cols[4]?.trim()}! Sou ${cols[1]?.trim()} (${cols[2]?.trim()}). Preciso de ajuda com...`
+      nome:           (cols[1] || "").replace(/"/g, "").trim(),
+      serie:          (cols[2] || "").replace(/"/g, "").trim(),
+      cidade:         (cols[3] || "").replace(/"/g, "").trim(),
+      tutor:          tutor,
+      tutor_wpp:      (cols[5] || "").replace(/"/g, "").trim(),
+      tutor_iniciais: iniciais(tutor),
+      tutor_msg:      `Oi, ${tutor}! Sou ${(cols[1] || "").replace(/"/g, "").trim()} (${(cols[2] || "").replace(/"/g, "").trim()}). Preciso de ajuda com...`
     };
   }
   return mapa;
@@ -256,18 +258,36 @@ function sincronizarDesktop() {
   // Nada a fazer — conteúdo fica direto no main-content
 }
 
-function buscarRADesktop() {
+async function buscarRADesktop() {
   const input = document.getElementById("raInputDesktop");
   const ra = input?.value?.trim();
   const erro = document.getElementById("ra-error-desktop");
   if (!ra) return;
+
+  // Se a planilha ainda não foi carregada (ex: usuário entrou pelo desktop),
+  // faz o fetch agora — mesma lógica do buscarRA() mobile
+  if (Object.keys(dadosCarregados).length === 0) {
+    mostrarLoading(true);
+    try {
+      const response = await fetch(SHEET_URL);
+      if (!response.ok) throw new Error("Erro ao carregar planilha");
+      const csv = await response.text();
+      dadosCarregados = parsearCSV(csv);
+    } catch(e) {
+      mostrarLoading(false);
+      if (erro) { erro.style.display = "block"; erro.textContent = "❌ Erro de conexão. Tente novamente."; }
+      return;
+    }
+    mostrarLoading(false);
+  }
+
   const aluno = dadosCarregados[ra];
   if (aluno) {
     if (erro) erro.style.display = "none";
     sessionStorage.setItem("iol_aluno", JSON.stringify(aluno));
     identificarAluno(aluno);
   } else {
-    if (erro) erro.style.display = "block";
+    if (erro) { erro.style.display = "block"; erro.textContent = "❌ RA não encontrado. Verifique e tente novamente."; }
     if (input) { input.style.borderColor = "#EE2D67"; setTimeout(() => { input.style.borderColor = ""; }, 2000); }
   }
 }
@@ -573,15 +593,7 @@ function abrirWhatsAppContato(wpp, msg) {
   window.open(`https://wa.me/${wpp}?text=${encodeURIComponent(msg)}`, "_blank", "noopener");
 }
 
-// -------------------------------------------------------
-//  NAVEGAÇÃO
-// -------------------------------------------------------
-function trocarAba(nomeAba) {
-  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.tab === nomeAba));
-  document.querySelectorAll(".tab-content").forEach(c => c.classList.toggle("active", c.id === `tab-${nomeAba}`));
-  fecharBusca();
-  document.getElementById("tabs-nav")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-}
+// trocarAba: definida acima com sync completo de sidebar desktop
 
 // -------------------------------------------------------
 //  RENDERIZAÇÕES
@@ -721,12 +733,12 @@ function renderizarAvisos(destaque, extras) {
 
 
 function renderizarTutor(aluno) {
-  // DEBUG temporário — remove após confirmar a série
-  console.log("Série do aluno:", JSON.stringify(aluno.serie));
-  showToast(`Série: "${aluno.serie}" → normalizada: "${normalizarSerie(aluno.serie)}"`);
-  document.getElementById("tutor-avatar").textContent = aluno.tutor_iniciais || iniciais(aluno.tutor || "");
-  document.getElementById("tutor-name").textContent   = aluno.tutor;
-  document.getElementById("tutor-turma").textContent  = aluno.serie;
+  const avatar = document.getElementById("tutor-avatar");
+  const nome   = document.getElementById("tutor-name");
+  const turma  = document.getElementById("tutor-turma");
+  if (avatar) avatar.textContent = aluno.tutor_iniciais || iniciais(aluno.tutor || "");
+  if (nome)   nome.textContent   = aluno.tutor;
+  if (turma)  turma.textContent  = aluno.serie;
 }
 
 // Normaliza série: "9º EF" ou "9EF" ou "9ºEF" → "9EF"
