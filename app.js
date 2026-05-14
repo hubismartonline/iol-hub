@@ -809,26 +809,30 @@ async function carregarCalendario(serie) {
     const sNorm = normalizarSerie(serie);
     const eventos = [];
 
-    // Detecta estrutura da planilha pelo cabeçalho (linha 0)
-    const header = rows[0] ? rows[0].map(h => (h||"").replace(/"/g,"").trim().toLowerCase()) : [];
-    const idxSerie  = header.findIndex(h => h === "serie" || h === "série");
-    const idxTitulo = header.findIndex(h => h === "titulo" || h === "título");
-    const idxTexto  = header.findIndex(h => h === "texto");
-    const idxData   = header.findIndex(h => h === "data");
-    const idxDia    = header.findIndex(h => h === "dia");
-    const idxMes    = header.findIndex(h => h === "mes" || h === "mês");
-    console.log("[Agenda] cabeçalhos:", header);
-    console.log("[Agenda] índices — serie:", idxSerie, "titulo:", idxTitulo, "data:", idxData, "dia:", idxDia, "mes:", idxMes);
+    // Estrutura real da planilha:
+    // cols[0]=dia | cols[1]=mes | cols[2]=titulo | cols[3]=subtitulo
+    // cols[4]=tipo | cols[5]=tipo_label | cols[6]=serie
+
+    const VESTIBULARES_LABELS = ["vestibular","vestibulinho","enem","enem treineiro"];
 
     for (let i = 1; i < rows.length; i++) {
       const cols = rows[i];
       if (!cols || cols.length < 3) continue;
 
-      // Lê série — pelo índice do cabeçalho ou fallback posição 0
-      const serieCol = (cols[idxSerie >= 0 ? idxSerie : 0] || "").replace(/"/g,"").trim().toLowerCase();
-      const isVestibular = serieCol === "vestibular";
+      const dia        = (cols[0] || "").replace(/"/g,"").trim();
+      const mes        = (cols[1] || "").replace(/"/g,"").trim().toUpperCase();
+      const titulo     = (cols[2] || "").replace(/"/g,"").trim();
+      const subtitulo  = (cols[3] || "").replace(/"/g,"").trim();
+      const tipo       = (cols[4] || "").replace(/"/g,"").trim().toLowerCase();
+      const tipo_label = (cols[5] || "").replace(/"/g,"").trim();
+      const serieCol   = (cols[6] || "").replace(/"/g,"").trim().toLowerCase();
 
-      const paraEstaSerie = isVestibular ||
+      if (!titulo && !dia) continue;
+
+      // Classifica como vestibular pelo tipo_label
+      const isVestibular = VESTIBULARES_LABELS.includes(tipo_label.toLowerCase());
+
+      const paraEstaSerie =
         serieCol === "todos" ||
         normalizarSerie(serieCol) === sNorm ||
         (serieCol === "ef" && ["8EF","9EF"].includes(sNorm)) ||
@@ -836,38 +840,26 @@ async function carregarCalendario(serie) {
 
       if (!paraEstaSerie) continue;
 
-      // Se planilha tem colunas dia/mes separadas, monta a data
-      let dia, mes, dataISO;
-      if (idxDia >= 0 && idxMes >= 0) {
-        dia = (cols[idxDia] || "").replace(/"/g,"").trim();
-        mes = (cols[idxMes] || "").replace(/"/g,"").trim().toUpperCase();
-        // Monta dataISO para ordenação
-        const mesesNum = {JAN:"01",FEV:"02",MAR:"03",ABR:"04",MAI:"05",JUN:"06",JUL:"07",AGO:"08",SET:"09",OUT:"10",NOV:"11",DEZ:"12"};
-        const mesNum = mesesNum[mes] || "01";
-        const diaNum = dia.padStart(2,"0");
-        dataISO = `2026-${mesNum}-${diaNum}`;
-      } else {
-        const dataStr = (cols[idxData >= 0 ? idxData : 3] || "").replace(/"/g,"").trim();
-        ({ dia, mes, dataISO } = parsearData(dataStr));
-      }
-
-      const titulo = (cols[idxTitulo >= 0 ? idxTitulo : 2] || "").replace(/"/g,"").trim();
-      const texto  = (cols[idxTexto  >= 0 ? idxTexto  : 3] || "").replace(/"/g,"").trim();
-
-      // Tags e itens — pega as colunas restantes após as principais
-      const extras = cols.filter((_, ci) => ![idxSerie, idxTitulo, idxTexto, idxData, idxDia, idxMes].includes(ci));
+      // Monta dataISO para ordenação
+      const mesesNum = {JAN:"01",FEV:"02",MAR:"03",ABR:"04",MAI:"05",JUN:"06",JUL:"07",AGO:"08",SET:"09",OUT:"10",NOV:"11",DEZ:"12"};
+      const mesNum = mesesNum[mes] || "01";
+      const diaNum = (dia||"01").toString().padStart(2,"0");
+      const dataISO = `2026-${mesNum}-${diaNum}`;
 
       eventos.push({
-        serie:  serieCol,
-        titulo, texto,
-        dia, mes, dataISO,
-        tag1:  (extras[0] || "").replace(/"/g,"").trim(),
-        item1: (extras[1] || "").replace(/"/g,"").trim(),
-        tag2:  (extras[2] || "").replace(/"/g,"").trim(),
-        item2: (extras[3] || "").replace(/"/g,"").trim(),
-        tag3:  (extras[4] || "").replace(/"/g,"").trim(),
-        item3: (extras[5] || "").replace(/"/g,"").trim(),
-        tipo:  isVestibular ? "vestibular" : "iol",
+        serie:   serieCol,
+        titulo,
+        texto:   subtitulo,
+        dia:     diaNum,
+        mes,
+        dataISO,
+        tag1:    tipo_label,
+        item1:   "",
+        tag2:    "",
+        item2:   "",
+        tag3:    "",
+        item3:   "",
+        tipo:    isVestibular ? "vestibular" : "iol",
       });
     }
 
@@ -877,12 +869,7 @@ async function carregarCalendario(serie) {
       return a.dataISO.localeCompare(b.dataISO);
     });
 
-    console.log("[Agenda] total rows:", rows.length, "| eventos filtrados:", eventos.length, "| série:", serie, "→", sNorm);
-    if (rows.length > 1) {
-      console.log("[Agenda] primeiras séries na planilha:", rows.slice(1,5).map(r => r[0]));
-      console.log("[Agenda] linha 1 completa (cols):", rows[1]);
-      console.log("[Agenda] linha 1 length:", rows[1]?.length);
-    }
+
     window._agendaEventos = eventos;
     window._agendaSerie   = serie;
     renderizarAgenda(eventos, "todos");
