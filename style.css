@@ -2307,6 +2307,19 @@ mark {
   margin: 4px 0 8px;
 }
 .recados-extras-linha { flex: 1; height: 1px; background: var(--border); }
+.recado-itens-bloco {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.recado-itens-bloco .aviso-item-detalhe {
+  font-size: 13px;
+  color: var(--text);
+  padding: 6px 0 6px 10px;
+  border-left: 3px solid var(--blue);
+}
+
 .recados-extras-label {
   font-family: 'Montserrat', sans-serif;
   font-weight: 700;
