@@ -713,18 +713,28 @@ function renderizarAvisos(destaque, extras) {
           onerror="this.parentNode.style.display='none'">
       </div>` : ""}
 
-      <!-- 4. Texto de encerramento + tags + lembretes -->
+      <!-- 4. Texto de encerramento + tags -->
       <div class="recado-rodape">
         ${destaque.texto_final
           ? `<div class="recado-texto-final">${formatarTexto(destaque.texto_final)}</div>`
           : ""}
         ${tags ? `<div class="recado-tags">${tags}</div>` : ""}
-        ${itens ? `<div class="recado-itens" style="margin-top:10px">${itens}</div>` : ""}
       </div>
 
     </div>
 
-    <!-- Recados secundários -->
+    <!-- Lembretes (item1, item2, item3 do recado principal) -->
+    ${itens ? `
+    <div class="recados-extras">
+      <div class="recados-extras-titulo">
+        <span class="recados-extras-linha"></span>
+        <span class="recados-extras-label">Lembretes</span>
+        <span class="recados-extras-linha"></span>
+      </div>
+      <div class="recado-itens-bloco">${itens}</div>
+    </div>` : ""}
+
+    <!-- Recados secundários (outras linhas da planilha) -->
     ${extras && extras.length ? `
     <div class="recados-extras">
       <div class="recados-extras-titulo">
