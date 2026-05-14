@@ -31,6 +31,11 @@ let dadosCarregados = {};
 // -------------------------------------------------------
 document.addEventListener("DOMContentLoaded", () => {
   atualizarSaudacao();
+
+  // Garante que main-content começa oculto até o login
+  const main = document.getElementById("main-content");
+  if (main) main.style.display = "none";
+
   const dadosSalvos = sessionStorage.getItem("iol_aluno");
   if (dadosSalvos) {
     try {
@@ -40,6 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
       carregarCadastro(alunoAtual.RA || alunoAtual.ra);
     } catch(e) { sessionStorage.removeItem("iol_aluno"); }
   } else {
+    setTimeout(() => document.getElementById("raInputDesktop")?.focus(), 400);
     setTimeout(() => document.getElementById("raInput")?.focus(), 400);
   }
 });
