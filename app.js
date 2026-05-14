@@ -94,9 +94,7 @@ async function buscarRA() {
 // -------------------------------------------------------
 function parsearCSV(csv) {
   const mapa = {};
-  // Usa parseCSVCompleto() que lida com aspas, quebras de linha e \r\n
   const rows = parseCSVCompleto(csv);
-  // Pula cabeçalho (linha 0)
   for (let i = 1; i < rows.length; i++) {
     const cols = rows[i];
     if (!cols || cols.length < 5) continue;
@@ -264,7 +262,7 @@ async function buscarRADesktop() {
   const erro = document.getElementById("ra-error-desktop");
   if (!ra) return;
 
-  // Se a planilha ainda não foi carregada (ex: usuário entrou pelo desktop),
+  // Se a planilha ainda não foi carregada (usuário entrou pelo desktop),
   // faz o fetch agora — mesma lógica do buscarRA() mobile
   if (Object.keys(dadosCarregados).length === 0) {
     mostrarLoading(true);
@@ -593,7 +591,9 @@ function abrirWhatsAppContato(wpp, msg) {
   window.open(`https://wa.me/${wpp}?text=${encodeURIComponent(msg)}`, "_blank", "noopener");
 }
 
-// trocarAba: definida acima com sync completo de sidebar desktop
+// -------------------------------------------------------
+//  NAVEGAÇÃO — trocarAba definida acima (linha ~275) com sync completo
+// -------------------------------------------------------
 
 // -------------------------------------------------------
 //  RENDERIZAÇÕES
