@@ -2124,7 +2124,6 @@ function renderizarMOLista(escolas, ra, jafiltrado) {
   const lista = document.getElementById("mo-lista");
   if (!lista) return;
 
-  // Aplica filtro de tipo se houver
   const tipoAtual = window._moTipoAtual || "todos";
   const filtradas = (jafiltrado || tipoAtual === "todos") ? escolas : escolas.filter(e => {
     const t = (e.tipo || "").toLowerCase();
@@ -2137,45 +2136,44 @@ function renderizarMOLista(escolas, ra, jafiltrado) {
   window._alunoRA = ra;
 
   if (!filtradas.length) {
-    lista.innerHTML = `<p style="color:var(--text2);font-size:13px;padding:16px;text-align:center">Nenhuma escola encontrada.</p>`;
+    lista.innerHTML = `<div class="mo-vazio"><div class="mo-vazio-icon">🏫</div><div class="mo-vazio-texto">Nenhuma escola encontrada para esse filtro.</div></div>`;
     return;
   }
 
   lista.innerHTML = filtradas.map((e, idx) => {
     const chaveInteresse = `${e.cidade}_${e.nome}`;
     const temInteresse = moInteresses[chaveInteresse];
-    const tipoColor = e.tipo?.toLowerCase().includes("federal") ? "#1A5276" :
-                      e.tipo?.toLowerCase().includes("priv")    ? "#7D3C98" : "#1A7A4A";
-    const tipoBg    = e.tipo?.toLowerCase().includes("federal") ? "#EBF4FF" :
-                      e.tipo?.toLowerCase().includes("priv")    ? "#FDF2F8" : "#EAFAF0";
+    const tipoNorm = (e.tipo || "").toLowerCase();
+    const badgeClass = tipoNorm.includes("federal") ? "mo-badge-federal" :
+                       tipoNorm.includes("priv")    ? "mo-badge-privado" : "mo-badge-publico";
 
     return `
       <div class="mo-card" id="mo-card-${idx}">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+        <div class="mo-card-header">
           <div style="flex:1;min-width:0">
-            <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:13px;color:var(--navy);margin-bottom:6px;line-height:1.3">
-              ${e.nome}
+            <div class="mo-card-nome">${e.nome}</div>
+            <div class="mo-card-badges">
+              ${e.tipo ? `<span class="mo-badge ${badgeClass}">${e.tipo}</span>` : ""}
+              ${e.bairro ? `<span class="mo-badge mo-badge-bairro">📍 ${e.bairro}</span>` : ""}
             </div>
-            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
-              ${e.tipo ? `<span style="background:${tipoBg};color:${tipoColor};border-radius:20px;padding:2px 9px;font-size:11px;font-weight:700;font-family:Montserrat,sans-serif">${e.tipo}</span>` : ""}
-              ${e.bairro ? `<span style="background:#F8F9FA;color:var(--text2);border-radius:20px;padding:2px 9px;font-size:11px;border:1px solid var(--border)">📍 ${e.bairro}</span>` : ""}
-            </div>
-            ${e.bolsas ? `<div style="font-size:12px;color:var(--text2);margin-bottom:4px">💰 ${e.bolsas}</div>` : ""}
-            ${e.cursos ? `<div style="font-size:12px;color:var(--text2);margin-bottom:4px">📚 ${e.cursos}</div>` : ""}
-            ${e.desempenho ? `<div style="font-size:11px;color:var(--text3)">📊 ${e.desempenho}</div>` : ""}
           </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
-            <button class="mo-interesse-btn${temInteresse ? " ativo" : ""}"
-              onclick="toggleMOInteresse('${chaveInteresse}', '${e.nome}', '${ra}', ${idx})"
-              id="mo-btn-${idx}"
-              title="${temInteresse ? "Remover interesse" : "Marcar interesse"}">
-              ${temInteresse ? "❤️" : "🤍"}
-            </button>
-            ${e.link ? `<a href="${e.link}" target="_blank" rel="noopener"
-              style="font-size:11px;color:var(--blue);text-decoration:none;font-family:Montserrat,sans-serif;font-weight:700">
-              Site ↗
-            </a>` : ""}
-          </div>
+        </div>
+        ${(e.bolsas || e.cursos || e.desempenho) ? `
+        <div class="mo-card-infos">
+          ${e.bolsas ? `<div class="mo-card-info-item">💰 <span>${e.bolsas}</span></div>` : ""}
+          ${e.cursos ? `<div class="mo-card-info-item">📚 <span>${e.cursos}</span></div>` : ""}
+          ${e.desempenho ? `<div class="mo-card-info-item">📊 <span style="color:var(--text3)">${e.desempenho}</span></div>` : ""}
+        </div>` : ""}
+        <div class="mo-card-footer">
+          <button class="mo-interesse-btn${temInteresse ? " ativo" : ""}"
+            onclick="toggleMOInteresse('${chaveInteresse}', '${e.nome.replace(/'/g,"\'")}', '${ra}', ${idx})"
+            id="mo-btn-${idx}">
+            ${temInteresse ? "❤️ Tenho interesse" : "🤍 Marcar interesse"}
+          </button>
+          ${e.link ? `<a href="${e.link}" target="_blank" rel="noopener"
+            style="font-size:12px;color:var(--blue);text-decoration:none;font-family:Montserrat,sans-serif;font-weight:700">
+            Ver site ↗
+          </a>` : ""}
         </div>
       </div>`;
   }).join("");
@@ -2255,32 +2253,29 @@ function renderizarPainelMO(ra) {
 
   if (!escolas.length) {
     container.innerHTML = `
-      <div style="text-align:center;padding:24px;color:var(--text2);font-size:13px">
-        <div style="font-size:32px;margin-bottom:10px">🏫</div>
-        Você ainda não marcou interesse em nenhuma escola.<br>
-        <span style="font-size:12px">Explore as escolas acima e clique em ❤️ para adicionar ao seu plano!</span>
+      <div class="mo-vazio">
+        <div class="mo-vazio-icon">🏫</div>
+        <div class="mo-vazio-texto">
+          Você ainda não marcou interesse em nenhuma escola.<br>
+          <span style="font-size:12px">Explore as escolas acima e clique em <strong>Marcar interesse</strong> para adicionar ao seu plano!</span>
+        </div>
       </div>`;
     return;
   }
 
-  // Campo: quantas escolas planeja se candidatar
   const meta = plano._meta || "";
 
   container.innerHTML = `
-    <div style="margin-bottom:16px">
-      <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:14px;color:var(--navy);margin-bottom:12px">
-        🎯 Quantas escolas você planeja se candidatar?
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <div class="mo-meta-wrap">
+      <div class="mo-meta-titulo">🎯 Quantas escolas você planeja se candidatar?</div>
+      <div class="mo-meta-btns">
         ${[1,2,3,4,"5+"].map(n => `
           <button class="mo-meta-btn${meta == n ? " ativo" : ""}"
-            onclick="definirMetaMO('${ra}', '${n}')">
-            ${n}
-          </button>`).join("")}
+            onclick="definirMetaMO('${ra}', '${n}')">${n}</button>`).join("")}
       </div>
     </div>
 
-    <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:14px;color:var(--navy);margin-bottom:12px">
+    <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:13px;color:var(--navy);margin-bottom:10px">
       📋 Minhas escolas (${escolas.filter(([k]) => k !== "_meta").length})
     </div>
 
@@ -2291,20 +2286,18 @@ function renderizarPainelMO(ra) {
 
       return `
         <div class="mo-plano-card">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:12px">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px">
             <div>
-              <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:13px;color:var(--navy)">${nomeEscola}</div>
-              <div style="font-size:11px;color:var(--text2);margin-top:2px">${cidade}</div>
+              <div class="mo-plano-card-nome">${nomeEscola}</div>
+              <div class="mo-plano-card-cidade">📍 ${cidade}</div>
             </div>
             <button onclick="removerMOInteresse('${chave}', '${ra}')"
-              style="background:none;border:none;font-size:16px;cursor:pointer;color:var(--text3);padding:0;flex-shrink:0"
-              title="Remover">✕</button>
+              style="background:none;border:none;font-size:14px;cursor:pointer;color:var(--text3);padding:4px;flex-shrink:0"
+              title="Remover da lista">✕</button>
           </div>
-
-          <!-- Etapas -->
-          <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <div class="mo-etapas-wrap">
             ${MO_ETAPAS.filter(e => e.id !== "nao_aprovado").map(etapa => `
-              <button class="mo-etapa-btn${etapaAtual === etapa.id ? " ativo" : ""}"
+              <button class="mo-etapa-btn${etapaAtual === etapa.id ? " ativo" : ""}${etapa.id === "aprovado" ? " mo-etapa-aprovado" : ""}"
                 onclick="atualizarEtapaMO('${chave}', '${etapa.id}', '${ra}')">
                 ${etapa.emoji} ${etapa.label}
               </button>`).join("")}
@@ -2313,7 +2306,6 @@ function renderizarPainelMO(ra) {
               💪 Não aprovado
             </button>
           </div>
-
           ${dados.data_atualizacao ? `
           <div style="font-size:10px;color:var(--text3);margin-top:8px">
             Atualizado em ${new Date(dados.data_atualizacao).toLocaleDateString("pt-BR")}
@@ -2646,28 +2638,25 @@ function renderizarListaProximas(escolas, latAluno, lonAluno) {
 
   container.innerHTML = `
     <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:13px;color:var(--navy);margin-bottom:10px">
-      📍 Escolas mais próximas
+      📍 Escolas mais próximas de você
     </div>
     ${escolas.map(({ escola, dist }) => {
-      const chave = `SP_${escola.nome}`;
+      const chave = "SP_" + escola.nome;
       const temInteresse = moInteresses[chave];
       return `
-        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;
-                    background:#fff;border:1.5px solid var(--border);border-radius:var(--r-sm);
-                    margin-bottom:8px">
-          <div style="background:${temInteresse ? "#FDF2F8" : "var(--bg)"};
-                      border-radius:8px;padding:6px 10px;text-align:center;min-width:50px;flex-shrink:0">
-            <div style="font-family:Montserrat,sans-serif;font-weight:800;font-size:14px;color:var(--navy)">${dist.toFixed(1)}</div>
-            <div style="font-size:9px;color:var(--text2)">km</div>
+        <div class="mo-proxima-card">
+          <div class="mo-proxima-dist">
+            <div class="mo-proxima-dist-num">${dist.toFixed(1)}</div>
+            <div class="mo-proxima-dist-label">km</div>
           </div>
-          <div style="flex:1;min-width:0">
-            <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:12px;color:var(--navy)">${escola.nome}</div>
-            <div style="font-size:11px;color:var(--text2)">📍 ${escola.bairro} · ${escola.tipo}</div>
-            ${escola.bolsas ? `<div style="font-size:11px;color:var(--text2)">💰 ${escola.bolsas}</div>` : ""}
+          <div class="mo-proxima-info">
+            <div class="mo-proxima-nome">${escola.nome}</div>
+            <div class="mo-proxima-sub">📍 ${escola.bairro || ""} · ${escola.tipo || ""}</div>
+            ${escola.bolsas ? `<div class="mo-proxima-sub">💰 ${escola.bolsas}</div>` : ""}
           </div>
           <button class="mo-interesse-btn${temInteresse ? " ativo" : ""}"
-            onclick="toggleMOInteresseRapido('${chave}', '${escola.nome}', '${window._alunoRA || ""}')"
-            style="flex-shrink:0">
+            onclick="toggleMOInteresseRapido('${chave}', '${escola.nome.replace(/'/g,"\'")}', '${window._alunoRA || ""}')"
+            style="flex-shrink:0;padding:8px 12px">
             ${temInteresse ? "❤️" : "🤍"}
           </button>
         </div>`;
