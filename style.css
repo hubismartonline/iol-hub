@@ -2372,7 +2372,13 @@ mark {
     border-bottom: 1px solid rgba(255,255,255,0.1);
     margin-bottom: 8px;
   }
-  .sidebar-logo img { width: 110px; height: auto; filter: brightness(0) invert(1); }
+  .sidebar-logo img {
+    width: 100px;
+    height: auto;
+    background: #fff;
+    border-radius: 12px;
+    padding: 8px 10px;
+  }
 
   .sidebar-perfil {
     padding: 14px 20px;
