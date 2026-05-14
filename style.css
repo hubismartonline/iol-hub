@@ -2508,3 +2508,29 @@ mark {
   0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+/* =============================================
+   FORMULÁRIO INCORPORADO — Atendimento
+   ============================================= */
+
+.atend-iframe-wrap {
+  background: #fff;
+  border-radius: var(--r-md);
+  border: 1.5px solid var(--border);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  margin-bottom: 16px;
+}
+
+.atend-iframe {
+  width: 100%;
+  height: 720px;
+  border: none;
+  display: block;
+}
+
+@media (min-width: 768px) {
+  .atend-iframe {
+    height: 860px;
+  }
+}
