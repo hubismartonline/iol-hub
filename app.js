@@ -830,7 +830,16 @@ async function carregarCalendario(serie) {
       if (!titulo && !dia) continue;
 
       // Classifica como vestibular pelo tipo_label
-      const isVestibular = VESTIBULARES_LABELS.includes(tipo_label.toLowerCase());
+      const tipoLabelNorm = tipo_label.toLowerCase();
+      const isVestibulinho = tipoLabelNorm === "vestibulinho";
+      const isVestibularEM = ["vestibular","enem","enem treineiro"].includes(tipoLabelNorm);
+      const isVestibular   = isVestibulinho || isVestibularEM;
+
+      // Restrição por série para vestibulares:
+      // Vestibulinho → só 9EF
+      // Vestibular/ENEM/ENEM Treineiro → só EM
+      if (isVestibulinho && sNorm !== "9EF") continue;
+      if (isVestibularEM && !["1EM","2EM","3EM"].includes(sNorm)) continue;
 
       const paraEstaSerie =
         serieCol === "todos" ||
