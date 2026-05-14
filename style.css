@@ -2484,3 +2484,27 @@ mark {
   .tutor-rodape-injetado { display: block; }
   .tutor-rodape-desktop  { display: block; }
 }
+
+/* =============================================
+   SKELETON LOADING — Nota do Aluno
+   ============================================= */
+
+.skeleton-nota {
+  background: #EBF4FF;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 14px;
+  border-left: 4px solid #c8dff7;
+}
+
+.skeleton-linha {
+  background: linear-gradient(90deg, #d4e8f7 25%, #e8f3fb 50%, #d4e8f7 75%);
+  background-size: 200% 100%;
+  border-radius: 6px;
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-pulse {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
