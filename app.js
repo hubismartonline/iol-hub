@@ -187,6 +187,12 @@ function linkificar(texto) {
   });
 }
 
+// Converte quebras de linha em <br> e linkifica
+function formatarTexto(texto) {
+  if (!texto) return "";
+  return linkificar(texto).replace(/\n/g, "<br>");
+}
+
 function iniciais(nome) {
   const partes = nome.split(" ").filter(Boolean);
   if (partes.length >= 2) return (partes[0][0] + partes[1][0]).toUpperCase();
@@ -710,7 +716,7 @@ function renderizarAvisos(destaque, extras) {
       <!-- 4. Texto de encerramento + tags + lembretes -->
       <div class="recado-rodape">
         ${destaque.texto_final
-          ? `<div class="recado-texto-final">${linkificar(destaque.texto_final)}</div>`
+          ? `<div class="recado-texto-final">${formatarTexto(destaque.texto_final)}</div>`
           : ""}
         ${tags ? `<div class="recado-tags">${tags}</div>` : ""}
         ${itens ? `<div class="recado-itens" style="margin-top:10px">${itens}</div>` : ""}
