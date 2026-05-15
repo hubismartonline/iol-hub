@@ -587,17 +587,27 @@ function renderizarCadastro(d, container) {
 //  SAIR
 // -------------------------------------------------------
 function sair() {
-  sessionStorage.removeItem("iol_aluno");
+  sessionStorage.clear();
   alunoAtual = null;
+
+  // Esconde conteúdo do aluno
   document.getElementById("student-profile").style.display = "none";
-  document.getElementById("ra-header-section").style.display = "block";
   document.getElementById("main-content").style.display = "none";
+
+  // Mostra tela de login
+  document.getElementById("ra-header-section").style.display = "block";
   document.getElementById("welcome-screen")?.classList.remove("hidden");
-  document.getElementById("raInput").value = "";
+
+  // Limpa campos
+  const raInput = document.getElementById("raInput");
+  if (raInput) { raInput.value = ""; raInput.focus(); }
   document.getElementById("ra-error").style.display = "none";
+
+  // Scroll para o topo
+  window.scrollTo({ top: 0, behavior: "smooth" });
+
   trocarAba("home");
   esconderFAB();
-  showToast("Até logo! 👋");
 }
 
 
