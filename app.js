@@ -2973,7 +2973,9 @@ async function carregarGuia() {
       const s = document.createElement("script");
       s.id = "_guia_s_" + cbName;
       s.onerror = () => { delete window[cbName]; reject(new Error("Erro")); };
-      s.src = "https://script.google.com/macros/s/AKfycbzty1jMjCZWCdneXerbgnPV6EyiAvwVCsUDrViaX25hKvfmkrJ_ilSWmUe4LZpUlcHXLQ/exec?action=guia&callback=" + cbName;
+      const guiaUrl = "https://script.google.com/macros/s/AKfycbzty1jMjCZWCdneXerbgnPV6EyiAvwVCsUDrViaX25hKvfmkrJ_ilSWmUe4LZpUlcHXLQ/exec?action=guia&callback=" + cbName;
+      console.log("[Guia] Chamando:", guiaUrl);
+      s.src = guiaUrl;
       document.head.appendChild(s);
     });
     if (data?.cursos?.length) {
