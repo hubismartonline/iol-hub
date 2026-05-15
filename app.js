@@ -2112,9 +2112,9 @@ async function carregarMOCidade(cidade, ra) {
 
       if (cidade === "SP") {
         // Aba Pesquisas: Nº | Nome | Tipo | Bairro | Bolsas | Cursos | Desempenho
-        if (i === 1) console.log("[MO SP] linha 1:", cols);
         const nome = (cols[1] || "").replace(/"/g,"").trim();
-        if (!nome) continue;
+        // Pula linhas de cabeçalho ou vazias
+        if (!nome || nome.toLowerCase().includes("nome") || nome.toLowerCase().includes("escola/inst") || /^\d+$/.test(nome)) continue;
         escolas.push({
           nome,
           tipo:       (cols[2] || "").replace(/"/g,"").trim(),
@@ -2640,12 +2640,11 @@ async function inicializarMapaMO(latAluno, lonAluno) {
     const temInteresse = moInteresses[`SP_${escola.nome}`];
     const iconEscola = L.divIcon({
       html: `<div style="background:${temInteresse ? "#EE2D67" : "#002561"};color:#fff;
-                         border-radius:50%;width:28px;height:28px;
+                         border-radius:50%;width:30px;height:30px;
                          display:flex;align-items:center;justify-content:center;
-                         font-size:13px;border:2px solid #fff;
-                         box-shadow:0 2px 6px rgba(0,0,0,0.3);
-                         font-family:Montserrat,sans-serif;font-weight:700">
-               ${temInteresse ? "❤️" : (idx + 1)}
+                         font-size:15px;border:2px solid #fff;
+                         box-shadow:0 2px 6px rgba(0,0,0,0.3)">
+               ${temInteresse ? "❤️" : "🏫"}
              </div>`,
       className: "",
       iconSize: [28, 28],
