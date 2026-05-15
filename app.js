@@ -2948,70 +2948,18 @@ const ETAPAS_VEST = [
   { id: "nao_aprovado", emoji: "💪", label: "Não aprovado" },
 ];
 
-let CURSOS_GUIA = ["Carregando..."];
 
 const GUIA_URL = "https://script.google.com/macros/s/AKfycbzty1jMjCZWCdneXerbgnPV6EyiAvwVCsUDrViaX25hKvfmkrJ_ilSWmUe4LZpUlcHXLQ/exec";
 
-let UNIVERSIDADES_GUIA = ["Carregando..."];
 
 // Cursos e universidades serão carregados do CSV do Guia de Carreiras
 // URL será configurada quando a planilha for publicada
-// Carrega cursos e universidades do Guia de Carreiras via action=guia
-let _guiaCarregado = false;
+// Cursos e universidades do Guia de Carreiras Ismart (hardcoded para performance)
+let CURSOS_GUIA = ['Adm Tech', 'Administração', 'Administração Pública', 'Agronomia', 'Bacharelado em Ciência e Tecnologia', 'Bacharelado em Inteligência Artifical', 'Ciência Da Computação', 'Ciência De Dados', 'Ciências Econômicas', 'Ciências Moleculares', 'Desenho Industrial - Projeto De Produto', 'Design', 'Design De Produto', 'Design Gráfico', 'Direito', 'Engenharia Aeroespacial', 'Engenharia Aeronáutica', 'Engenharia Agronômica', 'Engenharia Agrícola', 'Engenharia Ambiental', 'Engenharia Ambiental (campus Belo Horizonte)', 'Engenharia Ambiental E Sanitária', 'Engenharia Biomédica', 'Engenharia Civil', 'Engenharia Civil (campus Belo Horizonte)', 'Engenharia Controle e Automação', 'Engenharia Da Computação', 'Engenharia Da Computação (campus Belo Horizonte)', 'Engenharia De Agronegócios', 'Engenharia De Alimentos', 'Engenharia De Bioprocessos', 'Engenharia De Bioprocessos E Biotecnologia', 'Engenharia De Biossistemas', 'Engenharia De Biotecnologia', 'Engenharia De Computação E Informação', 'Engenharia De Comunicações', 'Engenharia De Controle E Automação', 'Engenharia De Energia', 'Engenharia De Energias', 'Engenharia De Fortificação E Construção', 'Engenharia De Gestão', 'Engenharia De Informação', 'Engenharia De Manufatura', 'Engenharia De Materiais', 'Engenharia De Materiais (campus Belo Horizonte)', 'Engenharia De Materiais E Manufatura', 'Engenharia De Minas', 'Engenharia De Pesca', 'Engenharia De Petróleo', 'Engenharia De Produção', 'Engenharia De Produção (Campus Rio)', 'Engenharia De Recursos Hídricos E Do Meio Ambiente', 'Engenharia De Sistemas', 'Engenharia De Software', 'Engenharia De Telecomunicações', 'Engenharia De Transportes (campus Belo Horizonte)', 'Engenharia Eletrônica', 'Engenharia Eletrônica E De Computação', 'Engenharia Eletrônica E De Telecomunicações', 'Engenharia Elétrica', 'Engenharia Elétrica (campus Belo Horizonte)', 'Engenharia Florestal', 'Engenharia Física', 'Engenharia Industrial', 'Engenharia Mecatrônica', 'Engenharia Mecânica', 'Engenharia Mecânica (campus Belo Horizonte)', 'Engenharia Metalúrgica', 'Engenharia Naval', 'Engenharia Naval E Oceânica', 'Engenharia Nuclear', 'Engenharia Produção (campus Belo Horizonte)', 'Engenharia Química', 'Engenharia de Produção', 'Engenhria Química', 'Estatística', 'Física Médica', 'Gestão De Políticas Públicas', 'Gestão Pública', 'Gestão Pública Para O Desenvolvimento Econômico E Social', 'Matemática', 'Matemática Aplicada', 'Matemática Aplicada E Computacional', 'Medicina', 'Nanotecnologia', 'Políticas Públicas', 'Sistema De Informações', 'Outro'];
+let UNIVERSIDADES_GUIA = ['Albert Einstein', 'CEFET/MG', 'EG - Fundação João Pinheiro', 'ESPM SP', 'FEI', 'FGV-RJ', 'FGV-SP', 'Faculdade de Medicina de São José do Rio Preto', 'ILUM', 'IME', 'INSPER', 'ITA', 'Instituto Mauá de Tecnologia', 'Inteli', 'Mackenzie', 'PUC MINAS', 'PUC-Rio', 'PUCRS', 'PUCSP', 'Santa Casa', 'Sírio Libanês', 'UEL', 'UEM', 'UERJ', 'UFABC', 'UFC', 'UFCSPA', 'UFF', 'UFLA', 'UFMG', 'UFOP', 'UFPE', 'UFPEL', 'UFPR', 'UFRGS', 'UFRJ', 'UFRN', 'UFSC', 'UFSCAR', 'UFSM', 'UFU', 'UFV', 'UNB', 'UNESP', 'UNICAMP', 'UNIFEI', 'UNIFESP', 'USP', 'UTFPR', 'Outra'];
 
-async function carregarGuia() {
-  if (_guiaCarregado) return;
-  try {
-    // Usa a URL do guia de carreiras (que tem action=guia)
-    const data = await new Promise((resolve, reject) => {
-      const cbName = "_guiaCb_" + Date.now();
-      window[cbName] = function(d) {
-        delete window[cbName];
-        document.getElementById("_guia_s_" + cbName)?.remove();
-        resolve(d);
-      };
-      const s = document.createElement("script");
-      s.id = "_guia_s_" + cbName;
-      s.onerror = () => { delete window[cbName]; reject(new Error("Erro")); };
-      const guiaUrl = "https://script.google.com/macros/s/AKfycbzty1jMjCZWCdneXerbgnPV6EyiAvwVCsUDrViaX25hKvfmkrJ_ilSWmUe4LZpUlcHXLQ/exec?action=guia&callback=" + cbName;
-      console.log("[Guia] Chamando:", guiaUrl);
-      s.src = guiaUrl;
-      document.head.appendChild(s);
-    });
-    if (data?.cursos?.length) {
-      CURSOS_GUIA = [...data.cursos, "Outro"];
-    }
-    if (data?.universidades?.length) {
-      UNIVERSIDADES_GUIA = [...data.universidades, "Outra"];
-    }
-    _guiaCarregado = true;
-    console.log("[Guia] Cursos:", CURSOS_GUIA.length, "| Universidades:", UNIVERSIDADES_GUIA.length);
-
-    // Re-renderiza os selects se já estiverem visíveis
-    const cursosSelect = document.getElementById("vest-curso-select");
-    if (cursosSelect) {
-      cursosSelect.innerHTML = `<option value="">Selecione um curso...</option>
-        ${CURSOS_GUIA.map(c => `<option value="${c}">${c}</option>`).join("")}`;
-    }
-    const univSelect = document.getElementById("vest-universidade-select");
-    if (univSelect) {
-      univSelect.innerHTML = `<option value="">Selecione a universidade...</option>
-        ${UNIVERSIDADES_GUIA.map(u => `<option value="${u}">${u}</option>`).join("")}`;
-    }
-  } catch(e) {
-    console.warn("[Guia] Erro:", e);
-    CURSOS_GUIA = ["Outro"];
-    UNIVERSIDADES_GUIA = ["Outra"];
-  }
-}
-
-async function carregarCursosGuia() {
-  await carregarGuia();
-}
-
-async function carregarUniversidadesGuia() {
-  await carregarGuia();
-}
+async function carregarCursosGuia() { /* já carregado */ }
+async function carregarUniversidadesGuia() { /* já carregado */ }
 
 function carregarPlanoVest(ra) {
   try {
