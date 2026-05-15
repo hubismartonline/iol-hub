@@ -21,7 +21,7 @@ const CADASTRO_URL = "https://script.google.com/macros/s/AKfycbxhwZfOXqWgsoxA0G7
 const SIMULADOR_URL = "https://script.google.com/macros/s/AKfycby2bv-dEQEoz3qtVSNjWY5sPQSTmyJ3L1wQv_ApX5bOzL-pls5UvrhKPHy1X6DQsmg8Dw/exec";
 
 // URL do Apps Script para salvar dados de MOs
-const MO_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzUR2RdW9GayQUW_FHXgI9GNmHfzfnXBnyAaFacSgMfYQwJ8WNrgOieUw13UJYBMt0o/exec";
+const MO_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyQ5cu2VInBwdA8MRYE1dH2WxmGxZH3MfweCa6KVZiGS8Ccf9UK_x2TL61bc2bI8g85pQ/exec";
 
 // URLs das planilhas de Melhores Oportunidades (MOs)
 const MO_URLS = {
