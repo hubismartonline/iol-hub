@@ -2944,46 +2944,43 @@ const GUIA_URL = "https://script.google.com/macros/s/AKfycbzty1jMjCZWCdneXerbgnP
 
 let UNIVERSIDADES_GUIA = ["Carregando..."];
 
+// Cursos e universidades serão carregados do CSV do Guia de Carreiras
+// URL será configurada quando a planilha for publicada
+const GUIA_CSV_URL = ""; // preencher com URL do CSV
+
 async function carregarUniversidadesGuia() {
   if (UNIVERSIDADES_GUIA.length > 2) return;
+  if (!GUIA_CSV_URL) { UNIVERSIDADES_GUIA = ["Outra"]; return; }
   try {
-    const dataAreas = await fetchSimulador({ action: "areas" });
-    const areas = dataAreas?.areas || [];
+    const resp = await fetch(GUIA_CSV_URL);
+    const csv = await resp.text();
+    const rows = parseCSVCompleto(csv);
     const univSet = new Set();
-    for (const area of areas) {
-      const dataCarreiras = await fetchSimulador({ action: "carreiras", area });
-      const carreiras = dataCarreiras?.carreiras || [];
-      if (carreiras.length > 0) {
-        const dataUnivs = await fetchSimulador({ action: "universidades", carreira: carreiras[0], uf: "todas" });
-        (dataUnivs?.universidades || []).forEach(u => {
-          const nome = u.universidade || u.nome || u;
-          if (nome && typeof nome === "string") univSet.add(nome);
-        });
-      }
+    for (let i = 1; i < rows.length; i++) {
+      const sigla = (rows[i][1] || "").replace(/"/g,"").trim();
+      if (sigla) univSet.add(sigla);
     }
     UNIVERSIDADES_GUIA = [...Array.from(univSet).sort(), "Outra"];
-    console.log("[Guia] Universidades carregadas:", UNIVERSIDADES_GUIA.length);
   } catch(e) {
-    console.warn("[Guia] Erro universidades:", e);
     UNIVERSIDADES_GUIA = ["Outra"];
   }
 }
 
 async function carregarCursosGuia() {
   if (CURSOS_GUIA.length > 2) return;
+  if (!GUIA_CSV_URL) { CURSOS_GUIA = ["Outro"]; return; }
   try {
-    const dataAreas = await fetchSimulador({ action: "areas" });
-    const areas = dataAreas?.areas || [];
-    const promises = areas.map(area => fetchSimulador({ action: "carreiras", area }));
-    const resultados = await Promise.all(promises);
-    const todosCursos = new Set();
-    resultados.forEach(r => {
-      (r?.carreiras || []).forEach(c => todosCursos.add(c));
-    });
-    CURSOS_GUIA = [...Array.from(todosCursos).sort(), "Outro"];
-    console.log("[Guia] Cursos carregados:", CURSOS_GUIA.length);
+    const resp = await fetch(GUIA_CSV_URL);
+    const csv = await resp.text();
+    const rows = parseCSVCompleto(csv);
+    const cursosSet = new Set();
+    for (let i = 1; i < rows.length; i++) {
+      const curso = (rows[i][0] || "").replace(/"/g,"").trim();
+      if (curso && curso !== "Nome Do Curso") cursosSet.add(curso);
+    }
+    CURSOS_GUIA = [...Array.from(cursosSet).sort(), "Outro"];
   } catch(e) {
-    console.warn("[Guia] Erro cursos:", e);
+    CURSOS_GUIA = ["Outro"];
   }
 }
 
