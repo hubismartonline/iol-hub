@@ -84,6 +84,125 @@ function atualizarSaudacao() {
 // -------------------------------------------------------
 //  BUSCA POR RA
 // -------------------------------------------------------
+
+// ============================================================
+//  VERIFICAÇÃO DE DATA DE NASCIMENTO
+// ============================================================
+function mostrarModalNascimento(origem) {
+  document.getElementById("modal-nascimento")?.remove();
+
+  const modal = document.createElement("div");
+  modal.id = "modal-nascimento";
+  modal.style.cssText = "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,37,97,0.6);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px";
+
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:16px;padding:28px;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);text-align:center">
+      <div style="font-size:36px;margin-bottom:12px">🔒</div>
+      <div style="font-family:Montserrat,sans-serif;font-weight:800;font-size:18px;color:#002561;margin-bottom:6px">
+        Confirme sua identidade
+      </div>
+      <div style="font-size:13px;color:#666;margin-bottom:20px;font-family:Lato,sans-serif">
+        Digite sua data de nascimento para acessar o Hub
+      </div>
+
+      <input type="text" id="input-nascimento"
+        placeholder="DD/MM/AAAA"
+        maxlength="10"
+        oninput="mascaraData(this)"
+        onkeydown="if(event.key==='Enter') confirmarNascimento()"
+        style="width:100%;padding:12px;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;font-family:Lato,sans-serif;text-align:center;box-sizing:border-box;outline:none;letter-spacing:2px">
+
+      <div id="erro-nascimento" style="display:none;color:#EE2D67;font-size:12px;margin-top:8px;font-family:Lato,sans-serif">
+        ❌ Data incorreta. Tente novamente.
+      </div>
+
+      <button onclick="confirmarNascimento()"
+        style="width:100%;margin-top:16px;padding:13px;background:#002561;color:#fff;border:none;border-radius:10px;font-family:Montserrat,sans-serif;font-weight:700;font-size:14px;cursor:pointer">
+        Entrar →
+      </button>
+      <button onclick="cancelarLogin()"
+        style="width:100%;margin-top:8px;padding:10px;background:transparent;color:#999;border:none;font-family:Lato,sans-serif;font-size:13px;cursor:pointer">
+        Cancelar
+      </button>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  setTimeout(() => document.getElementById("input-nascimento")?.focus(), 100);
+}
+
+function mascaraData(input) {
+  let v = input.value.replace(/\D/g, "");
+  if (v.length >= 3) v = v.slice(0,2) + "/" + v.slice(2);
+  if (v.length >= 6) v = v.slice(0,5) + "/" + v.slice(5);
+  input.value = v.slice(0, 10);
+}
+
+async function confirmarNascimento() {
+  const input = document.getElementById("input-nascimento");
+  const erro  = document.getElementById("erro-nascimento");
+  const digitado = (input?.value || "").trim();
+
+  if (digitado.length < 10) {
+    if (erro) erro.style.display = "block";
+    if (input) { input.style.borderColor = "#EE2D67"; setTimeout(() => input.style.borderColor = "#e0e0e0", 2000); }
+    return;
+  }
+
+  const aluno = window._alunoTemp;
+  if (!aluno) { cancelarLogin(); return; }
+
+  // Busca data de nascimento no CADASTRO_URL
+  mostrarLoading(true);
+  try {
+    const ra = aluno.RA || aluno.ra;
+    const resp = await fetch(CADASTRO_URL + "?ra=" + encodeURIComponent(ra));
+    const json = await resp.json();
+    const nascCadastro = (json?.dados?.Data_nascimento || "").trim();
+
+    // Normaliza as duas datas para DD/MM/AAAA
+    const nascDigitado = normalizarData(digitado);
+    const nascBase     = normalizarData(nascCadastro);
+
+    if (nascDigitado && nascBase && nascDigitado === nascBase) {
+      // ACESSO LIBERADO
+      document.getElementById("modal-nascimento")?.remove();
+      window._alunoTemp = null;
+      sessionStorage.setItem("iol_aluno", JSON.stringify(aluno));
+      identificarAluno(aluno);
+    } else {
+      if (erro) erro.style.display = "block";
+      if (input) { input.value = ""; input.style.borderColor = "#EE2D67"; input.focus(); setTimeout(() => input.style.borderColor = "#e0e0e0", 2000); }
+    }
+  } catch(e) {
+    console.warn("[Nascimento] Erro:", e);
+    showToast("Erro de conexão. Tente novamente.");
+  }
+  mostrarLoading(false);
+}
+
+function normalizarData(data) {
+  if (!data) return "";
+  // Remove tudo que não é número
+  const nums = data.replace(/\D/g, "");
+  if (nums.length === 8) {
+    // Pode ser DDMMAAAA ou AAAAMMDD
+    const dia = nums.slice(0,2);
+    const mes = nums.slice(2,4);
+    const ano = nums.slice(4,8);
+    // Valida se parece data DD/MM/AAAA
+    if (parseInt(dia) <= 31 && parseInt(mes) <= 12) {
+      return dia + "/" + mes + "/" + ano;
+    }
+  }
+  return data.trim();
+}
+
+function cancelarLogin() {
+  document.getElementById("modal-nascimento")?.remove();
+  window._alunoTemp = null;
+}
+
 async function buscarRA() {
   const input = document.getElementById("raInput");
   const ra = input?.value.trim();
@@ -102,8 +221,8 @@ async function buscarRA() {
     processarBusca(ra, erro);
   } catch(e) {
     if (typeof ALUNOS !== "undefined" && ALUNOS[ra]) {
-      sessionStorage.setItem("iol_aluno", JSON.stringify(ALUNOS[ra]));
-      identificarAluno(ALUNOS[ra]);
+      window._alunoTemp = ALUNOS[ra];
+      mostrarModalNascimento("mobile");
       if (erro) erro.style.display = "none";
     } else {
       showToast("Erro de conexão. Tente novamente.");
@@ -224,9 +343,9 @@ function iniciais(nome) {
 function processarBusca(ra, erro) {
   const aluno = dadosCarregados[ra];
   if (aluno) {
-    sessionStorage.setItem("iol_aluno", JSON.stringify(aluno));
-    identificarAluno(aluno);
     if (erro) erro.style.display = "none";
+    window._alunoTemp = aluno;
+    mostrarModalNascimento("mobile");
   } else {
     if (erro) { erro.style.display = "block"; erro.textContent = "❌ RA não encontrado. Verifique e tente novamente."; }
     const input = document.getElementById("raInput");
@@ -313,8 +432,9 @@ async function buscarRADesktop() {
   const aluno = dadosCarregados[ra];
   if (aluno) {
     if (erro) erro.style.display = "none";
-    sessionStorage.setItem("iol_aluno", JSON.stringify(aluno));
-    identificarAluno(aluno);
+    // Guarda temporariamente e pede data de nascimento
+    window._alunoTemp = aluno;
+    mostrarModalNascimento("desktop");
   } else {
     if (erro) { erro.style.display = "block"; erro.textContent = "❌ RA não encontrado. Verifique e tente novamente."; }
     if (input) { input.style.borderColor = "#EE2D67"; setTimeout(() => { input.style.borderColor = ""; }, 2000); }
