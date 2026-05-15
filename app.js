@@ -20,6 +20,9 @@ const CADASTRO_URL = "https://script.google.com/macros/s/AKfycbxhwZfOXqWgsoxA0G7
 // Simulador de Vestibular — Apps Script (Guia de Carreiras + SISU)
 const SIMULADOR_URL = "https://script.google.com/macros/s/AKfycby2bv-dEQEoz3qtVSNjWY5sPQSTmyJ3L1wQv_ApX5bOzL-pls5UvrhKPHy1X6DQsmg8Dw/exec";
 
+// URL do Apps Script para salvar dados de MOs
+const MO_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzUR2RdW9GayQUW_FHXgI9GNmHfzfnXBnyAaFacSgMfYQwJ8WNrgOieUw13UJYBMt0o/exec";
+
 // URLs das planilhas de Melhores Oportunidades (MOs)
 const MO_URLS = {
   SP:        "https://docs.google.com/spreadsheets/d/e/2PACX-1vT0m3gCD1gYND8bEJ5e_AhMubECUyU9uW0u1W-Ak59GxrNDnI7iGJ_wk9tb1EAXOyNZ6AsDIkc44qWN/pub?gid=652524075&single=true&output=csv",
@@ -1948,6 +1951,28 @@ function toggleFabItem(i) {
 //  MELHORES OPORTUNIDADES — EF
 // =============================================================
 
+async function salvarMONoScript(ra, nomeAluno, chaveEscola, etapa) {
+  try {
+    const partes = chaveEscola.split("_");
+    const cidade = partes[0];
+    const escola = partes.slice(1).join("_");
+
+    await fetch(MO_SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ra,
+        nome: nomeAluno || (window.alunoAtual?.nome || ""),
+        escola,
+        cidade,
+        etapa,
+      }),
+    });
+  } catch(e) {
+    console.warn("Erro ao salvar MO no script:", e);
+  }
+}
+
 async function renderizarMOs(aluno) {
   const container = document.getElementById("mo-container");
   if (!container) return;
@@ -2534,7 +2559,10 @@ function atualizarEtapaMO(chave, etapaId, ra) {
     salvarMOPlano(ra, plano);
     renderizarPainelMO(ra);
 
-    // Feedback visual com confetes para aprovação
+    // Salva no Apps Script
+    salvarMONoScript(ra, plano[chave]?.nome || "", chave, etapaId);
+
+    // Feedback visual
     const msgs = {
       interesse:    "Escola adicionada ao plano! 🏫",
       inscrito:     "Inscrição registrada! Boa sorte! 📋",
