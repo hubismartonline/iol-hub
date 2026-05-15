@@ -2334,35 +2334,120 @@ function renderizarPainelMO(ra) {
       const etapaAtual = dados.etapa || "interesse";
       const nomeEscola = dados.nome || chave.split("_").slice(1).join(" ");
       const cidade = chave.split("_")[0];
+      const historico = dados.historico || {};
+
+      // Progresso
+      const ordemEtapas = ["interesse","inscrito","prova","aprovado"];
+      const idxAtual = ordemEtapas.indexOf(etapaAtual);
+      const isNaoAprovado = etapaAtual === "nao_aprovado";
+      const pct = isNaoAprovado ? 75 : Math.round(((idxAtual + 1) / ordemEtapas.length) * 100);
+      const corBarra = isNaoAprovado ? "#F59E0B" : etapaAtual === "aprovado" ? "#27AE60" : "#00BDF2";
 
       return `
         <div class="mo-plano-card">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px">
-            <div>
+          <!-- Cabeçalho -->
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px">
+            <div style="flex:1">
               <div class="mo-plano-card-nome">${nomeEscola}</div>
-              <div class="mo-plano-card-cidade">📍 ${cidade}</div>
+              <div class="mo-plano-card-cidade">📍 ${cidade === "SP" ? "São Paulo" : cidade === "SJC" ? "São José dos Campos" : cidade === "BH" ? "Belo Horizonte" : cidade === "RJ" ? "Rio de Janeiro" : cidade}</div>
             </div>
             <button onclick="removerMOInteresse('${chave}', '${ra}')"
               style="background:none;border:none;font-size:14px;cursor:pointer;color:var(--text3);padding:4px;flex-shrink:0"
               title="Remover da lista">✕</button>
           </div>
-          <div class="mo-etapas-wrap">
-            ${MO_ETAPAS.filter(e => e.id !== "nao_aprovado").map(etapa => `
-              <button class="mo-etapa-btn${etapaAtual === etapa.id ? " ativo" : ""}${etapa.id === "aprovado" ? " mo-etapa-aprovado" : ""}"
-                onclick="atualizarEtapaMO('${chave}', '${etapa.id}', '${ra}')">
-                ${etapa.emoji} ${etapa.label}
-              </button>`).join("")}
-            <button class="mo-etapa-btn mo-etapa-nao${etapaAtual === "nao_aprovado" ? " ativo" : ""}"
-              onclick="atualizarEtapaMO('${chave}', 'nao_aprovado', '${ra}')">
-              💪 Não aprovado
-            </button>
+
+          <!-- Barra de progresso -->
+          <div style="margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:5px;font-family:Montserrat,sans-serif;font-weight:700">
+              <span>${isNaoAprovado ? "💪 Não aprovado desta vez" : etapaAtual === "aprovado" ? "🎉 APROVADO!" : "Em andamento..."}</span>
+              <span style="color:${corBarra}">${pct}%</span>
+            </div>
+            <div style="background:var(--border);border-radius:20px;height:8px;overflow:hidden">
+              <div style="height:100%;width:${pct}%;background:${corBarra};border-radius:20px;transition:width 0.5s ease"></div>
+            </div>
           </div>
-          ${dados.data_atualizacao ? `
-          <div style="font-size:10px;color:var(--text3);margin-top:8px">
-            Atualizado em ${new Date(dados.data_atualizacao).toLocaleDateString("pt-BR")}
-          </div>` : ""}
+
+          <!-- Etapas com histórico -->
+          <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">
+            ${ordemEtapas.map((etId, idx) => {
+              const etapa = MO_ETAPAS.find(e => e.id === etId);
+              const feito = ordemEtapas.indexOf(etapaAtual) >= idx || etapaAtual === "nao_aprovado" && idx < 3;
+              const atual = etapaAtual === etId;
+              const dataEtapa = historico[etId] ? new Date(historico[etId]).toLocaleDateString("pt-BR") : null;
+              return `
+                <div style="display:flex;align-items:center;gap:10px;cursor:pointer"
+                     onclick="atualizarEtapaMO('${chave}', '${etId}', '${ra}')">
+                  <div style="width:28px;height:28px;border-radius:50%;flex-shrink:0;
+                               background:${feito ? corBarra : "var(--border)"};
+                               display:flex;align-items:center;justify-content:center;
+                               font-size:14px;border:2px solid ${atual ? corBarra : "transparent"}">
+                    ${feito ? etapa.emoji : "○"}
+                  </div>
+                  <div style="flex:1">
+                    <div style="font-size:12px;font-family:Montserrat,sans-serif;font-weight:${atual ? "700" : "500"};
+                                color:${feito ? "var(--navy)" : "var(--text3)"}">
+                      ${etapa.label}
+                    </div>
+                    ${dataEtapa ? `<div style="font-size:10px;color:var(--text3)">${dataEtapa}</div>` : ""}
+                  </div>
+                  ${atual ? `<span style="font-size:10px;background:${corBarra};color:#fff;border-radius:20px;padding:2px 8px;font-family:Montserrat,sans-serif;font-weight:700">atual</span>` : ""}
+                </div>`;
+            }).join("")}
+            <!-- Não aprovado -->
+            <div style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-top:4px;padding-top:8px;border-top:1px solid var(--border)"
+                 onclick="atualizarEtapaMO('${chave}', 'nao_aprovado', '${ra}')">
+              <div style="width:28px;height:28px;border-radius:50%;flex-shrink:0;
+                           background:${isNaoAprovado ? "#F59E0B" : "var(--border)"};
+                           display:flex;align-items:center;justify-content:center;font-size:14px">
+                💪
+              </div>
+              <div style="font-size:12px;font-family:Montserrat,sans-serif;font-weight:${isNaoAprovado ? "700" : "500"};
+                          color:${isNaoAprovado ? "var(--navy)" : "var(--text3)"}">
+                Não aprovado desta vez
+              </div>
+              ${isNaoAprovado ? `<span style="font-size:10px;background:#F59E0B;color:#fff;border-radius:20px;padding:2px 8px;font-family:Montserrat,sans-serif;font-weight:700">atual</span>` : ""}
+            </div>
+          </div>
         </div>`;
     }).join("")}
+
+    <!-- Tabela resumo -->
+    ${escolas.filter(([k]) => k !== "_meta").length > 1 ? `
+    <div style="margin-top:8px">
+      <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:13px;color:var(--navy);margin-bottom:10px">
+        📊 Resumo do seu plano
+      </div>
+      <div style="background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-md);overflow:hidden">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead>
+            <tr style="background:var(--navy);color:#fff">
+              <th style="padding:8px 12px;text-align:left;font-family:Montserrat,sans-serif">Escola</th>
+              <th style="padding:8px 12px;text-align:center;font-family:Montserrat,sans-serif">Status</th>
+              <th style="padding:8px 12px;text-align:center;font-family:Montserrat,sans-serif">%</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${escolas.filter(([k]) => k !== "_meta").map(([chave, dados], i) => {
+              const nome = dados.nome || chave.split("_").slice(1).join(" ");
+              const etapa = dados.etapa || "interesse";
+              const isNao = etapa === "nao_aprovado";
+              const ordem = ["interesse","inscrito","prova","aprovado"];
+              const pct = isNao ? 75 : Math.round(((ordem.indexOf(etapa)+1)/ordem.length)*100);
+              const cor = isNao ? "#F59E0B" : etapa === "aprovado" ? "#27AE60" : "#00BDF2";
+              const emoji = MO_ETAPAS.find(e => e.id === etapa)?.emoji || "🔍";
+              return `
+                <tr style="border-bottom:1px solid var(--border);background:${i%2===0?"var(--bg)":"var(--white)"}">
+                  <td style="padding:8px 12px;color:var(--navy);font-weight:600">${nome.length > 25 ? nome.slice(0,22)+"..." : nome}</td>
+                  <td style="padding:8px 12px;text-align:center">${emoji}</td>
+                  <td style="padding:8px 12px;text-align:center">
+                    <span style="background:${cor}22;color:${cor};border-radius:20px;padding:2px 8px;font-weight:700;font-family:Montserrat,sans-serif">${pct}%</span>
+                  </td>
+                </tr>`;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>
+    </div>` : ""}
   `;
 }
 
@@ -2376,16 +2461,25 @@ function definirMetaMO(ra, meta) {
 function atualizarEtapaMO(chave, etapaId, ra) {
   const plano = carregarMOPlano(ra);
   if (plano[chave]) {
+    const agora = new Date().toISOString();
     plano[chave].etapa = etapaId;
-    plano[chave].data_atualizacao = new Date().toISOString();
+    plano[chave].data_atualizacao = agora;
+
+    // Salva histórico de datas por etapa
+    if (!plano[chave].historico) plano[chave].historico = {};
+    if (!plano[chave].historico[etapaId]) {
+      plano[chave].historico[etapaId] = agora;
+    }
+
     salvarMOPlano(ra, plano);
     renderizarPainelMO(ra);
 
-    // Feedback visual
+    // Feedback visual com confetes para aprovação
     const msgs = {
-      inscrito:     "Ótimo! Inscrição registrada! 📋",
-      prova:        "Arrasou na prova! 📝",
-      aprovado:     "PARABÉNS! Você foi aprovado! 🎉",
+      interesse:    "Escola adicionada ao plano! 🏫",
+      inscrito:     "Inscrição registrada! Boa sorte! 📋",
+      prova:        "Prova registrada! Você foi incrível! 📝",
+      aprovado:     "🎉 PARABÉNS! Você foi APROVADO! 🎉",
       nao_aprovado: "Não foi dessa vez, mas você tentou! Continue firme 💪",
     };
     if (msgs[etapaId]) showToast(msgs[etapaId]);
