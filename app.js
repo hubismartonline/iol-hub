@@ -1969,10 +1969,7 @@ async function renderizarMOs(aluno) {
   }
   container.style.display = "block";
 
-  // Mostra painel de acompanhamento
-  const painelWrap = document.getElementById("mo-painel-wrap");
-  if (painelWrap) painelWrap.style.display = "block";
-  renderizarPainelMO(aluno.RA);
+  // Painel agora está dentro das abas, não precisa de container externo
 
   // Cidade do aluno para filtro padrão
   const cidadeAluno = (aluno.cidade || "").toUpperCase();
@@ -2008,57 +2005,70 @@ async function renderizarMOs(aluno) {
       </div>
     </div>
 
-    <!-- VAMOS COMEÇAR -->
-    <div style="background:#fff;border:1.5px solid var(--border);border-radius:var(--r-lg);padding:18px;margin-bottom:16px">
-      <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:15px;color:var(--navy);margin-bottom:4px">
-        🗺️ Vamos encontrar as escolas mais próximas de você!
+    <!-- ABAS INTERNAS -->
+    <div class="mo-abas-nav">
+      <button class="mo-aba-btn ativo" data-aba="explorar" onclick="trocarAbaMO('explorar', '${aluno.RA}')">
+        🏫 Explorar escolas
+      </button>
+      <button class="mo-aba-btn" data-aba="plano" onclick="trocarAbaMO('plano', '${aluno.RA}')">
+        📊 Meu Plano
+        <span class="mo-aba-badge" id="mo-aba-badge" style="display:none">0</span>
+      </button>
+    </div>
+
+    <!-- ABA: EXPLORAR -->
+    <div id="mo-aba-explorar">
+
+      <div style="background:#fff;border:1.5px solid var(--border);border-radius:var(--r-lg);padding:18px;margin-bottom:16px">
+        <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:14px;color:var(--navy);margin-bottom:4px">
+          🗺️ Escolas mais próximas de você
+        </div>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.5">
+          Digite seu endereço para ver as MOs no mapa.
+        </p>
+        <div id="mo-mapa-wrap-inline"></div>
       </div>
-      <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.5">
-        Digite seu endereço para ver as MOs no mapa e descobrir quais ficam mais perto de você.
-      </p>
-      <div id="mo-mapa-wrap-inline"></div>
-    </div>
 
-    <!-- FILTROS + LISTA -->
-    <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:14px;color:var(--navy);margin-bottom:12px">
-      📋 Todas as escolas recomendadas
-    </div>
-
-    <!-- Cidade do aluno -->
-    <div id="mo-filtros-cidade" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
-      <div style="font-size:13px;color:var(--text2)">
-        📍 Mostrando escolas em <strong style="color:var(--navy)">${cidadePadrao === "SP" ? "São Paulo" : cidadePadrao === "SJC" ? "São José dos Campos" : cidadePadrao === "BH" ? "Belo Horizonte" : "Rio de Janeiro"}</strong>
+      <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:14px;color:var(--navy);margin-bottom:12px">
+        📋 Todas as escolas recomendadas
       </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        ${["SP","SJC","BH","RJ"].filter(c => c !== cidadePadrao).map(c => `
-          <button class="mo-tipo-btn"
-            onclick="carregarMOCidade('${c}', '${aluno.RA}');document.getElementById('mo-cidade-label').textContent='${c === "SP" ? "São Paulo" : c === "SJC" ? "São José dos Campos" : c === "BH" ? "Belo Horizonte" : "Rio de Janeiro"}'"
-            data-cidade="${c}">
-            ${c === "SP" ? "🏙️ SP" : c === "SJC" ? "✈️ SJC" : c === "BH" ? "⛰️ BH" : "🌊 RJ"}
-          </button>`).join("")}
+
+      <div id="mo-filtros-cidade" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+        <div style="font-size:13px;color:var(--text2)">
+          📍 <strong style="color:var(--navy)" id="mo-cidade-label">${cidadePadrao === "SP" ? "São Paulo" : cidadePadrao === "SJC" ? "São José dos Campos" : cidadePadrao === "BH" ? "Belo Horizonte" : "Rio de Janeiro"}</strong>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          ${["SP","SJC","BH","RJ"].filter(c => c !== cidadePadrao).map(c => `
+            <button class="mo-tipo-btn" onclick="carregarMOCidade('${c}', '${aluno.RA}');document.getElementById('mo-cidade-label').textContent='${c === "SP" ? "São Paulo" : c === "SJC" ? "São José dos Campos" : c === "BH" ? "Belo Horizonte" : "Rio de Janeiro"}'" data-cidade="${c}">
+              ${c === "SP" ? "🏙️ SP" : c === "SJC" ? "✈️ SJC" : c === "BH" ? "⛰️ BH" : "🌊 RJ"}
+            </button>`).join("")}
+        </div>
       </div>
-    </div>
 
-    <!-- Filtro de tipo -->
-    <div id="mo-filtros-tipo" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
-      <button class="mo-tipo-btn ativo" data-tipo="todos" onclick="filtrarMOTipo('todos')">Todas</button>
-      <button class="mo-tipo-btn" data-tipo="publico" onclick="filtrarMOTipo('publico')">🏛️ Públicas</button>
-      <button class="mo-tipo-btn" data-tipo="privado" onclick="filtrarMOTipo('privado')">🏫 Privadas</button>
-      <button class="mo-tipo-btn" data-tipo="federal" onclick="filtrarMOTipo('federal')">🎓 Federais</button>
-    </div>
+      <div id="mo-filtros-tipo" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+        <button class="mo-tipo-btn ativo" data-tipo="todos" onclick="filtrarMOTipo('todos')">Todas</button>
+        <button class="mo-tipo-btn" data-tipo="publico" onclick="filtrarMOTipo('publico')">🏛️ Públicas</button>
+        <button class="mo-tipo-btn" data-tipo="privado" onclick="filtrarMOTipo('privado')">🏫 Privadas</button>
+        <button class="mo-tipo-btn" data-tipo="federal" onclick="filtrarMOTipo('federal')">🎓 Federais</button>
+      </div>
 
-    <!-- Lista de escolas -->
-    <div id="mo-lista">
-      <div class="mo-loading">
-        <div class="skeleton-linha" style="width:100%;height:80px;margin-bottom:8px;border-radius:10px"></div>
-        <div class="skeleton-linha" style="width:100%;height:80px;margin-bottom:8px;border-radius:10px"></div>
-        <div class="skeleton-linha" style="width:100%;height:80px;border-radius:10px"></div>
+      <div id="mo-lista">
+        <div class="mo-loading">
+          <div class="skeleton-linha" style="width:100%;height:80px;margin-bottom:8px;border-radius:10px"></div>
+          <div class="skeleton-linha" style="width:100%;height:80px;margin-bottom:8px;border-radius:10px"></div>
+          <div class="skeleton-linha" style="width:100%;height:80px;border-radius:10px"></div>
+        </div>
+      </div>
+
+      <div id="mo-contador" style="display:none;margin-top:12px;background:#EBF4FF;border-radius:10px;padding:12px 16px;font-size:13px;color:var(--navy);font-family:Montserrat,sans-serif;font-weight:700;cursor:pointer"
+           onclick="trocarAbaMO('plano', '${aluno.RA}')">
+        ❤️ <span id="mo-contador-num">0</span> escola(s) no seu plano — <span style="text-decoration:underline">ver Meu Plano →</span>
       </div>
     </div>
 
-    <!-- Contador de interesses -->
-    <div id="mo-contador" style="display:none;margin-top:12px;background:#EBF4FF;border-radius:10px;padding:12px 16px;font-size:13px;color:var(--navy);font-family:Montserrat,sans-serif;font-weight:700">
-      ❤️ <span id="mo-contador-num">0</span> escola(s) na sua lista de interesse
+    <!-- ABA: MEU PLANO -->
+    <div id="mo-aba-plano" style="display:none">
+      <div id="mo-painel-inline"></div>
     </div>
   `;
 
@@ -2268,6 +2278,17 @@ function atualizarContadorMO(ra) {
   const num = document.getElementById("mo-contador-num");
   if (contador) contador.style.display = total > 0 ? "block" : "none";
   if (num) num.textContent = total;
+  // Atualiza badge da aba Meu Plano
+  const badge = document.getElementById("mo-aba-badge");
+  if (badge) {
+    badge.style.display = total > 0 ? "inline-flex" : "none";
+    badge.textContent = total;
+  }
+  // Atualiza botão da aba com o total
+  const btnPlano = document.querySelector(".mo-aba-btn[data-aba='plano']");
+  if (btnPlano) {
+    btnPlano.innerHTML = `📊 Meu Plano ${total > 0 ? `<span class="mo-aba-badge" id="mo-aba-badge">${total}</span>` : '<span class="mo-aba-badge" id="mo-aba-badge" style="display:none">0</span>'}`;
+  }
 }
 
 // =============================================================
@@ -2293,6 +2314,45 @@ function carregarMOPlano(ra) {
     const salvo = sessionStorage.getItem("mo_plano_" + ra);
     return salvo ? JSON.parse(salvo) : {};
   } catch(e) { return {}; }
+}
+
+function trocarAbaMO(aba, ra) {
+  // Atualiza botões
+  document.querySelectorAll(".mo-aba-btn").forEach(btn => {
+    btn.classList.toggle("ativo", btn.dataset.aba === aba);
+  });
+  // Mostra/esconde conteúdo
+  const explorar = document.getElementById("mo-aba-explorar");
+  const plano    = document.getElementById("mo-aba-plano");
+  if (explorar) explorar.style.display = aba === "explorar" ? "block" : "none";
+  if (plano)    plano.style.display    = aba === "plano"    ? "block" : "none";
+  // Renderiza painel ao abrir
+  if (aba === "plano") {
+    const painelEl = document.getElementById("mo-painel-inline");
+    if (painelEl) {
+      // Reutiliza renderizarPainelMO mas no container inline
+      const containerOriginal = document.getElementById("mo-painel");
+      renderizarPainelMOEm(ra, painelEl);
+    }
+  }
+  window.scrollTo({ top: document.getElementById("mo-container")?.offsetTop - 20 || 0, behavior: "smooth" });
+}
+
+function renderizarPainelMOEm(ra, container) {
+  if (!container) return;
+  const plano = carregarMOPlano(ra);
+  const escolas = Object.entries(plano);
+  // Reusa a lógica do renderizarPainelMO mas injeta num container específico
+  const tmpDiv = document.createElement("div");
+  tmpDiv.id = "mo-painel";
+  const oldPainel = document.getElementById("mo-painel");
+  if (oldPainel) oldPainel.id = "mo-painel-bkp";
+  document.body.appendChild(tmpDiv);
+  renderizarPainelMO(ra);
+  container.innerHTML = tmpDiv.innerHTML;
+  tmpDiv.remove();
+  if (oldPainel) oldPainel.id = "mo-painel";
+  // Rebinda eventos copiando os onclicks via delegação
 }
 
 function renderizarPainelMO(ra) {
