@@ -1959,7 +1959,7 @@ async function salvarMONoScript(ra, nomeAluno, chaveEscola, etapa) {
 
     const payload = JSON.stringify({
       ra,
-      nome: nomeAluno || (alunoAtual?.nome || ""),
+      nome: alunoAtual?.nome || nomeAluno || "",
       escola,
       cidade,
       etapa,
