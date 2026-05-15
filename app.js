@@ -2671,7 +2671,13 @@ function atualizarEtapaMO(chave, etapaId, ra) {
   if (!plano[chave].historico[etapaId]) plano[chave].historico[etapaId] = agora;
 
   salvarMOPlano(ra, plano);
+  // Atualiza o painel visível (inline ou normal)
   renderizarPainelMO(ra);
+  const painelInline = document.getElementById("mo-painel-inline");
+  const abaPlano = document.getElementById("mo-aba-plano");
+  if (painelInline && abaPlano && abaPlano.style.display !== "none") {
+    renderizarPainelMOEm(ra, painelInline);
+  }
 
   if (etapaId === "aprovado") {
     // Busca o tipo da escola no cache de MOs
