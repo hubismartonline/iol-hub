@@ -1981,6 +1981,7 @@ async function renderizarMOs(aluno) {
 
   const serie = normalizarSerie(aluno.serie);
   const ehEF = ["8EF","9EF"].includes(serie);
+  const eh9EF = serie === "9EF";
   const ehEM = ["1EM","2EM","3EM"].includes(serie);
 
   // Blocos exclusivos do EM — esconde para EF
@@ -1990,7 +1991,12 @@ async function renderizarMOs(aluno) {
     if (el) el.style.display = ehEF ? "none" : "";
   });
 
+  // MOs só para 9EF — 8EF não pode se inscrever ainda
   if (!ehEF) {
+    container.style.display = "none";
+    return;
+  }
+  if (!eh9EF) {
     container.style.display = "none";
     return;
   }
