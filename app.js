@@ -2112,6 +2112,7 @@ async function carregarMOCidade(cidade, ra) {
 
       if (cidade === "SP") {
         // Aba Pesquisas: Nº | Nome | Tipo | Bairro | Bolsas | Cursos | Desempenho
+        if (i === 1) console.log("[MO SP] linha 1:", cols);
         const nome = (cols[1] || "").replace(/"/g,"").trim();
         if (!nome) continue;
         escolas.push({
