@@ -2946,42 +2946,34 @@ let UNIVERSIDADES_GUIA = ["Carregando..."];
 
 // Cursos e universidades serão carregados do CSV do Guia de Carreiras
 // URL será configurada quando a planilha for publicada
-const GUIA_CSV_URL = ""; // preencher com URL do CSV
+// Carrega cursos e universidades do Guia de Carreiras via action=guia
+let _guiaCarregado = false;
 
-async function carregarUniversidadesGuia() {
-  if (UNIVERSIDADES_GUIA.length > 2) return;
-  if (!GUIA_CSV_URL) { UNIVERSIDADES_GUIA = ["Outra"]; return; }
+async function carregarGuia() {
+  if (_guiaCarregado) return;
   try {
-    const resp = await fetch(GUIA_CSV_URL);
-    const csv = await resp.text();
-    const rows = parseCSVCompleto(csv);
-    const univSet = new Set();
-    for (let i = 1; i < rows.length; i++) {
-      const sigla = (rows[i][1] || "").replace(/"/g,"").trim();
-      if (sigla) univSet.add(sigla);
+    const data = await fetchSimulador({ action: "guia" });
+    if (data?.cursos?.length) {
+      CURSOS_GUIA = [...data.cursos, "Outro"];
     }
-    UNIVERSIDADES_GUIA = [...Array.from(univSet).sort(), "Outra"];
+    if (data?.universidades?.length) {
+      UNIVERSIDADES_GUIA = [...data.universidades, "Outra"];
+    }
+    _guiaCarregado = true;
+    console.log("[Guia] Cursos:", CURSOS_GUIA.length, "| Universidades:", UNIVERSIDADES_GUIA.length);
   } catch(e) {
+    console.warn("[Guia] Erro:", e);
+    CURSOS_GUIA = ["Outro"];
     UNIVERSIDADES_GUIA = ["Outra"];
   }
 }
 
 async function carregarCursosGuia() {
-  if (CURSOS_GUIA.length > 2) return;
-  if (!GUIA_CSV_URL) { CURSOS_GUIA = ["Outro"]; return; }
-  try {
-    const resp = await fetch(GUIA_CSV_URL);
-    const csv = await resp.text();
-    const rows = parseCSVCompleto(csv);
-    const cursosSet = new Set();
-    for (let i = 1; i < rows.length; i++) {
-      const curso = (rows[i][0] || "").replace(/"/g,"").trim();
-      if (curso && curso !== "Nome Do Curso") cursosSet.add(curso);
-    }
-    CURSOS_GUIA = [...Array.from(cursosSet).sort(), "Outro"];
-  } catch(e) {
-    CURSOS_GUIA = ["Outro"];
-  }
+  await carregarGuia();
+}
+
+async function carregarUniversidadesGuia() {
+  await carregarGuia();
 }
 
 function carregarPlanoVest(ra) {
