@@ -3299,11 +3299,33 @@ function adicionarCandidatura(ra) {
   const tipo  = _vestTipoSelecionado;
   const planoLetra = _vestPlanoSelecionado;
 
-  if (!curso)       { showToast("Selecione um curso!"); return; }
-  if (!universidade){ showToast("Digite a universidade!"); return; }
-  if (!modalidade)  { showToast("Selecione a modalidade!"); return; }
-  if (!tipo)       { showToast("Selecione o tipo de candidatura!"); return; }
-  if (!planoLetra) { showToast("Selecione o Plano!"); return; }
+  // Validações em ordem — destaca o campo faltando
+  if (!curso) {
+    document.getElementById("vest-curso-select")?.style.setProperty("border-color", "#EE2D67");
+    setTimeout(() => document.getElementById("vest-curso-select")?.style.removeProperty("border-color"), 2000);
+    showToast("1️⃣ Selecione o curso primeiro!");
+    return;
+  }
+  if (!universidade) {
+    const el = document.getElementById("vest-universidade-select");
+    if (el) { el.style.borderColor = "#EE2D67"; setTimeout(() => el.style.borderColor = "", 2000); }
+    showToast("2️⃣ Selecione a universidade!");
+    return;
+  }
+  if (!modalidade) {
+    const el = document.getElementById("vest-modalidade-select");
+    if (el) { el.style.borderColor = "#EE2D67"; setTimeout(() => el.style.borderColor = "", 2000); }
+    showToast("3️⃣ Selecione o processo seletivo!");
+    return;
+  }
+  if (!tipo) {
+    showToast("4️⃣ Selecione o tipo: Sonho, Possível ou Segurança!");
+    return;
+  }
+  if (!planoLetra) {
+    showToast("5️⃣ Selecione o Plano (A, B, C...)!");
+    return;
+  }
 
   // Valida combinação tipo + plano
   const planosPermitidosPorTipo = { sonho: ["A","B","C"], possivel: ["D","E","F"], seguranca: ["G","H","I","J"] };
