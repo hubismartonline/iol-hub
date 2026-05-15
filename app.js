@@ -3334,7 +3334,7 @@ function adicionarCandidatura(ra) {
 
   salvarPlanoVest(ra, plano);
   renderizarPlanoVestibular(ra);
-  salvarVestNoScript(ra, curso, universidade, modalidade, planoLetra ? `Plano ${planoLetra}` : "pesquisando", tipo, "", "");
+  salvarVestNoScript(ra, curso, universidade, modalidade, "Estratégia de Vestibular", tipo, "", "", planoLetra);
   showToast("Candidatura adicionada! 🎯");
 
   // Limpa formulário
