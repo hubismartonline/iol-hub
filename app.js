@@ -2986,92 +2986,44 @@ let UNIVERSIDADES_GUIA = ["Carregando..."];
 async function carregarUniversidadesGuia() {
   if (UNIVERSIDADES_GUIA.length > 2) return;
   try {
-    // Busca universidades de todas as áreas e carreiras
-    const dataAreas = await fetchGuia({ action: "areas" });
+    const dataAreas = await fetchSimulador({ action: "areas" });
     const areas = dataAreas?.areas || [];
-
-    // Pega a primeira carreira de cada área para ter as universidades
     const univSet = new Set();
     for (const area of areas) {
-      const dataCarreiras = await fetchGuia({ action: "carreiras", area });
+      const dataCarreiras = await fetchSimulador({ action: "carreiras", area });
       const carreiras = dataCarreiras?.carreiras || [];
       if (carreiras.length > 0) {
-        const dataUnivs = await fetchGuia({ action: "universidades", carreira: carreiras[0], uf: "todas" });
+        const dataUnivs = await fetchSimulador({ action: "universidades", carreira: carreiras[0], uf: "todas" });
         (dataUnivs?.universidades || []).forEach(u => {
-          const nome = u.nome || u.universidade || u;
-          if (nome) univSet.add(nome);
+          const nome = u.universidade || u.nome || u;
+          if (nome && typeof nome === "string") univSet.add(nome);
         });
       }
     }
-
     UNIVERSIDADES_GUIA = [...Array.from(univSet).sort(), "Outra"];
     console.log("[Guia] Universidades carregadas:", UNIVERSIDADES_GUIA.length);
   } catch(e) {
-    console.warn("[Guia] Erro ao carregar universidades:", e);
+    console.warn("[Guia] Erro universidades:", e);
     UNIVERSIDADES_GUIA = ["Outra"];
   }
 }
 
-function fetchGuia(params) {
-  return new Promise((resolve, reject) => {
-    const cbName = "_guiaCb_" + Date.now();
-    window[cbName] = function(d) {
-      delete window[cbName];
-      document.getElementById("_guia_jsonp_" + cbName)?.remove();
-      resolve(d);
-    };
-    const script = document.createElement("script");
-    script.id = "_guia_jsonp_" + cbName;
-    script.onerror = () => { delete window[cbName]; reject(new Error("Erro")); };
-    script.src = GUIA_URL + "?" + new URLSearchParams({...params, callback: cbName}).toString();
-    document.head.appendChild(script);
-  });
-}
-
 async function carregarCursosGuia() {
-  if (CURSOS_GUIA.length > 2) return; // já carregou
+  if (CURSOS_GUIA.length > 2) return;
   try {
-    // 1. Busca as áreas
-    const dataAreas = await fetchGuia({ action: "areas" });
+    const dataAreas = await fetchSimulador({ action: "areas" });
     const areas = dataAreas?.areas || [];
-
-    // 2. Busca cursos de cada área em paralelo
-    const promises = areas.map(area => fetchGuia({ action: "carreiras", area }));
+    const promises = areas.map(area => fetchSimulador({ action: "carreiras", area }));
     const resultados = await Promise.all(promises);
-
-    // 3. Junta todos os cursos, remove duplicatas e ordena
     const todosCursos = new Set();
     resultados.forEach(r => {
       (r?.carreiras || []).forEach(c => todosCursos.add(c));
     });
-
     CURSOS_GUIA = [...Array.from(todosCursos).sort(), "Outro"];
     console.log("[Guia] Cursos carregados:", CURSOS_GUIA.length);
   } catch(e) {
-    console.warn("[Guia] Erro ao carregar cursos:", e);
+    console.warn("[Guia] Erro cursos:", e);
   }
-}
-const MODALIDADES_VEST = ['Particular — Vestibular Próprio', 'SISU (ENEM)', 'Provão Paulista', 'Pública — Vestibular Próprio', 'PROUNI (ENEM)'];
-
-const ETAPAS_VEST = [
-  { id: "pesquisando",  emoji: "🔍", label: "Pesquisando"  },
-  { id: "inscrito",     emoji: "📋", label: "Me inscrevi"  },
-  { id: "prova",        emoji: "📝", label: "Fiz a prova"  },
-  { id: "aprovado",     emoji: "✅", label: "Aprovado!"    },
-  { id: "nao_aprovado", emoji: "💪", label: "Não aprovado" },
-];
-
-function carregarPlanoVest(ra) {
-  try {
-    const salvo = sessionStorage.getItem("vest_plano_" + ra);
-    return salvo ? JSON.parse(salvo) : {};
-  } catch(e) { return {}; }
-}
-
-function salvarPlanoVest(ra, plano) {
-  try {
-    sessionStorage.setItem("vest_plano_" + ra, JSON.stringify(plano));
-  } catch(e) {}
 }
 
 async function renderizarPlanoVestibular(ra) {
