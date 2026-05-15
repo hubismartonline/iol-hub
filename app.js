@@ -2979,19 +2979,41 @@ function toggleMOInteresseRapido(chave, nome, ra) {
 // Cursos carregados dinamicamente do simulador
 let CURSOS_GUIA = ["Carregando..."];
 
+const GUIA_URL = "https://script.google.com/macros/s/AKfycbzty1jMjCZWCdneXerbgnPV6EyiAvwVCsUDrViaX25hKvfmkrJ_ilSWmUe4LZpUlcHXLQ/exec";
+
 async function carregarCursosGuia() {
   if (CURSOS_GUIA.length > 2) return; // já carregou
   try {
-    const data = await fetchSimulador({ action: "areas" });
+    // Usa JSONP igual ao simulador
+    const data = await new Promise((resolve, reject) => {
+      const cbName = "_guiaCb_" + Date.now();
+      window[cbName] = function(d) {
+        delete window[cbName];
+        const old = document.getElementById("_guia_jsonp");
+        if (old) old.remove();
+        resolve(d);
+      };
+      const script = document.createElement("script");
+      script.id = "_guia_jsonp";
+      script.onerror = () => { delete window[cbName]; reject(new Error("Erro")); };
+      script.src = GUIA_URL + "?action=areas&callback=" + cbName;
+      document.head.appendChild(script);
+    });
+
     if (data?.areas) {
-      CURSOS_GUIA = [...data.areas.map(a => a.nome || a), "Outro"];
+      CURSOS_GUIA = [...data.areas.map(a => a.nome || a).sort(), "Outro"];
+    } else if (Array.isArray(data)) {
+      CURSOS_GUIA = [...data.map(a => a.nome || a).sort(), "Outro"];
     }
   } catch(e) {
-    // fallback com lista básica
-    CURSOS_GUIA = ["Administração","Ciências Biológicas","Ciências Econômicas","Direito",
-      "Enfermagem","Engenharia Civil","Engenharia de Computação","Engenharia Elétrica",
-      "Engenharia Mecânica","Medicina","Pedagogia","Psicologia",
-      "Relações Internacionais","Sistemas de Informação","Outro"];
+    console.warn("[Guia] Erro ao carregar cursos:", e);
+    // Fallback — usa o simulador existente
+    try {
+      const data2 = await fetchSimulador({ action: "areas" });
+      if (data2?.areas) {
+        CURSOS_GUIA = [...data2.areas.map(a => a.nome || a).sort(), "Outro"];
+      }
+    } catch(e2) {}
   }
 }
 const MODALIDADES_VEST = ['Particular — Vestibular Próprio', 'SISU (ENEM)', 'Provão Paulista', 'Pública — Vestibular Próprio', 'PROUNI (ENEM)'];
