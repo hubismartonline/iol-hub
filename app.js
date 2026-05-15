@@ -2981,39 +2981,74 @@ let CURSOS_GUIA = ["Carregando..."];
 
 const GUIA_URL = "https://script.google.com/macros/s/AKfycbzty1jMjCZWCdneXerbgnPV6EyiAvwVCsUDrViaX25hKvfmkrJ_ilSWmUe4LZpUlcHXLQ/exec";
 
+let UNIVERSIDADES_GUIA = ["Carregando..."];
+
+async function carregarUniversidadesGuia() {
+  if (UNIVERSIDADES_GUIA.length > 2) return;
+  try {
+    // Busca universidades de todas as áreas e carreiras
+    const dataAreas = await fetchGuia({ action: "areas" });
+    const areas = dataAreas?.areas || [];
+
+    // Pega a primeira carreira de cada área para ter as universidades
+    const univSet = new Set();
+    for (const area of areas) {
+      const dataCarreiras = await fetchGuia({ action: "carreiras", area });
+      const carreiras = dataCarreiras?.carreiras || [];
+      if (carreiras.length > 0) {
+        const dataUnivs = await fetchGuia({ action: "universidades", carreira: carreiras[0], uf: "todas" });
+        (dataUnivs?.universidades || []).forEach(u => {
+          const nome = u.nome || u.universidade || u;
+          if (nome) univSet.add(nome);
+        });
+      }
+    }
+
+    UNIVERSIDADES_GUIA = [...Array.from(univSet).sort(), "Outra"];
+    console.log("[Guia] Universidades carregadas:", UNIVERSIDADES_GUIA.length);
+  } catch(e) {
+    console.warn("[Guia] Erro ao carregar universidades:", e);
+    UNIVERSIDADES_GUIA = ["Outra"];
+  }
+}
+
+function fetchGuia(params) {
+  return new Promise((resolve, reject) => {
+    const cbName = "_guiaCb_" + Date.now();
+    window[cbName] = function(d) {
+      delete window[cbName];
+      document.getElementById("_guia_jsonp_" + cbName)?.remove();
+      resolve(d);
+    };
+    const script = document.createElement("script");
+    script.id = "_guia_jsonp_" + cbName;
+    script.onerror = () => { delete window[cbName]; reject(new Error("Erro")); };
+    script.src = GUIA_URL + "?" + new URLSearchParams({...params, callback: cbName}).toString();
+    document.head.appendChild(script);
+  });
+}
+
 async function carregarCursosGuia() {
   if (CURSOS_GUIA.length > 2) return; // já carregou
   try {
-    // Usa JSONP igual ao simulador
-    const data = await new Promise((resolve, reject) => {
-      const cbName = "_guiaCb_" + Date.now();
-      window[cbName] = function(d) {
-        delete window[cbName];
-        const old = document.getElementById("_guia_jsonp");
-        if (old) old.remove();
-        resolve(d);
-      };
-      const script = document.createElement("script");
-      script.id = "_guia_jsonp";
-      script.onerror = () => { delete window[cbName]; reject(new Error("Erro")); };
-      script.src = GUIA_URL + "?action=areas&callback=" + cbName;
-      document.head.appendChild(script);
+    // 1. Busca as áreas
+    const dataAreas = await fetchGuia({ action: "areas" });
+    const areas = dataAreas?.areas || [];
+
+    // 2. Busca cursos de cada área em paralelo
+    const promises = areas.map(area => fetchGuia({ action: "carreiras", area }));
+    const resultados = await Promise.all(promises);
+
+    // 3. Junta todos os cursos, remove duplicatas e ordena
+    const todosCursos = new Set();
+    resultados.forEach(r => {
+      (r?.carreiras || []).forEach(c => todosCursos.add(c));
     });
 
-    if (data?.areas) {
-      CURSOS_GUIA = [...data.areas.map(a => a.nome || a).sort(), "Outro"];
-    } else if (Array.isArray(data)) {
-      CURSOS_GUIA = [...data.map(a => a.nome || a).sort(), "Outro"];
-    }
+    CURSOS_GUIA = [...Array.from(todosCursos).sort(), "Outro"];
+    console.log("[Guia] Cursos carregados:", CURSOS_GUIA.length);
   } catch(e) {
     console.warn("[Guia] Erro ao carregar cursos:", e);
-    // Fallback — usa o simulador existente
-    try {
-      const data2 = await fetchSimulador({ action: "areas" });
-      if (data2?.areas) {
-        CURSOS_GUIA = [...data2.areas.map(a => a.nome || a).sort(), "Outro"];
-      }
-    } catch(e2) {}
   }
 }
 const MODALIDADES_VEST = ['Particular — Vestibular Próprio', 'SISU (ENEM)', 'Provão Paulista', 'Pública — Vestibular Próprio', 'PROUNI (ENEM)'];
@@ -3043,8 +3078,8 @@ async function renderizarPlanoVestibular(ra) {
   const container = document.getElementById("vest-plano-container");
   if (!container) return;
 
-  // Carrega cursos do simulador se ainda não carregou
-  await carregarCursosGuia();
+  // Carrega cursos e universidades do guia
+  await Promise.all([carregarCursosGuia(), carregarUniversidadesGuia()]);
 
   const plano = carregarPlanoVest(ra);
   const candidaturas = Object.entries(plano);
@@ -3073,8 +3108,13 @@ async function renderizarPlanoVestibular(ra) {
         <!-- Universidade -->
         <div>
           <label style="font-size:11px;font-weight:700;color:var(--text2);font-family:Montserrat,sans-serif;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px">Universidade</label>
-          <input type="text" id="vest-universidade" placeholder="Ex: USP, UNICAMP, UNIFESP..."
-            style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:13px;font-family:Lato,sans-serif;box-sizing:border-box;outline:none">
+          <select id="vest-universidade-select" onchange="toggleVestOutraUniv()"
+            style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:13px;font-family:Lato,sans-serif;background:var(--white);color:var(--navy);outline:none">
+            <option value="">Selecione a universidade...</option>
+            ${UNIVERSIDADES_GUIA.map(u => `<option value="${u}">${u}</option>`).join("")}
+          </select>
+          <input type="text" id="vest-universidade-outro" placeholder="Digite a universidade..."
+            style="display:none;width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:13px;font-family:Lato,sans-serif;margin-top:6px;box-sizing:border-box;outline:none">
         </div>
 
         <!-- Processo Seletivo -->
@@ -3234,13 +3274,24 @@ function toggleVestOutroCurso() {
   }
 }
 
+function toggleVestOutraUniv() {
+  const sel = document.getElementById("vest-universidade-select");
+  const outro = document.getElementById("vest-universidade-outro");
+  if (sel && outro) {
+    outro.style.display = sel.value === "Outra" ? "block" : "none";
+  }
+}
+
 function adicionarCandidatura(ra) {
   const sel = document.getElementById("vest-curso-select");
   const outro = document.getElementById("vest-curso-outro");
-  const univ = document.getElementById("vest-universidade");
+  const univSel = document.getElementById("vest-universidade-select");
+  const univOutro = document.getElementById("vest-universidade-outro");
 
   const curso = sel?.value === "Outro" ? (outro?.value?.trim() || "") : (sel?.value || "");
-  const universidade = univ?.value?.trim() || "";
+  const universidade = univSel?.value === "Outra"
+    ? (univOutro?.value?.trim() || "")
+    : (univSel?.value || "");
   const modalidade = document.getElementById('vest-modalidade-select')?.value || '';
 
   if (!curso) { showToast("Selecione um curso!"); return; }
@@ -3265,7 +3316,8 @@ function adicionarCandidatura(ra) {
   // Limpa formulário
   if (sel) sel.value = "";
   if (outro) { outro.value = ""; outro.style.display = "none"; }
-  if (univ) univ.value = "";
+  if (univSel) univSel.value = "";
+  if (univOutro) { univOutro.value = ""; univOutro.style.display = "none"; }
   const modalSel = document.getElementById("vest-modalidade-select");
   if (modalSel) modalSel.value = "";
 }
