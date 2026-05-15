@@ -3027,6 +3027,46 @@ async function renderizarPlanoVestibular(ra) {
           </select>
         </div>
 
+        <!-- Tipo de candidatura -->
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--text2);font-family:Montserrat,sans-serif;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Tipo de candidatura</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            ${[
+              {id:"sonho",    emoji:"🌟", label:"Curso Sonho",    desc:"Nota de corte acima da sua"},
+              {id:"possivel", emoji:"✅", label:"Curso Possível", desc:"Próximo da sua nota"},
+              {id:"seguranca",emoji:"🔒", label:"Curso Segurança",desc:"Sua nota já está dentro"},
+            ].map(t => `
+              <button class="vest-tipo-btn" data-tipo="${t.id}" onclick="selecionarTipoCandidatura('${t.id}')"
+                style="flex:1;min-width:90px;padding:10px 8px;border-radius:var(--r-sm);border:1.5px solid var(--border);background:#fff;cursor:pointer;transition:all 0.15s;text-align:center">
+                <div style="font-size:18px;margin-bottom:2px">${t.emoji}</div>
+                <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:11px;color:var(--navy)">${t.label}</div>
+                <div style="font-size:10px;color:var(--text3);margin-top:1px">${t.desc}</div>
+              </button>`).join("")}
+          </div>
+        </div>
+
+        <!-- Plano -->
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--text2);font-family:Montserrat,sans-serif;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Plano</label>
+          <div style="display:flex;gap:6px;flex-wrap:wrap" id="vest-planos-wrap">
+            ${["A","B","C","D","E","F","G","H","I","J"].map(p => {
+              const planosUsados = Object.values(carregarPlanoVest(ra)).map(d => d.plano).filter(Boolean);
+              const usado = planosUsados.includes(p);
+              return `
+                <button class="vest-plano-btn${usado ? " usado" : ""}" data-plano="${p}"
+                  onclick="${usado ? "" : `selecionarPlanoCandidatura('${p}')`}"
+                  style="width:36px;height:36px;border-radius:8px;border:1.5px solid ${usado ? "#ddd" : "var(--border)"};
+                         background:${usado ? "#f5f5f5" : "#fff"};color:${usado ? "#bbb" : "var(--navy)"};
+                         font-family:Montserrat,sans-serif;font-weight:700;font-size:13px;
+                         cursor:${usado ? "not-allowed" : "pointer"};transition:all 0.15s"
+                  title="${usado ? "Plano " + p + " já utilizado" : "Plano " + p}">
+                  ${p}
+                </button>`;
+            }).join("")}
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px">Planos marcados em cinza já estão em uso</div>
+        </div>
+
         <button onclick="adicionarCandidatura('${ra}')"
           style="padding:11px;background:var(--navy);color:#fff;border:none;border-radius:var(--r-sm);font-family:Montserrat,sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:background 0.2s"
           onmouseover="this.style.background='#004fa3'" onmouseout="this.style.background='var(--navy)'">
@@ -3094,9 +3134,13 @@ function renderizarCardVest(chave, dados, ra) {
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px">
         <div style="flex:1">
           <div class="mo-plano-card-nome">${dados.curso || "Curso não informado"}</div>
-          <div style="font-size:12px;color:var(--text2);margin-top:2px">
-            🏛️ ${dados.universidade || "Universidade não informada"}
-            ${dados.modalidade ? `· <span style="background:var(--bg);border-radius:20px;padding:1px 8px;font-size:11px;font-family:Montserrat,sans-serif;font-weight:700">${dados.modalidade}</span>` : ""}
+          <div style="display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-top:4px">
+            ${dados.plano ? `<span style="background:var(--navy);color:#fff;border-radius:6px;padding:2px 8px;font-size:11px;font-family:Montserrat,sans-serif;font-weight:800">Plano ${dados.plano}</span>` : ""}
+            ${dados.tipo === "sonho"     ? `<span style="background:#FEF3C7;color:#92400E;border-radius:20px;padding:2px 8px;font-size:11px;font-family:Montserrat,sans-serif;font-weight:700">🌟 Sonho</span>`     : ""}
+            ${dados.tipo === "possivel"  ? `<span style="background:#D4EFDF;color:#1A7A4A;border-radius:20px;padding:2px 8px;font-size:11px;font-family:Montserrat,sans-serif;font-weight:700">✅ Possível</span>`  : ""}
+            ${dados.tipo === "seguranca" ? `<span style="background:#EBF4FF;color:#1A5276;border-radius:20px;padding:2px 8px;font-size:11px;font-family:Montserrat,sans-serif;font-weight:700">🔒 Segurança</span>` : ""}
+            <span style="font-size:12px;color:var(--text2)">🏛️ ${dados.universidade || ""}</span>
+            ${dados.modalidade ? `<span style="background:var(--bg);border-radius:20px;padding:2px 8px;font-size:11px;font-family:Montserrat,sans-serif;font-weight:700;border:1px solid var(--border)">${dados.modalidade}</span>` : ""}
           </div>
         </div>
         <button onclick="removerCandidatura('${chave}', '${ra}')"
@@ -3170,6 +3214,30 @@ function selecionarModalidade(modal) {
   });
 }
 
+let _vestTipoSelecionado = "";
+let _vestPlanoSelecionado = "";
+
+function selecionarTipoCandidatura(tipo) {
+  _vestTipoSelecionado = tipo;
+  const cores = { sonho: "#FEF3C7", possivel: "#D4EFDF", seguranca: "#EBF4FF" };
+  const bordas = { sonho: "#F59E0B", possivel: "#27AE60", seguranca: "#00BDF2" };
+  document.querySelectorAll(".vest-tipo-btn").forEach(btn => {
+    const ativo = btn.dataset.tipo === tipo;
+    btn.style.background   = ativo ? cores[tipo]  : "#fff";
+    btn.style.borderColor  = ativo ? bordas[tipo] : "var(--border)";
+  });
+}
+
+function selecionarPlanoCandidatura(plano) {
+  _vestPlanoSelecionado = plano;
+  document.querySelectorAll(".vest-plano-btn:not(.usado)").forEach(btn => {
+    const ativo = btn.dataset.plano === plano;
+    btn.style.background  = ativo ? "var(--navy)" : "#fff";
+    btn.style.color       = ativo ? "#fff"        : "var(--navy)";
+    btn.style.borderColor = ativo ? "var(--navy)" : "var(--border)";
+  });
+}
+
 function toggleVestOutroCurso() {
   const sel = document.getElementById("vest-curso-select");
   const outro = document.getElementById("vest-curso-outro");
@@ -3207,6 +3275,7 @@ function adicionarCandidatura(ra) {
 
   plano[chave] = {
     curso, universidade, modalidade,
+    tipo, plano,
     etapa: "pesquisando",
     historico: { pesquisando: new Date().toISOString() },
     data_criacao: new Date().toISOString(),
@@ -3224,6 +3293,8 @@ function adicionarCandidatura(ra) {
   if (univOutro) { univOutro.value = ""; univOutro.style.display = "none"; }
   const modalSel = document.getElementById("vest-modalidade-select");
   if (modalSel) modalSel.value = "";
+  _vestTipoSelecionado = "";
+  _vestPlanoSelecionado = "";
 }
 
 function atualizarEtapaVest(chave, etapaId, ra) {
