@@ -1945,7 +1945,17 @@ async function renderizarMOs(aluno) {
   if (!container) return;
 
   const serie = normalizarSerie(aluno.serie);
-  if (!["8EF","9EF"].includes(serie)) {
+  const ehEF = ["8EF","9EF"].includes(serie);
+  const ehEM = ["1EM","2EM","3EM"].includes(serie);
+
+  // Blocos exclusivos do EM — esconde para EF
+  const blocosEM = ["bloco-estrategia", "bloco-simulador", "bloco-criterios", "orient-lembretes-vest", "bloco-es-ismart"];
+  blocosEM.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = ehEF ? "none" : "";
+  });
+
+  if (!ehEF) {
     container.style.display = "none";
     return;
   }
