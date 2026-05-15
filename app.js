@@ -3295,7 +3295,7 @@ function adicionarCandidatura(ra) {
 
   salvarPlanoVest(ra, plano);
   renderizarPlanoVestibular(ra);
-  salvarVestNoScript(ra, curso, universidade, modalidade, "pesquisando");
+  salvarVestNoScript(ra, curso, universidade, modalidade, planoLetra ? `Plano ${planoLetra}` : "pesquisando", tipo, "", "");
   showToast("Candidatura adicionada! 🎯");
 
   // Limpa formulário
@@ -3323,7 +3323,7 @@ function atualizarEtapaVest(chave, etapaId, ra) {
 
   salvarPlanoVest(ra, plano);
   renderizarPlanoVestibular(ra);
-  salvarVestNoScript(ra, plano[chave].curso, plano[chave].universidade, plano[chave].modalidade, etapaId);
+  salvarVestNoScript(ra, plano[chave].curso, plano[chave].universidade, plano[chave].modalidade, etapaId, plano[chave].tipo || "", "", plano[chave].plano || "");
 
   const msgs = {
     inscrito:     "Inscrição registrada! 📋",
@@ -3436,7 +3436,11 @@ function salvarAprovacao(chave, ra, isPrivada) {
       plano[chave].curso,
       plano[chave].universidade,
       plano[chave].modalidade,
-      `aprovado${colocacao ? " — colocação: " + colocacao : ""}${bolsa ? " — bolsa: " + bolsa : ""}`
+      "aprovado",
+      plano[chave].tipo || "",
+      colocacao,
+      bolsa,
+      plano[chave].plano || ""
     );
   }
 
@@ -3485,7 +3489,7 @@ function inicializarAbasVest(aluno) {
   }
 }
 
-async function salvarVestNoScript(ra, curso, universidade, modalidade, etapa) {
+async function salvarVestNoScript(ra, curso, universidade, modalidade, etapa, tipo = "", colocacao = "", bolsa = "", plano = "") {
   try {
     await fetch(VEST_SCRIPT_URL, {
       method: "POST",
@@ -3493,10 +3497,15 @@ async function salvarVestNoScript(ra, curso, universidade, modalidade, etapa) {
       headers: { "Content-Type": "text/plain" },
       body: JSON.stringify({
         ra,
-        nome: alunoAtual?.nome || "",
-        escola: `${curso} — ${universidade}`,
-        cidade: modalidade,
+        nome:        alunoAtual?.nome || "",
+        curso,
+        universidade,
+        modalidade,
+        tipo,
+        plano,
         etapa,
+        colocacao,
+        bolsa,
       }),
     });
   } catch(e) { console.warn("[Vest Script] Erro:", e); }
