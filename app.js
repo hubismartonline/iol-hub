@@ -2940,6 +2940,14 @@ function toggleMOInteresseRapido(chave, nome, ra) {
 // Cursos carregados dinamicamente do simulador
 const MODALIDADES_VEST = ['Particular — Vestibular Próprio', 'SISU (ENEM)', 'Provão Paulista', 'Pública — Vestibular Próprio', 'PROUNI (ENEM)'];
 
+const ETAPAS_VEST = [
+  { id: "pesquisando",  emoji: "🔍", label: "Pesquisando"  },
+  { id: "inscrito",     emoji: "📋", label: "Me inscrevi"  },
+  { id: "prova",        emoji: "📝", label: "Fiz a prova"  },
+  { id: "aprovado",     emoji: "✅", label: "Aprovado!"    },
+  { id: "nao_aprovado", emoji: "💪", label: "Não aprovado" },
+];
+
 let CURSOS_GUIA = ["Carregando..."];
 
 const GUIA_URL = "https://script.google.com/macros/s/AKfycbzty1jMjCZWCdneXerbgnPV6EyiAvwVCsUDrViaX25hKvfmkrJ_ilSWmUe4LZpUlcHXLQ/exec";
