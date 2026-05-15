@@ -2741,7 +2741,8 @@ function mostrarModalAprovacaoMO(chave, ra, isPrivada) {
         </div>
       </div>` : ""}
       <div style="display:flex;gap:8px">
-        <button onclick="salvarAprovacaoMO('${chave}', '${ra}', ${isPrivada})"
+        <button onclick="salvarAprovacaoMO(this.dataset.chave, this.dataset.ra, this.dataset.privada==='true')"
+          data-chave="${chave}" data-ra="${ra}" data-privada="${isPrivada}"
           style="flex:1;padding:11px;background:var(--navy);color:#fff;border:none;border-radius:var(--r-sm);font-family:Montserrat,sans-serif;font-weight:700;font-size:13px;cursor:pointer">
           Salvar 🎉
         </button>
