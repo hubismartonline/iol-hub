@@ -590,24 +590,35 @@ function sair() {
   sessionStorage.clear();
   alunoAtual = null;
 
-  // Esconde conteúdo do aluno
-  document.getElementById("student-profile").style.display = "none";
-  document.getElementById("main-content").style.display = "none";
+  // Sidebar desktop
+  document.getElementById("sidebar-perfil")?.style.setProperty("display","none");
+  document.getElementById("sidebar-nav")?.style.setProperty("display","none");
+  document.getElementById("sidebar-ra")?.style.setProperty("display","block");
 
-  // Mostra tela de login
-  document.getElementById("ra-header-section").style.display = "block";
+  // Header mobile
+  document.getElementById("student-profile")?.style.setProperty("display","none");
+  document.getElementById("ra-header-section")?.style.setProperty("display","block");
+
+  // Conteúdo principal
+  document.getElementById("main-content")?.style.setProperty("display","none");
   document.getElementById("welcome-screen")?.classList.remove("hidden");
 
   // Limpa campos
-  const raInput = document.getElementById("raInput");
-  if (raInput) { raInput.value = ""; raInput.focus(); }
-  document.getElementById("ra-error").style.display = "none";
+  const raDesktop = document.getElementById("raInputDesktop");
+  if (raDesktop) { raDesktop.value = ""; raDesktop.focus(); }
+  const raMobile = document.getElementById("raInput");
+  if (raMobile) raMobile.value = "";
+  const errDesktop = document.getElementById("ra-error-desktop");
+  if (errDesktop) errDesktop.style.display = "none";
+  const errMobile = document.getElementById("ra-error");
+  if (errMobile) errMobile.style.display = "none";
 
   // Scroll para o topo
   window.scrollTo({ top: 0, behavior: "smooth" });
 
   trocarAba("home");
   esconderFAB();
+  showToast("Até logo! 👋");
 }
 
 
