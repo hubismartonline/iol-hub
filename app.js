@@ -21,7 +21,8 @@ const CADASTRO_URL = "https://script.google.com/macros/s/AKfycbxhwZfOXqWgsoxA0G7
 const SIMULADOR_URL = "https://script.google.com/macros/s/AKfycby2bv-dEQEoz3qtVSNjWY5sPQSTmyJ3L1wQv_ApX5bOzL-pls5UvrhKPHy1X6DQsmg8Dw/exec";
 
 // URL do Apps Script para salvar dados de MOs
-const MO_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyQ5cu2VInBwdA8MRYE1dH2WxmGxZH3MfweCa6KVZiGS8Ccf9UK_x2TL61bc2bI8g85pQ/exec";
+const MO_SCRIPT_URL   = "https://script.google.com/macros/s/AKfycbyQ5cu2VInBwdA8MRYE1dH2WxmGxZH3MfweCa6KVZiGS8Ccf9UK_x2TL61bc2bI8g85pQ/exec";
+const VEST_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzPKp8mSHvb9a2cbambp1PLrWuk8quX4Iqh3gCvttYhNE_Zlpeh7AZtzTPukAVTIetA8A/exec";
 
 // URLs das planilhas de Melhores Oportunidades (MOs)
 const MO_URLS = {
@@ -3285,7 +3286,7 @@ function inicializarAbasVest(aluno) {
 
 async function salvarVestNoScript(ra, curso, universidade, modalidade, etapa) {
   try {
-    await fetch(MO_SCRIPT_URL, {
+    await fetch(VEST_SCRIPT_URL, {
       method: "POST",
       mode: "no-cors",
       headers: { "Content-Type": "text/plain" },
@@ -3295,7 +3296,6 @@ async function salvarVestNoScript(ra, curso, universidade, modalidade, etapa) {
         escola: `${curso} — ${universidade}`,
         cidade: modalidade,
         etapa,
-        tipo: "vestibular_3em"
       }),
     });
   } catch(e) { console.warn("[Vest Script] Erro:", e); }
