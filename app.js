@@ -1957,19 +1957,27 @@ async function salvarMONoScript(ra, nomeAluno, chaveEscola, etapa) {
     const cidade = partes[0];
     const escola = partes.slice(1).join("_");
 
-    await fetch(MO_SCRIPT_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ra,
-        nome: nomeAluno || (window.alunoAtual?.nome || ""),
-        escola,
-        cidade,
-        etapa,
-      }),
+    const payload = JSON.stringify({
+      ra,
+      nome: nomeAluno || (alunoAtual?.nome || ""),
+      escola,
+      cidade,
+      etapa,
     });
+
+    console.log("[MO Script] Enviando:", payload);
+
+    // Usa no-cors para evitar bloqueio de CORS
+    const resp = await fetch(MO_SCRIPT_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain" },
+      body: payload,
+    });
+
+    console.log("[MO Script] Enviado com sucesso");
   } catch(e) {
-    console.warn("Erro ao salvar MO no script:", e);
+    console.warn("[MO Script] Erro:", e);
   }
 }
 
