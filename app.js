@@ -3362,7 +3362,10 @@ function atualizarEtapaVest(chave, etapaId, ra) {
 
   salvarPlanoVest(ra, plano);
   renderizarPlanoVestibular(ra);
-  salvarVestNoScript(ra, plano[chave].curso, plano[chave].universidade, plano[chave].modalidade, etapaId, plano[chave].tipo || "", "", "", plano[chave].plano || "");
+  // "aprovado" é salvo pelo salvarAprovacao (com colocação e bolsa) — não duplicar
+  if (etapaId !== "aprovado") {
+    salvarVestNoScript(ra, plano[chave].curso, plano[chave].universidade, plano[chave].modalidade, etapaId, plano[chave].tipo || "", "", "", plano[chave].plano || "");
+  }
 
   const msgs = {
     inscrito:     "Inscrição registrada! 📋",
