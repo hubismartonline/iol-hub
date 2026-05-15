@@ -1953,34 +1953,25 @@ function toggleFabItem(i) {
 //  MELHORES OPORTUNIDADES — EF
 // =============================================================
 
-async function salvarMONoScript(ra, nomeAluno, chaveEscola, etapa) {
+async function salvarMONoScript(ra, nomeEscola, cidade, etapa, tipo_interesse = "", prioridade = "", colocacao = "", bolsa = "") {
   try {
-    const partes = chaveEscola.split("_");
-    const cidade = partes[0];
-    const escola = partes.slice(1).join("_");
-
-    const payload = JSON.stringify({
-      ra,
-      nome: alunoAtual?.nome || nomeAluno || "",
-      escola,
-      cidade,
-      etapa,
-    });
-
-    console.log("[MO Script] Enviando:", payload);
-
-    // Usa no-cors para evitar bloqueio de CORS
-    const resp = await fetch(MO_SCRIPT_URL, {
+    await fetch(MO_SCRIPT_URL, {
       method: "POST",
       mode: "no-cors",
       headers: { "Content-Type": "text/plain" },
-      body: payload,
+      body: JSON.stringify({
+        ra,
+        nome: alunoAtual?.nome || "",
+        escola: nomeEscola,
+        cidade,
+        etapa,
+        prioridade,
+        tipo_interesse,
+        colocacao,
+        bolsa,
+      }),
     });
-
-    console.log("[MO Script] Enviado com sucesso");
-  } catch(e) {
-    console.warn("[MO Script] Erro:", e);
-  }
+  } catch(e) { console.warn("[MO Script] Erro:", e); }
 }
 
 
@@ -2282,30 +2273,128 @@ function toggleMOInteresse(chave, nomeEscola, ra, idx) {
   const plano = carregarMOPlano(ra);
 
   if (moInteresses[chave]) {
+    // Remove
     delete moInteresses[chave];
     delete plano[chave];
+    try { sessionStorage.setItem("mo_interesses_" + ra, JSON.stringify(moInteresses)); } catch(e) {}
+    salvarMOPlano(ra, plano);
+    const btn = document.getElementById(`mo-btn-${idx}`);
+    if (btn) { btn.textContent = "🤍 Marcar interesse"; btn.classList.remove("ativo"); }
+    atualizarContadorMO(ra);
+    renderizarPainelMO(ra);
   } else {
-    moInteresses[chave] = { nome: nomeEscola, data: new Date().toISOString() };
-    plano[chave] = { nome: nomeEscola, etapa: "interesse", data_atualizacao: new Date().toISOString() };
-    showToast("Adicionado ao seu plano! 🎉");
+    // Abre modal para tipo e prioridade
+    mostrarModalMOInteresse(chave, nomeEscola, ra, idx);
   }
+}
 
-  // Salva no sessionStorage
-  try {
-    sessionStorage.setItem("mo_interesses_" + ra, JSON.stringify(moInteresses));
-  } catch(e) {}
+function mostrarModalMOInteresse(chave, nomeEscola, ra, idx) {
+  document.getElementById("mo-modal-interesse")?.remove();
+  const plano = carregarMOPlano(ra);
+  const prioridadesUsadas = Object.values(plano).map(d => d.prioridade).filter(Boolean);
+
+  const modal = document.createElement("div");
+  modal.id = "mo-modal-interesse";
+  modal.style.cssText = "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,37,97,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px";
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:var(--r-lg);padding:24px;max-width:400px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+      <div style="font-family:Montserrat,sans-serif;font-weight:800;font-size:15px;color:var(--navy);margin-bottom:4px">🏫 ${nomeEscola}</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:16px">Adicionar ao meu plano</div>
+
+      <div style="margin-bottom:14px">
+        <label style="font-size:11px;font-weight:700;color:var(--text2);font-family:Montserrat,sans-serif;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:8px">Tipo de interesse</label>
+        <div style="display:flex;gap:8px;flex-direction:column">
+          ${MO_TIPOS_INTERESSE.map(t => `
+            <button class="mo-tipo-int-btn" data-tipo="${t.id}" onclick="selecionarMOTipoInteresse('${t.id}')"
+              style="padding:10px 12px;border-radius:var(--r-sm);border:1.5px solid var(--border);background:#fff;cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;transition:all 0.15s">
+              <span style="font-size:20px">${t.emoji}</span>
+              <div>
+                <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:13px;color:var(--navy)">${t.label}</div>
+                <div style="font-size:11px;color:var(--text2)">${t.desc}</div>
+              </div>
+            </button>`).join("")}
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px">
+        <label style="font-size:11px;font-weight:700;color:var(--text2);font-family:Montserrat,sans-serif;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:8px">Prioridade</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          ${[1,2,3,4,5,6,7,8,9,10].map(n => {
+            const usado = prioridadesUsadas.includes(String(n));
+            return `<button class="mo-prior-btn${usado ? " usado" : ""}" data-prior="${n}"
+              onclick="${usado ? "" : `selecionarMOPrioridade('${n}')`}"
+              style="width:36px;height:36px;border-radius:8px;border:1.5px solid ${usado ? "#ddd" : "var(--border)"};
+                     background:${usado ? "#f5f5f5" : "#fff"};color:${usado ? "#bbb" : "var(--navy)"};
+                     font-family:Montserrat,sans-serif;font-weight:700;font-size:13px;cursor:${usado ? "not-allowed" : "pointer"}">${n}</button>`;
+          }).join("")}
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">Números em cinza já estão em uso</div>
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <button onclick="confirmarMOInteresse('${chave}', '${nomeEscola.replace(/'/g,"\'")}', '${ra}', ${idx})"
+          style="flex:1;padding:11px;background:var(--navy);color:#fff;border:none;border-radius:var(--r-sm);font-family:Montserrat,sans-serif;font-weight:700;font-size:13px;cursor:pointer">
+          Adicionar →
+        </button>
+        <button onclick="document.getElementById('mo-modal-interesse').remove();_moTipoInteresseSelecionado='';_moPrioridadeSelecionada='';"
+          style="padding:11px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:Montserrat,sans-serif;font-weight:700;font-size:13px;cursor:pointer;color:var(--text2)">
+          Cancelar
+        </button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+function selecionarMOTipoInteresse(tipo) {
+  _moTipoInteresseSelecionado = tipo;
+  const cores  = { sonho:"#FEF3C7", boa_opcao:"#D4EFDF", estrategica:"#EBF4FF" };
+  const bordas = { sonho:"#F59E0B", boa_opcao:"#27AE60", estrategica:"#00BDF2" };
+  document.querySelectorAll(".mo-tipo-int-btn").forEach(btn => {
+    const ativo = btn.dataset.tipo === tipo;
+    btn.style.background  = ativo ? cores[tipo]  : "#fff";
+    btn.style.borderColor = ativo ? bordas[tipo] : "var(--border)";
+  });
+}
+
+function selecionarMOPrioridade(prior) {
+  _moPrioridadeSelecionada = String(prior);
+  document.querySelectorAll(".mo-prior-btn:not(.usado)").forEach(btn => {
+    const ativo = btn.dataset.prior === String(prior);
+    btn.style.background  = ativo ? "var(--navy)" : "#fff";
+    btn.style.color       = ativo ? "#fff"        : "var(--navy)";
+    btn.style.borderColor = ativo ? "var(--navy)" : "var(--border)";
+  });
+}
+
+function confirmarMOInteresse(chave, nomeEscola, ra, idx) {
+  if (!_moTipoInteresseSelecionado) { showToast("Selecione o tipo de interesse!"); return; }
+  if (!_moPrioridadeSelecionada)    { showToast("Selecione a prioridade!"); return; }
+
+  const plano = carregarMOPlano(ra);
+  moInteresses[chave] = { nome: nomeEscola, data: new Date().toISOString() };
+  plano[chave] = {
+    nome: nomeEscola,
+    etapa: "interesse",
+    tipo_interesse: _moTipoInteresseSelecionado,
+    prioridade: _moPrioridadeSelecionada,
+    data_atualizacao: new Date().toISOString(),
+  };
+
+  try { sessionStorage.setItem("mo_interesses_" + ra, JSON.stringify(moInteresses)); } catch(e) {}
   salvarMOPlano(ra, plano);
+  salvarMONoScript(ra, nomeEscola, chave.split("_")[0], "interesse", _moTipoInteresseSelecionado, _moPrioridadeSelecionada);
 
-  // Atualiza botão
   const btn = document.getElementById(`mo-btn-${idx}`);
-  if (btn) {
-    const temInteresse = moInteresses[chave];
-    btn.textContent = temInteresse ? "❤️" : "🤍";
-    btn.classList.toggle("ativo", !!temInteresse);
-  }
+  if (btn) { btn.textContent = "❤️ Tenho interesse"; btn.classList.add("ativo"); }
+
+  document.getElementById("mo-modal-interesse")?.remove();
+  _moTipoInteresseSelecionado = "";
+  _moPrioridadeSelecionada    = "";
 
   atualizarContadorMO(ra);
   renderizarPainelMO(ra);
+  showToast("Adicionado ao seu plano! 🎉");
+  trocarAbaMO("plano", ra);
 }
 
 function atualizarContadorMO(ra) {
@@ -2332,12 +2421,21 @@ function atualizarContadorMO(ra) {
 // =============================================================
 
 const MO_ETAPAS = [
-  { id: "interesse",  emoji: "🔍", label: "Tenho interesse"  },
-  { id: "inscrito",   emoji: "📋", label: "Me inscrevi"      },
-  { id: "prova",      emoji: "📝", label: "Fiz a prova"      },
-  { id: "aprovado",   emoji: "✅", label: "Fui aprovado!"    },
-  { id: "nao_aprovado", emoji: "💪", label: "Não aprovado"   },
+  { id: "interesse",    emoji: "🔍", label: "Tenho interesse"       },
+  { id: "inscrito",     emoji: "📋", label: "Me inscrevi"           },
+  { id: "prova",        emoji: "📝", label: "Fiz a prova"           },
+  { id: "aprovado",     emoji: "✅", label: "Fui aprovado!"         },
+  { id: "nao_aprovado", emoji: "💪", label: "Não aprovado"          },
 ];
+
+const MO_TIPOS_INTERESSE = [
+  { id: "sonho",      emoji: "⭐", label: "Escola dos Sonhos", desc: "A que mais quer"             },
+  { id: "boa_opcao",  emoji: "👍", label: "Boa Opção",         desc: "Gosta muito e tem chances"   },
+  { id: "estrategica",emoji: "🎯", label: "Estratégica",       desc: "Garante uma vaga no EM"      },
+];
+
+let _moTipoInteresseSelecionado = "";
+let _moPrioridadeSelecionada    = "";
 
 function salvarMOPlano(ra, plano) {
   try {
@@ -2445,7 +2543,13 @@ function renderizarPainelMO(ra) {
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px">
             <div style="flex:1">
               <div class="mo-plano-card-nome">${nomeEscola}</div>
-              <div class="mo-plano-card-cidade">📍 ${cidade === "SP" ? "São Paulo" : cidade === "SJC" ? "São José dos Campos" : cidade === "BH" ? "Belo Horizonte" : cidade === "RJ" ? "Rio de Janeiro" : cidade}</div>
+              <div style="display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-top:4px">
+                ${dados.prioridade ? `<span style="background:var(--navy);color:#fff;border-radius:6px;padding:2px 8px;font-size:11px;font-family:Montserrat,sans-serif;font-weight:800">${dados.prioridade}ª opção</span>` : ""}
+                ${dados.tipo_interesse === "sonho"       ? `<span style="background:#FEF3C7;color:#92400E;border-radius:20px;padding:2px 8px;font-size:11px;font-family:Montserrat,sans-serif;font-weight:700">⭐ Escola dos Sonhos</span>` : ""}
+                ${dados.tipo_interesse === "boa_opcao"   ? `<span style="background:#D4EFDF;color:#1A7A4A;border-radius:20px;padding:2px 8px;font-size:11px;font-family:Montserrat,sans-serif;font-weight:700">👍 Boa Opção</span>` : ""}
+                ${dados.tipo_interesse === "estrategica" ? `<span style="background:#EBF4FF;color:#1A5276;border-radius:20px;padding:2px 8px;font-size:11px;font-family:Montserrat,sans-serif;font-weight:700">🎯 Estratégica</span>` : ""}
+                <span style="font-size:11px;color:var(--text2)">📍 ${cidade === "SP" ? "São Paulo" : cidade === "SJC" ? "São José dos Campos" : cidade === "BH" ? "Belo Horizonte" : cidade === "RJ" ? "Rio de Janeiro" : cidade}</span>
+              </div>
             </div>
             <button onclick="removerMOInteresse('${chave}', '${ra}')"
               style="background:none;border:none;font-size:14px;cursor:pointer;color:var(--text3);padding:4px;flex-shrink:0"
@@ -2556,41 +2660,129 @@ function definirMetaMO(ra, meta) {
 
 function atualizarEtapaMO(chave, etapaId, ra) {
   const plano = carregarMOPlano(ra);
-  if (plano[chave]) {
-    const agora = new Date().toISOString();
-    plano[chave].etapa = etapaId;
-    plano[chave].data_atualizacao = agora;
+  if (!plano[chave]) return;
 
-    // Salva histórico de datas por etapa
-    if (!plano[chave].historico) plano[chave].historico = {};
-    if (!plano[chave].historico[etapaId]) {
-      plano[chave].historico[etapaId] = agora;
-    }
+  const agora = new Date().toISOString();
+  plano[chave].etapa = etapaId;
+  plano[chave].data_atualizacao = agora;
+  if (!plano[chave].historico) plano[chave].historico = {};
+  if (!plano[chave].historico[etapaId]) plano[chave].historico[etapaId] = agora;
 
-    salvarMOPlano(ra, plano);
-    renderizarPainelMO(ra);
+  salvarMOPlano(ra, plano);
+  renderizarPainelMO(ra);
 
-    // Salva no Apps Script
-    salvarMONoScript(ra, plano[chave]?.nome || "", chave, etapaId);
-
-    // Feedback visual
-    const msgs = {
-      interesse:    "Escola adicionada ao plano! 🏫",
-      inscrito:     "Inscrição registrada! Boa sorte! 📋",
-      prova:        "Prova registrada! Você foi incrível! 📝",
-      aprovado:     "🎉 PARABÉNS! Você foi APROVADO! 🎉",
-      nao_aprovado: "Não foi dessa vez, mas você tentou! Continue firme 💪",
-    };
-    if (msgs[etapaId]) showToast(msgs[etapaId]);
+  if (etapaId === "aprovado") {
+    // Detecta se é escola privada pelo tipo da planilha
+    const tipoEscola = (plano[chave].tipo || "").toLowerCase();
+    const isPrivada = tipoEscola.includes("priv");
+    mostrarModalAprovacaoMO(chave, ra, isPrivada);
+    return;
   }
+
+  salvarMONoScript(ra, plano[chave].nome || "", chave.split("_")[0], etapaId, plano[chave].tipo_interesse || "", plano[chave].prioridade || "");
+
+  const msgs = {
+    inscrito:     "Inscrição registrada! Boa sorte! 📋",
+    prova:        "Prova registrada! Você foi incrível! 📝",
+    nao_aprovado: "Não foi dessa vez. Continue firme! 💪",
+  };
+  if (msgs[etapaId]) showToast(msgs[etapaId]);
+}
+
+function mostrarModalAprovacaoMO(chave, ra, isPrivada) {
+  document.getElementById("mo-modal-aprovacao")?.remove();
+  const modal = document.createElement("div");
+  modal.id = "mo-modal-aprovacao";
+  modal.style.cssText = "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,37,97,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px";
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:var(--r-lg);padding:24px;max-width:400px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+      <div style="text-align:center;margin-bottom:16px">
+        <div style="font-size:40px;margin-bottom:8px">🎉</div>
+        <div style="font-family:Montserrat,sans-serif;font-weight:800;font-size:18px;color:var(--navy)">PARABÉNS! Aprovado!</div>
+        <div style="font-size:13px;color:var(--text2);margin-top:4px">Conta mais sobre sua aprovação</div>
+      </div>
+      <div style="margin-bottom:14px">
+        <label style="font-size:11px;font-weight:700;color:var(--text2);font-family:Montserrat,sans-serif;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">
+          Sua colocação <span style="color:var(--pink)">*</span>
+        </label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="number" id="mo-colocacao" placeholder="Ex: 1, 5, 23..."
+            style="flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:13px;font-family:Lato,sans-serif;box-sizing:border-box;outline:none">
+          <button onclick="document.getElementById('mo-colocacao').value='não se aplica';document.getElementById('mo-colocacao').type='text';"
+            style="padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:var(--bg);font-size:12px;font-family:Montserrat,sans-serif;font-weight:700;color:var(--text2);cursor:pointer;white-space:nowrap">
+            Não se aplica
+          </button>
+        </div>
+      </div>
+      ${isPrivada ? `
+      <div style="margin-bottom:16px">
+        <label style="font-size:11px;font-weight:700;color:var(--text2);font-family:Montserrat,sans-serif;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:8px">
+          Conseguiu bolsa? <span style="color:var(--pink)">*</span>
+        </label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          ${["Não","Sim — Parcial","Sim — 100%"].map(op => `
+            <button class="mo-bolsa-btn" data-bolsa="${op}" onclick="selecionarBolsaMO('${op}')"
+              style="padding:8px 14px;border-radius:20px;border:1.5px solid var(--border);background:#fff;color:var(--text2);font-size:12px;font-family:Montserrat,sans-serif;font-weight:700;cursor:pointer;transition:all 0.15s">
+              ${op}
+            </button>`).join("")}
+        </div>
+      </div>` : ""}
+      <div style="display:flex;gap:8px">
+        <button onclick="salvarAprovacaoMO('${chave}', '${ra}', ${isPrivada})"
+          style="flex:1;padding:11px;background:var(--navy);color:#fff;border:none;border-radius:var(--r-sm);font-family:Montserrat,sans-serif;font-weight:700;font-size:13px;cursor:pointer">
+          Salvar 🎉
+        </button>
+        <button onclick="document.getElementById('mo-modal-aprovacao').remove()"
+          style="padding:11px 16px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:Montserrat,sans-serif;font-weight:700;font-size:13px;cursor:pointer;color:var(--text2)">
+          Pular
+        </button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+let _moBolsaSelecionada = "";
+
+function selecionarBolsaMO(opcao) {
+  _moBolsaSelecionada = opcao;
+  document.querySelectorAll(".mo-bolsa-btn").forEach(btn => {
+    const ativo = btn.dataset.bolsa === opcao;
+    btn.style.background  = ativo ? "var(--navy)" : "#fff";
+    btn.style.color       = ativo ? "#fff"        : "var(--text2)";
+    btn.style.borderColor = ativo ? "var(--navy)" : "var(--border)";
+  });
+}
+
+function salvarAprovacaoMO(chave, ra, isPrivada) {
+  const colocacao = document.getElementById("mo-colocacao")?.value?.trim() || "";
+  const bolsa     = isPrivada ? (_moBolsaSelecionada || "") : "";
+
+  if (!colocacao) { showToast("Informe sua colocação ou clique em 'Não se aplica'!"); return; }
+  if (isPrivada && !bolsa) { showToast("Informe se conseguiu bolsa!"); return; }
+
+  const plano = carregarMOPlano(ra);
+  if (plano[chave]) {
+    plano[chave].colocacao = colocacao;
+    plano[chave].bolsa     = bolsa;
+    salvarMOPlano(ra, plano);
+    salvarMONoScript(ra, plano[chave].nome || "", chave.split("_")[0], "aprovado", plano[chave].tipo_interesse || "", plano[chave].prioridade || "", colocacao, bolsa);
+  }
+
+  document.getElementById("mo-modal-aprovacao")?.remove();
+  _moBolsaSelecionada = "";
+  renderizarPainelMO(ra);
+  showToast("🎉 PARABÉNS! Aprovação registrada!");
 }
 
 function removerMOInteresse(chave, ra) {
   const plano = carregarMOPlano(ra);
+  // Registra remoção na planilha
+  if (plano[chave]) {
+    salvarMONoScript(ra, plano[chave].nome || "", chave.split("_")[0], "removido", plano[chave].tipo_interesse || "", plano[chave].prioridade || "");
+  }
   delete plano[chave];
   salvarMOPlano(ra, plano);
 
-  // Também remove dos moInteresses
   delete moInteresses[chave];
   try { sessionStorage.setItem("mo_interesses_" + ra, JSON.stringify(moInteresses)); } catch(e) {}
 
