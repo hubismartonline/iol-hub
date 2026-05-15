@@ -324,6 +324,11 @@ function trocarAba(nomeAba) {
   // Atualiza sidebar desktop
   document.querySelectorAll(".sidebar-nav-item").forEach(btn => btn.classList.toggle("active", btn.dataset.tab === nomeAba));
   fecharBusca();
+  // Controla banner 9EF — só aparece no Início
+  const banner = document.getElementById("banner-9ef");
+  if (banner && banner.dataset.serie9ef === "true") {
+    banner.style.display = nomeAba === "home" ? "block" : "none";
+  }
   // Scroll
   if (window.innerWidth < 768) {
     document.getElementById("tabs-nav")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -598,8 +603,11 @@ function renderizarBanner9EF(aluno) {
   const container = document.getElementById("banner-9ef");
   if (!container) return;
   const serie = normalizarSerie(aluno.serie);
-  if (serie === "9EF") {
+  // Só mostra na aba home e só para 9EF
+  const abaAtiva = document.querySelector(".tab-content.active")?.id;
+  if (serie === "9EF" && (!abaAtiva || abaAtiva === "tab-home")) {
     container.style.display = "block";
+    container.dataset.serie9ef = "true";
   } else {
     container.style.display = "none";
   }
