@@ -2005,23 +2005,6 @@ function trocarAbaVest(aba) {
   }
 }
 
-function inicializarAbasVest(aluno) {
-  const serie = normalizarSerie(aluno.serie);
-  if (serie !== "3EM") return;
-
-  const wrap = document.getElementById("vest-abas-wrap");
-  if (wrap) wrap.style.display = "block";
-
-  // Atualiza badge com candidaturas existentes
-  const plano = carregarPlanoVest(aluno.RA || aluno.ra);
-  const total = Object.keys(plano).length;
-  const badge = document.getElementById("vest-aba-badge");
-  if (badge && total > 0) {
-    badge.style.display = "inline-flex";
-    badge.textContent = total;
-  }
-}
-
 async function renderizarMOs(aluno) {
   const container = document.getElementById("mo-container");
   if (!container) return;
@@ -3302,6 +3285,38 @@ function removerCandidatura(chave, ra) {
   delete plano[chave];
   salvarPlanoVest(ra, plano);
   renderizarPlanoVestibular(ra);
+}
+
+function trocarAbaVest(aba) {
+  document.querySelectorAll("[data-aba]").forEach(btn => {
+    if (btn.closest("#vest-abas-wrap")) {
+      btn.classList.toggle("ativo", btn.dataset.aba === aba);
+    }
+  });
+  const blocosSimulador = ["bloco-estrategia","bloco-simulador","bloco-criterios","orient-lembretes-vest","bloco-es-ismart"];
+  blocosSimulador.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = aba === "simulador" ? "" : "none";
+  });
+  const planoWrap = document.getElementById("vest-plano-wrap");
+  if (planoWrap) planoWrap.style.display = aba === "plano" ? "block" : "none";
+  if (aba === "plano" && alunoAtual) {
+    renderizarPlanoVestibular(alunoAtual.RA || alunoAtual.ra);
+  }
+}
+
+function inicializarAbasVest(aluno) {
+  const serie = normalizarSerie(aluno.serie);
+  if (serie !== "3EM") return;
+  const wrap = document.getElementById("vest-abas-wrap");
+  if (wrap) wrap.style.display = "block";
+  const plano = carregarPlanoVest(aluno.RA || aluno.ra);
+  const total = Object.keys(plano).length;
+  const badge = document.getElementById("vest-aba-badge");
+  if (badge && total > 0) {
+    badge.style.display = "inline-flex";
+    badge.textContent = total;
+  }
 }
 
 async function salvarVestNoScript(ra, curso, universidade, modalidade, etapa) {
