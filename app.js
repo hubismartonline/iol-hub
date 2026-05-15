@@ -2977,7 +2977,7 @@ function toggleMOInteresseRapido(chave, nome, ra) {
 // =============================================================
 
 const CURSOS_GUIA = ['Administração', 'Arquitetura e Urbanismo', 'Ciências Biológicas', 'Ciências Contábeis', 'Ciências Econômicas', 'Ciências Sociais', 'Comunicação Social', 'Design', 'Direito', 'Educação Física', 'Enfermagem', 'Engenharia Aeronáutica', 'Engenharia Ambiental', 'Engenharia Civil', 'Engenharia de Computação', 'Engenharia de Produção', 'Engenharia Elétrica', 'Engenharia Mecânica', 'Engenharia Química', 'Farmácia', 'Física', 'Geografia', 'História', 'Letras', 'Matemática', 'Medicina', 'Medicina Veterinária', 'Nutrição', 'Odontologia', 'Pedagogia', 'Psicologia', 'Química', 'Relações Internacionais', 'Serviço Social', 'Sistemas de Informação', 'Tecnologia da Informação', 'Outro'];
-const MODALIDADES_VEST = ['SISU', 'FUVEST', 'UNICAMP', 'UNESP', 'Provão Paulista', 'PROUNI', 'Particular', 'Outro'];
+const MODALIDADES_VEST = ['Particular — Vestibular Próprio', 'SISU (ENEM)', 'Provão Paulista', 'Pública — Vestibular Próprio', 'PROUNI (ENEM)'];
 
 const ETAPAS_VEST = [
   { id: "pesquisando",  emoji: "🔍", label: "Pesquisando"  },
