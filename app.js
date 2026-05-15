@@ -2962,7 +2962,20 @@ let _guiaCarregado = false;
 async function carregarGuia() {
   if (_guiaCarregado) return;
   try {
-    const data = await fetchSimulador({ action: "guia" });
+    // Usa a URL do guia de carreiras (que tem action=guia)
+    const data = await new Promise((resolve, reject) => {
+      const cbName = "_guiaCb_" + Date.now();
+      window[cbName] = function(d) {
+        delete window[cbName];
+        document.getElementById("_guia_s_" + cbName)?.remove();
+        resolve(d);
+      };
+      const s = document.createElement("script");
+      s.id = "_guia_s_" + cbName;
+      s.onerror = () => { delete window[cbName]; reject(new Error("Erro")); };
+      s.src = "https://script.google.com/macros/s/AKfycbzty1jMjCZWCdneXerbgnPV6EyiAvwVCsUDrViaX25hKvfmkrJ_ilSWmUe4LZpUlcHXLQ/exec?action=guia&callback=" + cbName;
+      document.head.appendChild(s);
+    });
     if (data?.cursos?.length) {
       CURSOS_GUIA = [...data.cursos, "Outro"];
     }
