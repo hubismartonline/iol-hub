@@ -183,19 +183,38 @@ async function confirmarNascimento() {
 
 function normalizarData(data) {
   if (!data) return "";
-  // Remove tudo que não é número
-  const nums = data.replace(/\D/g, "");
-  if (nums.length === 8) {
-    // Pode ser DDMMAAAA ou AAAAMMDD
-    const dia = nums.slice(0,2);
-    const mes = nums.slice(2,4);
-    const ano = nums.slice(4,8);
-    // Valida se parece data DD/MM/AAAA
-    if (parseInt(dia) <= 31 && parseInt(mes) <= 12) {
+  data = data.trim();
+
+  // Formato do cadastro: "Thu Dec 20 2012 00:00:00 GMT-0200" ou Date object string
+  if (data.includes("GMT") || data.includes("00:00:00")) {
+    const d = new Date(data);
+    if (!isNaN(d)) {
+      const dia = String(d.getUTCDate()).padStart(2,"0");
+      const mes = String(d.getUTCMonth()+1).padStart(2,"0");
+      const ano = d.getUTCFullYear();
       return dia + "/" + mes + "/" + ano;
     }
   }
-  return data.trim();
+
+  // Formato DD/MM/AAAA (digitado pelo aluno)
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(data)) return data;
+
+  // Formato AAAA-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}/.test(data)) {
+    const parts = data.split("-");
+    return parts[2].slice(0,2) + "/" + parts[1] + "/" + parts[0];
+  }
+
+  // Tenta parsear como Date genérico
+  const d = new Date(data);
+  if (!isNaN(d)) {
+    const dia = String(d.getUTCDate()).padStart(2,"0");
+    const mes = String(d.getUTCMonth()+1).padStart(2,"0");
+    const ano = d.getUTCFullYear();
+    return dia + "/" + mes + "/" + ano;
+  }
+
+  return data;
 }
 
 function cancelarLogin() {
