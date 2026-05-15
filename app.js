@@ -1969,9 +1969,6 @@ async function renderizarMOs(aluno) {
   }
   container.style.display = "block";
 
-  // Mostra mapa (só SP por enquanto)
-  renderizarMapaMO(aluno.RA);
-
   // Mostra painel de acompanhamento
   const painelWrap = document.getElementById("mo-painel-wrap");
   if (painelWrap) painelWrap.style.display = "block";
@@ -1991,23 +1988,55 @@ async function renderizarMOs(aluno) {
   } catch(e) { moInteresses = {}; }
 
   container.innerHTML = `
-    <div style="margin-bottom:16px">
-      <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:15px;color:var(--navy);margin-bottom:4px">
-        🏫 Melhores Oportunidades de Ensino Médio
+
+    <!-- INTRO -->
+    <div style="background:linear-gradient(135deg,#002561,#004fa3);border-radius:var(--r-lg);padding:22px;margin-bottom:16px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;background:var(--blue);opacity:0.15;border-radius:50%"></div>
+      <div style="font-family:Montserrat,sans-serif;font-weight:800;font-size:16px;color:#fff;margin-bottom:10px;position:relative">
+        🏫 O que são as Melhores Oportunidades?
       </div>
-      <div style="font-size:12px;color:var(--text2)">
-        Escolas recomendadas pelo Ismart para o seu próximo passo
+      <p style="font-size:13px;color:rgba(255,255,255,0.85);line-height:1.6;margin-bottom:12px;position:relative">
+        As <strong style="color:#00BDF2">Melhores Oportunidades (MOs)</strong> são escolas de Ensino Médio recomendadas pelo Ismart — públicas gratuitas, institutos federais e privadas com bolsa — selecionadas pelo alto nível de ensino e pelas portas que abrem para o futuro.
+      </p>
+      <div style="background:rgba(0,189,242,0.15);border-radius:10px;padding:12px 14px;border-left:3px solid var(--blue);position:relative">
+        <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:13px;color:#fff;margin-bottom:4px">
+          💡 Por que ir além do Bolsa Talento?
+        </div>
+        <p style="font-size:12px;color:rgba(255,255,255,0.8);line-height:1.6;margin:0">
+          Quanto <strong style="color:#00BDF2">maior a sua estratégia de vestibular</strong>, maior a chance de entrar em uma boa escola de EM. Alunos que se inscrevem em múltiplas oportunidades têm muito mais chances de aprovação — e o Ismart está aqui para te ajudar a montar esse plano!
+        </p>
       </div>
     </div>
 
-    <!-- Filtros de cidade -->
-    <div id="mo-filtros-cidade" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
-      ${["SP","SJC","BH","RJ"].map(c => `
-        <button class="mo-cidade-btn${c === cidadePadrao ? " ativo" : ""}"
-          onclick="carregarMOCidade('${c}', '${aluno.RA}')"
-          data-cidade="${c}">
-          ${c === "SP" ? "São Paulo" : c === "SJC" ? "São José dos Campos" : c === "BH" ? "Belo Horizonte" : "Rio de Janeiro"}
-        </button>`).join("")}
+    <!-- VAMOS COMEÇAR -->
+    <div style="background:#fff;border:1.5px solid var(--border);border-radius:var(--r-lg);padding:18px;margin-bottom:16px">
+      <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:15px;color:var(--navy);margin-bottom:4px">
+        🗺️ Vamos encontrar as escolas mais próximas de você!
+      </div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.5">
+        Digite seu endereço para ver as MOs no mapa e descobrir quais ficam mais perto de você.
+      </p>
+      <div id="mo-mapa-wrap-inline"></div>
+    </div>
+
+    <!-- FILTROS + LISTA -->
+    <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:14px;color:var(--navy);margin-bottom:12px">
+      📋 Todas as escolas recomendadas
+    </div>
+
+    <!-- Cidade do aluno -->
+    <div id="mo-filtros-cidade" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+      <div style="font-size:13px;color:var(--text2)">
+        📍 Mostrando escolas em <strong style="color:var(--navy)">${cidadePadrao === "SP" ? "São Paulo" : cidadePadrao === "SJC" ? "São José dos Campos" : cidadePadrao === "BH" ? "Belo Horizonte" : "Rio de Janeiro"}</strong>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${["SP","SJC","BH","RJ"].filter(c => c !== cidadePadrao).map(c => `
+          <button class="mo-tipo-btn"
+            onclick="carregarMOCidade('${c}', '${aluno.RA}');document.getElementById('mo-cidade-label').textContent='${c === "SP" ? "São Paulo" : c === "SJC" ? "São José dos Campos" : c === "BH" ? "Belo Horizonte" : "Rio de Janeiro"}'"
+            data-cidade="${c}">
+            ${c === "SP" ? "🏙️ SP" : c === "SJC" ? "✈️ SJC" : c === "BH" ? "⛰️ BH" : "🌊 RJ"}
+          </button>`).join("")}
+      </div>
     </div>
 
     <!-- Filtro de tipo -->
@@ -2032,6 +2061,9 @@ async function renderizarMOs(aluno) {
       ❤️ <span id="mo-contador-num">0</span> escola(s) na sua lista de interesse
     </div>
   `;
+
+  // Inicializa mapa no container inline
+  renderizarMapaMO(aluno.RA);
 
   // Carrega cidade padrão
   await carregarMOCidade(cidadePadrao, aluno.RA);
@@ -2392,7 +2424,8 @@ let mapaLeaflet = null;
 let mapaMarcadores = [];
 
 async function renderizarMapaMO(ra) {
-  const container = document.getElementById("mo-mapa-wrap");
+  // Usa container inline se existir, senão o original
+  const container = document.getElementById("mo-mapa-wrap-inline") || document.getElementById("mo-mapa-wrap");
   if (!container) return;
   container.style.display = "block";
 
