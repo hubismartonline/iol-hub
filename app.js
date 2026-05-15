@@ -1982,28 +1982,6 @@ async function salvarMONoScript(ra, nomeAluno, chaveEscola, etapa) {
   }
 }
 
-function trocarAbaVest(aba) {
-  document.querySelectorAll("[data-aba]").forEach(btn => {
-    if (btn.closest("#vest-abas-wrap")) {
-      btn.classList.toggle("ativo", btn.dataset.aba === aba);
-    }
-  });
-
-  // Blocos do simulador
-  const blocosSimulador = ["bloco-estrategia","bloco-simulador","bloco-criterios","orient-lembretes-vest","bloco-es-ismart"];
-  blocosSimulador.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.style.display = aba === "simulador" ? "" : "none";
-  });
-
-  // Plano
-  const planoWrap = document.getElementById("vest-plano-wrap");
-  if (planoWrap) planoWrap.style.display = aba === "plano" ? "block" : "none";
-
-  if (aba === "plano" && alunoAtual) {
-    renderizarPlanoVestibular(alunoAtual.RA || alunoAtual.ra);
-  }
-}
 
 async function renderizarMOs(aluno) {
   const container = document.getElementById("mo-container");
@@ -3007,6 +2985,19 @@ async function carregarCursosGuia() {
   } catch(e) {
     console.warn("[Guia] Erro cursos:", e);
   }
+}
+
+function carregarPlanoVest(ra) {
+  try {
+    const salvo = sessionStorage.getItem("vest_plano_" + ra);
+    return salvo ? JSON.parse(salvo) : {};
+  } catch(e) { return {}; }
+}
+
+function salvarPlanoVest(ra, plano) {
+  try {
+    sessionStorage.setItem("vest_plano_" + ra, JSON.stringify(plano));
+  } catch(e) {}
 }
 
 async function renderizarPlanoVestibular(ra) {
