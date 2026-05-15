@@ -200,6 +200,19 @@
         <!-- MELHORES OPORTUNIDADES (só EF, injetada via JS) -->
         <div id="mo-container" style="display:none"></div>
 
+        <!-- ABAS EM — Simulador / Meu Plano (só 3EM, injetada via JS) -->
+        <div id="vest-abas-wrap" style="display:none">
+          <div class="mo-abas-nav" style="margin-bottom:16px">
+            <button class="mo-aba-btn ativo" data-aba="simulador" onclick="trocarAbaVest('simulador')">
+              🎯 Simulador
+            </button>
+            <button class="mo-aba-btn" data-aba="plano" onclick="trocarAbaVest('plano')">
+              📋 Meu Plano
+              <span class="mo-aba-badge" id="vest-aba-badge" style="display:none">0</span>
+            </button>
+          </div>
+        </div>
+
         <!-- MAPA DE ESCOLAS -->
         <div id="mo-mapa-wrap" style="display:none"></div>
 
@@ -293,6 +306,13 @@
 
         <!-- CALENDÁRIO DE VESTIBULARES -->
         <div id="orient-lembretes-vest" style="margin-bottom:14px"></div>
+
+        <!-- Container Meu Plano Vestibular -->
+        <div id="vest-plano-wrap" style="display:none">
+          <div style="background:#fff;border:1.5px solid var(--border);border-radius:var(--r-lg);padding:16px;margin-bottom:16px">
+            <div id="vest-plano-container"></div>
+          </div>
+        </div>
 
         <!-- 4. ES ISMART -->
         <div id="bloco-es-ismart" style="background:#EAFAF0;border-radius:12px;padding:20px;margin-bottom:14px;border-left:4px solid #27AE60">
