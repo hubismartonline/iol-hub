@@ -351,6 +351,7 @@ function renderizarTudo(aluno) {
   carregarCalendario(aluno.serie);
   renderizarNotaAluno(aluno);
   renderizarMOs(aluno);
+  inicializarAbasVest(aluno);
   renderizarTutorRodape(aluno);
 }
 
@@ -1981,6 +1982,46 @@ async function salvarMONoScript(ra, nomeAluno, chaveEscola, etapa) {
   }
 }
 
+function trocarAbaVest(aba) {
+  document.querySelectorAll("[data-aba]").forEach(btn => {
+    if (btn.closest("#vest-abas-wrap")) {
+      btn.classList.toggle("ativo", btn.dataset.aba === aba);
+    }
+  });
+
+  // Blocos do simulador
+  const blocosSimulador = ["bloco-estrategia","bloco-simulador","bloco-criterios","orient-lembretes-vest","bloco-es-ismart"];
+  blocosSimulador.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = aba === "simulador" ? "" : "none";
+  });
+
+  // Plano
+  const planoWrap = document.getElementById("vest-plano-wrap");
+  if (planoWrap) planoWrap.style.display = aba === "plano" ? "block" : "none";
+
+  if (aba === "plano" && alunoAtual) {
+    renderizarPlanoVestibular(alunoAtual.RA || alunoAtual.ra);
+  }
+}
+
+function inicializarAbasVest(aluno) {
+  const serie = normalizarSerie(aluno.serie);
+  if (serie !== "3EM") return;
+
+  const wrap = document.getElementById("vest-abas-wrap");
+  if (wrap) wrap.style.display = "block";
+
+  // Atualiza badge com candidaturas existentes
+  const plano = carregarPlanoVest(aluno.RA || aluno.ra);
+  const total = Object.keys(plano).length;
+  const badge = document.getElementById("vest-aba-badge");
+  if (badge && total > 0) {
+    badge.style.display = "inline-flex";
+    badge.textContent = total;
+  }
+}
+
 async function renderizarMOs(aluno) {
   const container = document.getElementById("mo-container");
   if (!container) return;
@@ -2929,4 +2970,313 @@ function toggleMOInteresseRapido(chave, nome, ra) {
     btn.textContent = tem ? "❤️" : "🤍";
     btn.classList.toggle("ativo", !!tem);
   }
+}
+
+// =============================================================
+//  PLANO DE VESTIBULAR — 3º EM
+// =============================================================
+
+const CURSOS_GUIA = ['Administração', 'Arquitetura e Urbanismo', 'Ciências Biológicas', 'Ciências Contábeis', 'Ciências Econômicas', 'Ciências Sociais', 'Comunicação Social', 'Design', 'Direito', 'Educação Física', 'Enfermagem', 'Engenharia Aeronáutica', 'Engenharia Ambiental', 'Engenharia Civil', 'Engenharia de Computação', 'Engenharia de Produção', 'Engenharia Elétrica', 'Engenharia Mecânica', 'Engenharia Química', 'Farmácia', 'Física', 'Geografia', 'História', 'Letras', 'Matemática', 'Medicina', 'Medicina Veterinária', 'Nutrição', 'Odontologia', 'Pedagogia', 'Psicologia', 'Química', 'Relações Internacionais', 'Serviço Social', 'Sistemas de Informação', 'Tecnologia da Informação', 'Outro'];
+const MODALIDADES_VEST = ['SISU', 'FUVEST', 'UNICAMP', 'UNESP', 'Provão Paulista', 'PROUNI', 'Particular', 'Outro'];
+
+const ETAPAS_VEST = [
+  { id: "pesquisando",  emoji: "🔍", label: "Pesquisando"  },
+  { id: "inscrito",     emoji: "📋", label: "Me inscrevi"  },
+  { id: "prova",        emoji: "📝", label: "Fiz a prova"  },
+  { id: "aprovado",     emoji: "✅", label: "Aprovado!"    },
+  { id: "nao_aprovado", emoji: "💪", label: "Não aprovado" },
+];
+
+function carregarPlanoVest(ra) {
+  try {
+    const salvo = sessionStorage.getItem("vest_plano_" + ra);
+    return salvo ? JSON.parse(salvo) : {};
+  } catch(e) { return {}; }
+}
+
+function salvarPlanoVest(ra, plano) {
+  try {
+    sessionStorage.setItem("vest_plano_" + ra, JSON.stringify(plano));
+  } catch(e) {}
+}
+
+function renderizarPlanoVestibular(ra) {
+  const container = document.getElementById("vest-plano-container");
+  if (!container) return;
+
+  const plano = carregarPlanoVest(ra);
+  const candidaturas = Object.entries(plano);
+
+  container.innerHTML = `
+    <!-- Formulário para adicionar candidatura -->
+    <div style="background:var(--bg);border-radius:var(--r-md);padding:16px;margin-bottom:16px;border:1.5px solid var(--border)">
+      <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:13px;color:var(--navy);margin-bottom:12px">
+        ➕ Adicionar candidatura
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+
+        <!-- Curso -->
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--text2);font-family:Montserrat,sans-serif;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px">Curso</label>
+          <select id="vest-curso-select" onchange="toggleVestOutroCurso()"
+            style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:13px;font-family:Lato,sans-serif;background:var(--white);color:var(--navy);outline:none">
+            <option value="">Selecione um curso...</option>
+            ${CURSOS_GUIA.map(c => `<option value="${c}">${c}</option>`).join("")}
+          </select>
+          <input type="text" id="vest-curso-outro" placeholder="Digite o curso..."
+            style="display:none;width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:13px;font-family:Lato,sans-serif;margin-top:6px;box-sizing:border-box;outline:none">
+        </div>
+
+        <!-- Universidade -->
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--text2);font-family:Montserrat,sans-serif;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px">Universidade</label>
+          <input type="text" id="vest-universidade" placeholder="Ex: USP, UNICAMP, UNIFESP..."
+            style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:13px;font-family:Lato,sans-serif;box-sizing:border-box;outline:none">
+        </div>
+
+        <!-- Modalidade -->
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--text2);font-family:Montserrat,sans-serif;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px">Modalidade</label>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            ${MODALIDADES_VEST.map(m => `
+              <button class="vest-modal-btn" data-modal="${m}" onclick="selecionarModalidade('${m}')"
+                style="padding:6px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--white);color:var(--text2);font-size:12px;font-family:Montserrat,sans-serif;font-weight:700;cursor:pointer;transition:all 0.15s">
+                ${m}
+              </button>`).join("")}
+          </div>
+        </div>
+
+        <button onclick="adicionarCandidatura('${ra}')"
+          style="padding:11px;background:var(--navy);color:#fff;border:none;border-radius:var(--r-sm);font-family:Montserrat,sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:background 0.2s"
+          onmouseover="this.style.background='#004fa3'" onmouseout="this.style.background='var(--navy)'">
+          Adicionar ao meu plano →
+        </button>
+      </div>
+    </div>
+
+    <!-- Lista de candidaturas -->
+    ${candidaturas.length === 0 ? `
+      <div class="mo-vazio">
+        <div class="mo-vazio-icon">🎯</div>
+        <div class="mo-vazio-texto">Você ainda não adicionou nenhuma candidatura.<br><span style="font-size:12px">Use o formulário acima para começar seu plano!</span></div>
+      </div>` : `
+      <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:13px;color:var(--navy);margin-bottom:10px">
+        📋 Minhas candidaturas (${candidaturas.length})
+      </div>
+      ${candidaturas.map(([chave, dados]) => renderizarCardVest(chave, dados, ra)).join("")}
+
+      <!-- Tabela resumo -->
+      ${candidaturas.length > 1 ? `
+      <div style="margin-top:16px">
+        <div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:13px;color:var(--navy);margin-bottom:10px">📊 Resumo</div>
+        <div style="background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-md);overflow:hidden">
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead>
+              <tr style="background:var(--navy);color:#fff">
+                <th style="padding:8px 12px;text-align:left;font-family:Montserrat,sans-serif">Curso</th>
+                <th style="padding:8px 12px;text-align:left;font-family:Montserrat,sans-serif">Universidade</th>
+                <th style="padding:8px 12px;text-align:center;font-family:Montserrat,sans-serif">Modalidade</th>
+                <th style="padding:8px 12px;text-align:center;font-family:Montserrat,sans-serif">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${candidaturas.map(([chave, dados], i) => {
+                const etapa = ETAPAS_VEST.find(e => e.id === (dados.etapa || "pesquisando"));
+                const corStatus = dados.etapa === "aprovado" ? "#27AE60" : dados.etapa === "nao_aprovado" ? "#F59E0B" : "#00BDF2";
+                return `
+                  <tr style="border-bottom:1px solid var(--border);background:${i%2===0?"var(--bg)":"var(--white)"}">
+                    <td style="padding:8px 12px;color:var(--navy);font-weight:600">${dados.curso?.length > 20 ? dados.curso.slice(0,18)+"..." : dados.curso}</td>
+                    <td style="padding:8px 12px;color:var(--text2)">${dados.universidade?.length > 20 ? dados.universidade.slice(0,18)+"..." : dados.universidade}</td>
+                    <td style="padding:8px 12px;text-align:center"><span style="background:var(--bg);border-radius:20px;padding:2px 8px;font-size:11px;font-weight:700;font-family:Montserrat,sans-serif">${dados.modalidade || "-"}</span></td>
+                    <td style="padding:8px 12px;text-align:center"><span style="background:${corStatus}22;color:${corStatus};border-radius:20px;padding:2px 8px;font-size:11px;font-weight:700;font-family:Montserrat,sans-serif">${etapa?.emoji} ${etapa?.label}</span></td>
+                  </tr>`;
+              }).join("")}
+            </tbody>
+          </table>
+        </div>
+      </div>` : ""}
+    `}
+  `;
+}
+
+function renderizarCardVest(chave, dados, ra) {
+  const etapaAtual = dados.etapa || "pesquisando";
+  const ordemEtapas = ["pesquisando","inscrito","prova","aprovado"];
+  const isNaoAprovado = etapaAtual === "nao_aprovado";
+  const idxAtual = ordemEtapas.indexOf(etapaAtual);
+  const pct = isNaoAprovado ? 75 : Math.round(((idxAtual + 1) / ordemEtapas.length) * 100);
+  const corBarra = isNaoAprovado ? "#F59E0B" : etapaAtual === "aprovado" ? "#27AE60" : "#00BDF2";
+  const historico = dados.historico || {};
+
+  return `
+    <div class="mo-plano-card" style="margin-bottom:12px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px">
+        <div style="flex:1">
+          <div class="mo-plano-card-nome">${dados.curso || "Curso não informado"}</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:2px">
+            🏛️ ${dados.universidade || "Universidade não informada"}
+            ${dados.modalidade ? `· <span style="background:var(--bg);border-radius:20px;padding:1px 8px;font-size:11px;font-family:Montserrat,sans-serif;font-weight:700">${dados.modalidade}</span>` : ""}
+          </div>
+        </div>
+        <button onclick="removerCandidatura('${chave}', '${ra}')"
+          style="background:none;border:none;font-size:14px;cursor:pointer;color:var(--text3);padding:4px;flex-shrink:0">✕</button>
+      </div>
+
+      <!-- Barra de progresso -->
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:5px;font-family:Montserrat,sans-serif;font-weight:700">
+          <span>${isNaoAprovado ? "💪 Não aprovado desta vez" : etapaAtual === "aprovado" ? "🎉 APROVADO!" : "Em andamento..."}</span>
+          <span style="color:${corBarra}">${pct}%</span>
+        </div>
+        <div style="background:var(--border);border-radius:20px;height:8px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:${corBarra};border-radius:20px;transition:width 0.5s ease"></div>
+        </div>
+      </div>
+
+      <!-- Linha do tempo -->
+      <div style="display:flex;flex-direction:column;gap:6px">
+        ${ordemEtapas.map((etId, idx) => {
+          const etapa = ETAPAS_VEST.find(e => e.id === etId);
+          const feito = idxAtual >= idx && !isNaoAprovado || etapaAtual === "aprovado";
+          const atual = etapaAtual === etId;
+          const dataEtapa = historico[etId] ? new Date(historico[etId]).toLocaleDateString("pt-BR") : null;
+          return `
+            <div style="display:flex;align-items:center;gap:10px;cursor:pointer"
+                 onclick="atualizarEtapaVest('${chave}', '${etId}', '${ra}')">
+              <div style="width:28px;height:28px;border-radius:50%;flex-shrink:0;
+                           background:${feito ? corBarra : "var(--border)"};
+                           display:flex;align-items:center;justify-content:center;
+                           font-size:14px;border:2px solid ${atual ? corBarra : "transparent"}">
+                ${feito ? etapa.emoji : "○"}
+              </div>
+              <div style="flex:1">
+                <div style="font-size:12px;font-family:Montserrat,sans-serif;font-weight:${atual ? "700" : "500"};
+                            color:${feito ? "var(--navy)" : "var(--text3)"}">
+                  ${etapa.label}
+                </div>
+                ${dataEtapa ? `<div style="font-size:10px;color:var(--text3)">${dataEtapa}</div>` : ""}
+              </div>
+              ${atual ? `<span style="font-size:10px;background:${corBarra};color:#fff;border-radius:20px;padding:2px 8px;font-family:Montserrat,sans-serif;font-weight:700">atual</span>` : ""}
+            </div>`;
+        }).join("")}
+        <!-- Não aprovado -->
+        <div style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-top:4px;padding-top:8px;border-top:1px solid var(--border)"
+             onclick="atualizarEtapaVest('${chave}', 'nao_aprovado', '${ra}')">
+          <div style="width:28px;height:28px;border-radius:50%;flex-shrink:0;
+                       background:${isNaoAprovado ? "#F59E0B" : "var(--border)"};
+                       display:flex;align-items:center;justify-content:center;font-size:14px">💪</div>
+          <div style="font-size:12px;font-family:Montserrat,sans-serif;font-weight:${isNaoAprovado ? "700" : "500"};
+                      color:${isNaoAprovado ? "var(--navy)" : "var(--text3)"}">Não aprovado desta vez</div>
+          ${isNaoAprovado ? `<span style="font-size:10px;background:#F59E0B;color:#fff;border-radius:20px;padding:2px 8px;font-family:Montserrat,sans-serif;font-weight:700">atual</span>` : ""}
+        </div>
+      </div>
+    </div>`;
+}
+
+let _vestModalSelecionada = "";
+
+function selecionarModalidade(modal) {
+  _vestModalSelecionada = modal;
+  document.querySelectorAll(".vest-modal-btn").forEach(btn => {
+    const ativo = btn.dataset.modal === modal;
+    btn.style.background = ativo ? "var(--navy)" : "var(--white)";
+    btn.style.color = ativo ? "#fff" : "var(--text2)";
+    btn.style.borderColor = ativo ? "var(--navy)" : "var(--border)";
+  });
+}
+
+function toggleVestOutroCurso() {
+  const sel = document.getElementById("vest-curso-select");
+  const outro = document.getElementById("vest-curso-outro");
+  if (sel && outro) {
+    outro.style.display = sel.value === "Outro" ? "block" : "none";
+  }
+}
+
+function adicionarCandidatura(ra) {
+  const sel = document.getElementById("vest-curso-select");
+  const outro = document.getElementById("vest-curso-outro");
+  const univ = document.getElementById("vest-universidade");
+
+  const curso = sel?.value === "Outro" ? (outro?.value?.trim() || "") : (sel?.value || "");
+  const universidade = univ?.value?.trim() || "";
+  const modalidade = _vestModalSelecionada;
+
+  if (!curso) { showToast("Selecione um curso!"); return; }
+  if (!universidade) { showToast("Digite a universidade!"); return; }
+  if (!modalidade) { showToast("Selecione a modalidade!"); return; }
+
+  const plano = carregarPlanoVest(ra);
+  const chave = `${curso}_${universidade}_${Date.now()}`.replace(/[^a-zA-ZÀ-ÿ0-9_]/g, "_");
+
+  plano[chave] = {
+    curso, universidade, modalidade,
+    etapa: "pesquisando",
+    historico: { pesquisando: new Date().toISOString() },
+    data_criacao: new Date().toISOString(),
+  };
+
+  salvarPlanoVest(ra, plano);
+  renderizarPlanoVestibular(ra);
+  salvarVestNoScript(ra, curso, universidade, modalidade, "pesquisando");
+  showToast("Candidatura adicionada! 🎯");
+
+  // Limpa formulário
+  if (sel) sel.value = "";
+  if (outro) { outro.value = ""; outro.style.display = "none"; }
+  if (univ) univ.value = "";
+  _vestModalSelecionada = "";
+  document.querySelectorAll(".vest-modal-btn").forEach(btn => {
+    btn.style.background = "var(--white)";
+    btn.style.color = "var(--text2)";
+    btn.style.borderColor = "var(--border)";
+  });
+}
+
+function atualizarEtapaVest(chave, etapaId, ra) {
+  const plano = carregarPlanoVest(ra);
+  if (!plano[chave]) return;
+
+  const agora = new Date().toISOString();
+  plano[chave].etapa = etapaId;
+  plano[chave].data_atualizacao = agora;
+  if (!plano[chave].historico) plano[chave].historico = {};
+  if (!plano[chave].historico[etapaId]) plano[chave].historico[etapaId] = agora;
+
+  salvarPlanoVest(ra, plano);
+  renderizarPlanoVestibular(ra);
+  salvarVestNoScript(ra, plano[chave].curso, plano[chave].universidade, plano[chave].modalidade, etapaId);
+
+  const msgs = {
+    inscrito:     "Inscrição registrada! 📋",
+    prova:        "Prova registrada! Arrasou! 📝",
+    aprovado:     "🎉 PARABÉNS! APROVADO!",
+    nao_aprovado: "Não foi dessa vez. Continue firme! 💪",
+  };
+  if (msgs[etapaId]) showToast(msgs[etapaId]);
+}
+
+function removerCandidatura(chave, ra) {
+  const plano = carregarPlanoVest(ra);
+  delete plano[chave];
+  salvarPlanoVest(ra, plano);
+  renderizarPlanoVestibular(ra);
+}
+
+async function salvarVestNoScript(ra, curso, universidade, modalidade, etapa) {
+  try {
+    await fetch(MO_SCRIPT_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify({
+        ra,
+        nome: alunoAtual?.nome || "",
+        escola: `${curso} — ${universidade}`,
+        cidade: modalidade,
+        etapa,
+        tipo: "vestibular_3em"
+      }),
+    });
+  } catch(e) { console.warn("[Vest Script] Erro:", e); }
 }
