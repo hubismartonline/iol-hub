@@ -3219,12 +3219,43 @@ let _vestPlanoSelecionado = "";
 
 function selecionarTipoCandidatura(tipo) {
   _vestTipoSelecionado = tipo;
+  _vestPlanoSelecionado = ""; // reseta plano ao trocar tipo
+
   const cores = { sonho: "#FEF3C7", possivel: "#D4EFDF", seguranca: "#EBF4FF" };
   const bordas = { sonho: "#F59E0B", possivel: "#27AE60", seguranca: "#00BDF2" };
+
   document.querySelectorAll(".vest-tipo-btn").forEach(btn => {
     const ativo = btn.dataset.tipo === tipo;
-    btn.style.background   = ativo ? cores[tipo]  : "#fff";
-    btn.style.borderColor  = ativo ? bordas[tipo] : "var(--border)";
+    btn.style.background  = ativo ? cores[tipo]  : "#fff";
+    btn.style.borderColor = ativo ? bordas[tipo] : "var(--border)";
+  });
+
+  // Planos permitidos por tipo
+  const permitidos = {
+    sonho:     ["A","B","C"],
+    possivel:  ["D","E","F"],
+    seguranca: ["G","H","I","J"],
+  };
+  const planosPermitidos = permitidos[tipo] || [];
+
+  document.querySelectorAll(".vest-plano-btn").forEach(btn => {
+    const plano = btn.dataset.plano;
+    const permitido = planosPermitidos.includes(plano);
+    const emUso = btn.classList.contains("usado");
+
+    if (!permitido) {
+      btn.style.background  = "#f5f5f5";
+      btn.style.color       = "#ccc";
+      btn.style.borderColor = "#eee";
+      btn.style.cursor      = "not-allowed";
+      btn.onclick           = null;
+    } else if (!emUso) {
+      btn.style.background  = "#fff";
+      btn.style.color       = "var(--navy)";
+      btn.style.borderColor = "var(--border)";
+      btn.style.cursor      = "pointer";
+      btn.onclick           = () => selecionarPlanoCandidatura(plano);
+    }
   });
 }
 
@@ -3271,8 +3302,16 @@ function adicionarCandidatura(ra) {
   if (!curso)       { showToast("Selecione um curso!"); return; }
   if (!universidade){ showToast("Digite a universidade!"); return; }
   if (!modalidade)  { showToast("Selecione a modalidade!"); return; }
-  if (!tipo)        { showToast("Selecione o tipo de candidatura!"); return; }
-  if (!planoLetra)  { showToast("Selecione o Plano (A, B, C...)!"); return; }
+  if (!tipo)       { showToast("Selecione o tipo de candidatura!"); return; }
+  if (!planoLetra) { showToast("Selecione o Plano!"); return; }
+
+  // Valida combinação tipo + plano
+  const planosPermitidosPorTipo = { sonho: ["A","B","C"], possivel: ["D","E","F"], seguranca: ["G","H","I","J"] };
+  if (!planosPermitidosPorTipo[tipo]?.includes(planoLetra)) {
+    const nomes = { sonho: "A, B ou C", possivel: "D, E ou F", seguranca: "G, H, I ou J" };
+    showToast(`Curso ${tipo === "sonho" ? "Sonho" : tipo === "possivel" ? "Possível" : "Segurança"} deve ser Plano ${nomes[tipo]}!`);
+    return;
+  }
 
   // Verifica se plano já está em uso
   const planoAtual = carregarPlanoVest(ra);
