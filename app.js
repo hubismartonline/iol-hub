@@ -3374,8 +3374,11 @@ function atualizarEtapaVest(chave, etapaId, ra) {
   // Quando aprovado, abre modal para coletar informações extras
   if (etapaId === "aprovado") {
     const dados = plano[chave];
-    const isPrivada = (dados.modalidade || "").toLowerCase().includes("particular") ||
-                      (dados.modalidade || "").toLowerCase().includes("prouni");
+    const modalLower = (dados.modalidade || "").toLowerCase();
+    const isPrivada = modalLower.includes("particular") ||
+                      modalLower.includes("prouni") ||
+                      modalLower.includes("provão") ||
+                      modalLower.includes("provao");
     mostrarModalAprovacao(chave, ra, isPrivada);
   }
 }
@@ -3407,10 +3410,16 @@ function mostrarModalAprovacao(chave, ra, isPrivada) {
       <!-- Colocação -->
       <div style="margin-bottom:14px">
         <label style="font-size:11px;font-weight:700;color:var(--text2);font-family:Montserrat,sans-serif;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">
-          Sua colocação (opcional)
+          Sua colocação <span style="color:var(--pink)">*</span>
         </label>
-        <input type="number" id="vest-colocacao" placeholder="Ex: 1, 5, 23..."
-          style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:13px;font-family:Lato,sans-serif;box-sizing:border-box;outline:none">
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="number" id="vest-colocacao" placeholder="Ex: 1, 5, 23..."
+            style="flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:13px;font-family:Lato,sans-serif;box-sizing:border-box;outline:none">
+          <button onclick="document.getElementById('vest-colocacao').value='não se aplica'; document.getElementById('vest-colocacao').type='text';"
+            style="padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:var(--bg);font-size:12px;font-family:Montserrat,sans-serif;font-weight:700;color:var(--text2);cursor:pointer;white-space:nowrap">
+            Não se aplica
+          </button>
+        </div>
         <div style="font-size:11px;color:var(--text3);margin-top:3px">Posição no ranking de aprovados</div>
       </div>
 
@@ -3462,6 +3471,9 @@ function selecionarBolsa(opcao) {
 function salvarAprovacao(chave, ra, isPrivada) {
   const colocacao = document.getElementById("vest-colocacao")?.value?.trim() || "";
   const bolsa = isPrivada ? (_vestBolsaSelecionada || "") : "";
+
+  if (!colocacao) { showToast("Informe sua colocação ou clique em 'Não se aplica'!"); return; }
+  if (isPrivada && !bolsa) { showToast("Informe se conseguiu bolsa!"); return; }
 
   const plano = carregarPlanoVest(ra);
   if (plano[chave]) {
