@@ -2976,7 +2976,24 @@ function toggleMOInteresseRapido(chave, nome, ra) {
 //  PLANO DE VESTIBULAR — 3º EM
 // =============================================================
 
-const CURSOS_GUIA = ['Administração', 'Arquitetura e Urbanismo', 'Ciências Biológicas', 'Ciências Contábeis', 'Ciências Econômicas', 'Ciências Sociais', 'Comunicação Social', 'Design', 'Direito', 'Educação Física', 'Enfermagem', 'Engenharia Aeronáutica', 'Engenharia Ambiental', 'Engenharia Civil', 'Engenharia de Computação', 'Engenharia de Produção', 'Engenharia Elétrica', 'Engenharia Mecânica', 'Engenharia Química', 'Farmácia', 'Física', 'Geografia', 'História', 'Letras', 'Matemática', 'Medicina', 'Medicina Veterinária', 'Nutrição', 'Odontologia', 'Pedagogia', 'Psicologia', 'Química', 'Relações Internacionais', 'Serviço Social', 'Sistemas de Informação', 'Tecnologia da Informação', 'Outro'];
+// Cursos carregados dinamicamente do simulador
+let CURSOS_GUIA = ["Carregando..."];
+
+async function carregarCursosGuia() {
+  if (CURSOS_GUIA.length > 2) return; // já carregou
+  try {
+    const data = await fetchSimulador({ action: "areas" });
+    if (data?.areas) {
+      CURSOS_GUIA = [...data.areas.map(a => a.nome || a), "Outro"];
+    }
+  } catch(e) {
+    // fallback com lista básica
+    CURSOS_GUIA = ["Administração","Ciências Biológicas","Ciências Econômicas","Direito",
+      "Enfermagem","Engenharia Civil","Engenharia de Computação","Engenharia Elétrica",
+      "Engenharia Mecânica","Medicina","Pedagogia","Psicologia",
+      "Relações Internacionais","Sistemas de Informação","Outro"];
+  }
+}
 const MODALIDADES_VEST = ['Particular — Vestibular Próprio', 'SISU (ENEM)', 'Provão Paulista', 'Pública — Vestibular Próprio', 'PROUNI (ENEM)'];
 
 const ETAPAS_VEST = [
@@ -3000,9 +3017,12 @@ function salvarPlanoVest(ra, plano) {
   } catch(e) {}
 }
 
-function renderizarPlanoVestibular(ra) {
+async function renderizarPlanoVestibular(ra) {
   const container = document.getElementById("vest-plano-container");
   if (!container) return;
+
+  // Carrega cursos do simulador se ainda não carregou
+  await carregarCursosGuia();
 
   const plano = carregarPlanoVest(ra);
   const candidaturas = Object.entries(plano);
@@ -3022,6 +3042,7 @@ function renderizarPlanoVestibular(ra) {
             style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:13px;font-family:Lato,sans-serif;background:var(--white);color:var(--navy);outline:none">
             <option value="">Selecione um curso...</option>
             ${CURSOS_GUIA.map(c => `<option value="${c}">${c}</option>`).join("")}
+            ${CURSOS_GUIA.includes("Outro") ? "" : `<option value="Outro">Outro</option>`}
           </select>
           <input type="text" id="vest-curso-outro" placeholder="Digite o curso..."
             style="display:none;width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:13px;font-family:Lato,sans-serif;margin-top:6px;box-sizing:border-box;outline:none">
@@ -3034,16 +3055,14 @@ function renderizarPlanoVestibular(ra) {
             style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:13px;font-family:Lato,sans-serif;box-sizing:border-box;outline:none">
         </div>
 
-        <!-- Modalidade -->
+        <!-- Processo Seletivo -->
         <div>
-          <label style="font-size:11px;font-weight:700;color:var(--text2);font-family:Montserrat,sans-serif;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px">Modalidade</label>
-          <div style="display:flex;gap:6px;flex-wrap:wrap">
-            ${MODALIDADES_VEST.map(m => `
-              <button class="vest-modal-btn" data-modal="${m}" onclick="selecionarModalidade('${m}')"
-                style="padding:6px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--white);color:var(--text2);font-size:12px;font-family:Montserrat,sans-serif;font-weight:700;cursor:pointer;transition:all 0.15s">
-                ${m}
-              </button>`).join("")}
-          </div>
+          <label style="font-size:11px;font-weight:700;color:var(--text2);font-family:Montserrat,sans-serif;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px">Processo Seletivo</label>
+          <select id="vest-modalidade-select"
+            style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:13px;font-family:Lato,sans-serif;background:var(--white);color:var(--navy);outline:none">
+            <option value="">Selecione o processo seletivo...</option>
+            ${MODALIDADES_VEST.map(m => `<option value="${m}">${m}</option>`).join("")}
+          </select>
         </div>
 
         <button onclick="adicionarCandidatura('${ra}')"
@@ -3200,7 +3219,7 @@ function adicionarCandidatura(ra) {
 
   const curso = sel?.value === "Outro" ? (outro?.value?.trim() || "") : (sel?.value || "");
   const universidade = univ?.value?.trim() || "";
-  const modalidade = _vestModalSelecionada;
+  const modalidade = document.getElementById('vest-modalidade-select')?.value || '';
 
   if (!curso) { showToast("Selecione um curso!"); return; }
   if (!universidade) { showToast("Digite a universidade!"); return; }
@@ -3225,12 +3244,8 @@ function adicionarCandidatura(ra) {
   if (sel) sel.value = "";
   if (outro) { outro.value = ""; outro.style.display = "none"; }
   if (univ) univ.value = "";
-  _vestModalSelecionada = "";
-  document.querySelectorAll(".vest-modal-btn").forEach(btn => {
-    btn.style.background = "var(--white)";
-    btn.style.color = "var(--text2)";
-    btn.style.borderColor = "var(--border)";
-  });
+  const modalSel = document.getElementById("vest-modalidade-select");
+  if (modalSel) modalSel.value = "";
 }
 
 function atualizarEtapaVest(chave, etapaId, ra) {
