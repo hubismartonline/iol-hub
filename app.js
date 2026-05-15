@@ -2576,7 +2576,8 @@ function renderizarPainelMO(ra) {
               const dataEtapa = historico[etId] ? new Date(historico[etId]).toLocaleDateString("pt-BR") : null;
               return `
                 <div style="display:flex;align-items:center;gap:10px;cursor:pointer"
-                     onclick="atualizarEtapaMO('${chave}', '${etId}', '${ra}')">
+                     onclick="atualizarEtapaMO(this.dataset.chave, this.dataset.etapa, this.dataset.ra)"
+                     data-chave="${chave.replace(/'/g, '')}" data-etapa="${etId}" data-ra="${ra}">
                   <div style="width:28px;height:28px;border-radius:50%;flex-shrink:0;
                                background:${feito ? corBarra : "var(--border)"};
                                display:flex;align-items:center;justify-content:center;
@@ -2595,7 +2596,8 @@ function renderizarPainelMO(ra) {
             }).join("")}
             <!-- Não aprovado -->
             <div style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-top:4px;padding-top:8px;border-top:1px solid var(--border)"
-                 onclick="atualizarEtapaMO('${chave}', 'nao_aprovado', '${ra}')">
+                 onclick="atualizarEtapaMO(this.dataset.chave, 'nao_aprovado', this.dataset.ra)"
+                 data-chave="${chave.replace(/'/g, '')}" data-ra="${ra}">
               <div style="width:28px;height:28px;border-radius:50%;flex-shrink:0;
                            background:${isNaoAprovado ? "#F59E0B" : "var(--border)"};
                            display:flex;align-items:center;justify-content:center;font-size:14px">
@@ -2672,9 +2674,14 @@ function atualizarEtapaMO(chave, etapaId, ra) {
   renderizarPainelMO(ra);
 
   if (etapaId === "aprovado") {
-    // Detecta se é escola privada pelo tipo da planilha
-    const tipoEscola = (plano[chave].tipo || "").toLowerCase();
-    const isPrivada = tipoEscola.includes("priv");
+    // Busca o tipo da escola no cache de MOs
+    const cidade = chave.split("_")[0];
+    const nomeEscola = plano[chave].nome || "";
+    let isPrivada = false;
+    const escolaCache = (moCache[cidade] || []).find(e => e.nome === nomeEscola);
+    if (escolaCache) {
+      isPrivada = (escolaCache.tipo || "").toLowerCase().includes("priv");
+    }
     mostrarModalAprovacaoMO(chave, ra, isPrivada);
     return;
   }
