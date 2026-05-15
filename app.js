@@ -3471,9 +3471,12 @@ function selecionarBolsa(opcao) {
 function salvarAprovacao(chave, ra, isPrivada) {
   const colocacao = document.getElementById("vest-colocacao")?.value?.trim() || "";
   const bolsa = isPrivada ? (_vestBolsaSelecionada || "") : "";
+  const planoAtual = carregarPlanoVest(ra);
+  const modalidade = (planoAtual[chave]?.modalidade || "").toLowerCase();
+  const isParticular = modalidade.includes("particular");
 
   if (!colocacao) { showToast("Informe sua colocação ou clique em 'Não se aplica'!"); return; }
-  if (isPrivada && !bolsa) { showToast("Informe se conseguiu bolsa!"); return; }
+  if (isParticular && !bolsa) { showToast("Informe se conseguiu bolsa!"); return; }
 
   const plano = carregarPlanoVest(ra);
   if (plano[chave]) {
@@ -3503,6 +3506,20 @@ function salvarAprovacao(chave, ra, isPrivada) {
 
 function removerCandidatura(chave, ra) {
   const plano = carregarPlanoVest(ra);
+  // Registra na planilha antes de apagar
+  if (plano[chave]) {
+    salvarVestNoScript(
+      ra,
+      plano[chave].curso,
+      plano[chave].universidade,
+      plano[chave].modalidade,
+      "removido",
+      plano[chave].tipo || "",
+      "",
+      "",
+      plano[chave].plano || ""
+    );
+  }
   delete plano[chave];
   salvarPlanoVest(ra, plano);
   renderizarPlanoVestibular(ra);
