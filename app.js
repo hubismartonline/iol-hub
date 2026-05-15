@@ -3056,15 +3056,23 @@ async function inicializarMapaMO(latAluno, lonAluno) {
       iconAnchor: [14, 14],
     });
 
+    const chaveEscola = `SP_${escola.nome}`;
+    const jaTemInteresse = !!moInteresses[chaveEscola];
     const marker = L.marker(coords, { icon: iconEscola })
       .addTo(mapaLeaflet)
       .bindPopup(`
-        <div style="font-family:Montserrat,sans-serif;min-width:180px">
+        <div style="font-family:Montserrat,sans-serif;min-width:200px">
           <div style="font-weight:700;font-size:13px;margin-bottom:4px">${escola.nome}</div>
-          <div style="font-size:11px;color:#666;margin-bottom:4px">📍 ${escola.bairro}</div>
+          <div style="font-size:11px;color:#666;margin-bottom:2px">📍 ${escola.bairro}</div>
           <div style="font-size:11px;color:#666;margin-bottom:4px">📏 ${dist.toFixed(1)} km de você</div>
           ${escola.bolsas ? `<div style="font-size:11px;color:#333;margin-bottom:6px">💰 ${escola.bolsas}</div>` : ""}
-          ${escola.link ? `<a href="${escola.link}" target="_blank" style="font-size:11px;color:#00BDF2;font-weight:700">Ver site ↗</a>` : ""}
+          ${escola.link ? `<a href="${escola.link}" target="_blank" style="font-size:11px;color:#00BDF2;font-weight:700;display:block;margin-bottom:6px">Ver site ↗</a>` : ""}
+          <button onclick="toggleMOInteresseRapido('SP_${escola.nome.replace(/'/g,"\'")}', '${escola.nome.replace(/'/g,"\'")}', '${window._alunoRA || ""}')"
+            style="width:100%;padding:7px;background:${jaTemInteresse ? "#FDF2F8" : "#002561"};color:${jaTemInteresse ? "#EE2D67" : "#fff"};
+                   border:1.5px solid ${jaTemInteresse ? "#EE2D67" : "#002561"};border-radius:8px;
+                   font-family:Montserrat,sans-serif;font-weight:700;font-size:12px;cursor:pointer">
+            ${jaTemInteresse ? "❤️ Tenho interesse" : "🤍 Marcar interesse"}
+          </button>
         </div>
       `);
 
@@ -3121,28 +3129,21 @@ function renderizarListaProximas(escolas, latAluno, lonAluno) {
 }
 
 function toggleMOInteresseRapido(chave, nome, ra) {
-  const idx = -1; // sem idx específico
   if (moInteresses[chave]) {
-    delete moInteresses[chave];
+    // Remove
     const plano = carregarMOPlano(ra);
+    if (plano[chave]) salvarMONoScript(ra, plano[chave].nome || "", chave.split("_")[0], "removido", plano[chave].tipo_interesse || "", plano[chave].prioridade || "");
+    delete moInteresses[chave];
     delete plano[chave];
     salvarMOPlano(ra, plano);
+    try { sessionStorage.setItem("mo_interesses_" + ra, JSON.stringify(moInteresses)); } catch(e) {}
+    atualizarContadorMO(ra);
+    renderizarPainelMO(ra);
+    const btn = event?.target;
+    if (btn) { btn.textContent = "🤍"; btn.classList.remove("ativo"); }
   } else {
-    moInteresses[chave] = { nome, data: new Date().toISOString() };
-    const plano = carregarMOPlano(ra);
-    plano[chave] = { nome, etapa: "interesse", data_atualizacao: new Date().toISOString() };
-    salvarMOPlano(ra, plano);
-    showToast("Adicionado ao seu plano! 🎉");
-  }
-  try { sessionStorage.setItem("mo_interesses_" + ra, JSON.stringify(moInteresses)); } catch(e) {}
-  atualizarContadorMO(ra);
-  renderizarPainelMO(ra);
-  // Re-renderiza lista
-  const btn = event?.target;
-  if (btn) {
-    const tem = moInteresses[chave];
-    btn.textContent = tem ? "❤️" : "🤍";
-    btn.classList.toggle("ativo", !!tem);
+    // Abre modal com tipo e prioridade — passa idx=-1 (sem botão na lista principal)
+    mostrarModalMOInteresse(chave, nome, ra, -1);
   }
 }
 
