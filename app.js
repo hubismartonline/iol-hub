@@ -3106,7 +3106,11 @@ function renderizarCardVest(chave, dados, ra) {
       <!-- Barra de progresso -->
       <div style="margin-bottom:12px">
         <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:5px;font-family:Montserrat,sans-serif;font-weight:700">
-          <span>${isNaoAprovado ? "💪 Não aprovado desta vez" : etapaAtual === "aprovado" ? "🎉 APROVADO!" : "Em andamento..."}</span>
+          <span>
+            ${isNaoAprovado ? "💪 Não aprovado desta vez" : etapaAtual === "aprovado" ? "🎉 APROVADO!" : "Em andamento..."}
+            ${etapaAtual === "aprovado" && dados.colocacao ? `<span style="color:var(--text3);font-weight:400"> · ${dados.colocacao}º lugar</span>` : ""}
+            ${etapaAtual === "aprovado" && dados.bolsa ? `<span style="background:#D4EFDF;color:#1A7A4A;border-radius:20px;padding:1px 8px;font-size:10px;margin-left:4px">${dados.bolsa}</span>` : ""}
+          </span>
           <span style="color:${corBarra}">${pct}%</span>
         </div>
         <div style="background:var(--border);border-radius:20px;height:8px;overflow:hidden">
@@ -3239,10 +3243,122 @@ function atualizarEtapaVest(chave, etapaId, ra) {
   const msgs = {
     inscrito:     "Inscrição registrada! 📋",
     prova:        "Prova registrada! Arrasou! 📝",
-    aprovado:     "🎉 PARABÉNS! APROVADO!",
     nao_aprovado: "Não foi dessa vez. Continue firme! 💪",
   };
   if (msgs[etapaId]) showToast(msgs[etapaId]);
+
+  // Quando aprovado, abre modal para coletar informações extras
+  if (etapaId === "aprovado") {
+    const dados = plano[chave];
+    const isPrivada = (dados.modalidade || "").toLowerCase().includes("particular") ||
+                      (dados.modalidade || "").toLowerCase().includes("prouni");
+    mostrarModalAprovacao(chave, ra, isPrivada);
+  }
+}
+
+function mostrarModalAprovacao(chave, ra, isPrivada) {
+  // Remove modal anterior se existir
+  document.getElementById("vest-modal-aprovacao")?.remove();
+
+  const modal = document.createElement("div");
+  modal.id = "vest-modal-aprovacao";
+  modal.style.cssText = `
+    position:fixed;top:0;left:0;right:0;bottom:0;
+    background:rgba(0,37,97,0.5);z-index:9999;
+    display:flex;align-items:center;justify-content:center;padding:20px
+  `;
+
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:var(--r-lg);padding:24px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+      <div style="text-align:center;margin-bottom:16px">
+        <div style="font-size:40px;margin-bottom:8px">🎉</div>
+        <div style="font-family:Montserrat,sans-serif;font-weight:800;font-size:18px;color:var(--navy)">
+          PARABÉNS! Você foi aprovado!
+        </div>
+        <div style="font-size:13px;color:var(--text2);margin-top:4px">
+          Conta mais um pouco sobre sua aprovação
+        </div>
+      </div>
+
+      <!-- Colocação -->
+      <div style="margin-bottom:14px">
+        <label style="font-size:11px;font-weight:700;color:var(--text2);font-family:Montserrat,sans-serif;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">
+          Sua colocação (opcional)
+        </label>
+        <input type="number" id="vest-colocacao" placeholder="Ex: 1, 5, 23..."
+          style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:13px;font-family:Lato,sans-serif;box-sizing:border-box;outline:none">
+        <div style="font-size:11px;color:var(--text3);margin-top:3px">Posição no ranking de aprovados</div>
+      </div>
+
+      ${isPrivada ? `
+      <!-- Bolsa (só para privadas) -->
+      <div style="margin-bottom:16px">
+        <label style="font-size:11px;font-weight:700;color:var(--text2);font-family:Montserrat,sans-serif;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:8px">
+          Conseguiu bolsa?
+        </label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          ${["Não","Sim — Parcial","Sim — 100%"].map(op => `
+            <button class="vest-bolsa-btn" data-bolsa="${op}"
+              onclick="selecionarBolsa('${op}')"
+              style="padding:8px 14px;border-radius:20px;border:1.5px solid var(--border);background:#fff;color:var(--text2);font-size:12px;font-family:Montserrat,sans-serif;font-weight:700;cursor:pointer;transition:all 0.15s">
+              ${op}
+            </button>`).join("")}
+        </div>
+      </div>` : ""}
+
+      <!-- Botões -->
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button onclick="salvarAprovacao('${chave}', '${ra}', ${isPrivada})"
+          style="flex:1;padding:11px;background:var(--navy);color:#fff;border:none;border-radius:var(--r-sm);font-family:Montserrat,sans-serif;font-weight:700;font-size:13px;cursor:pointer">
+          Salvar 🎉
+        </button>
+        <button onclick="document.getElementById('vest-modal-aprovacao').remove()"
+          style="padding:11px 16px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:Montserrat,sans-serif;font-weight:700;font-size:13px;cursor:pointer;color:var(--text2)">
+          Pular
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+}
+
+let _vestBolsaSelecionada = "";
+
+function selecionarBolsa(opcao) {
+  _vestBolsaSelecionada = opcao;
+  document.querySelectorAll(".vest-bolsa-btn").forEach(btn => {
+    const ativo = btn.dataset.bolsa === opcao;
+    btn.style.background = ativo ? "var(--navy)" : "#fff";
+    btn.style.color = ativo ? "#fff" : "var(--text2)";
+    btn.style.borderColor = ativo ? "var(--navy)" : "var(--border)";
+  });
+}
+
+function salvarAprovacao(chave, ra, isPrivada) {
+  const colocacao = document.getElementById("vest-colocacao")?.value?.trim() || "";
+  const bolsa = isPrivada ? (_vestBolsaSelecionada || "") : "";
+
+  const plano = carregarPlanoVest(ra);
+  if (plano[chave]) {
+    plano[chave].colocacao = colocacao;
+    plano[chave].bolsa = bolsa;
+    salvarPlanoVest(ra, plano);
+
+    // Salva no script com info extra
+    salvarVestNoScript(
+      ra,
+      plano[chave].curso,
+      plano[chave].universidade,
+      plano[chave].modalidade,
+      `aprovado${colocacao ? " — colocação: " + colocacao : ""}${bolsa ? " — bolsa: " + bolsa : ""}`
+    );
+  }
+
+  document.getElementById("vest-modal-aprovacao")?.remove();
+  renderizarPlanoVestibular(ra);
+  showToast("🎉 PARABÉNS! Aprovação registrada!");
+  _vestBolsaSelecionada = "";
 }
 
 function removerCandidatura(chave, ra) {
