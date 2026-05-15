@@ -3265,17 +3265,29 @@ function adicionarCandidatura(ra) {
     ? (univOutro?.value?.trim() || "")
     : (univSel?.value || "");
   const modalidade = document.getElementById('vest-modalidade-select')?.value || '';
+  const tipo  = _vestTipoSelecionado;
+  const planoLetra = _vestPlanoSelecionado;
 
-  if (!curso) { showToast("Selecione um curso!"); return; }
-  if (!universidade) { showToast("Digite a universidade!"); return; }
-  if (!modalidade) { showToast("Selecione a modalidade!"); return; }
+  if (!curso)       { showToast("Selecione um curso!"); return; }
+  if (!universidade){ showToast("Digite a universidade!"); return; }
+  if (!modalidade)  { showToast("Selecione a modalidade!"); return; }
+  if (!tipo)        { showToast("Selecione o tipo de candidatura!"); return; }
+  if (!planoLetra)  { showToast("Selecione o Plano (A, B, C...)!"); return; }
 
-  const plano = carregarPlanoVest(ra);
+  // Verifica se plano já está em uso
+  const planoAtual = carregarPlanoVest(ra);
+  const planosUsados = Object.values(planoAtual).map(d => d.plano).filter(Boolean);
+  if (planosUsados.includes(planoLetra)) {
+    showToast(`Plano ${planoLetra} já está em uso! Escolha outro.`);
+    return;
+  }
+
+  const plano = planoAtual;
   const chave = `${curso}_${universidade}_${Date.now()}`.replace(/[^a-zA-ZÀ-ÿ0-9_]/g, "_");
 
   plano[chave] = {
     curso, universidade, modalidade,
-    tipo, plano,
+    tipo, plano: planoLetra,
     etapa: "pesquisando",
     historico: { pesquisando: new Date().toISOString() },
     data_criacao: new Date().toISOString(),
@@ -3295,6 +3307,8 @@ function adicionarCandidatura(ra) {
   if (modalSel) modalSel.value = "";
   _vestTipoSelecionado = "";
   _vestPlanoSelecionado = "";
+  document.querySelectorAll(".vest-tipo-btn").forEach(b => { b.style.background=""; b.style.borderColor=""; });
+  document.querySelectorAll(".vest-plano-btn:not(.usado)").forEach(b => { b.style.background="#fff"; b.style.color="var(--navy)"; b.style.borderColor="var(--border)"; });
 }
 
 function atualizarEtapaVest(chave, etapaId, ra) {
