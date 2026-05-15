@@ -2801,6 +2801,12 @@ function removerMOInteresse(chave, ra) {
   try { sessionStorage.setItem("mo_interesses_" + ra, JSON.stringify(moInteresses)); } catch(e) {}
 
   renderizarPainelMO(ra);
+  // Atualiza painel inline
+  const painelInlineDel = document.getElementById("mo-painel-inline");
+  const abaPlanoEl = document.getElementById("mo-aba-plano");
+  if (painelInlineDel && abaPlanoEl && abaPlanoEl.style.display !== "none") {
+    renderizarPainelMOEm(ra, painelInlineDel);
+  }
   atualizarContadorMO(ra);
 
   // Atualiza botão de interesse na lista se visível
