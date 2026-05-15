@@ -3004,8 +3004,7 @@ async function renderizarPlanoVestibular(ra) {
   const container = document.getElementById("vest-plano-container");
   if (!container) return;
 
-  // Carrega cursos e universidades do guia
-  await Promise.all([carregarCursosGuia(), carregarUniversidadesGuia()]);
+  // Cursos e universidades serão carregados sob demanda
 
   const plano = carregarPlanoVest(ra);
   const candidaturas = Object.entries(plano);
