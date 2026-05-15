@@ -2971,6 +2971,18 @@ async function carregarGuia() {
     }
     _guiaCarregado = true;
     console.log("[Guia] Cursos:", CURSOS_GUIA.length, "| Universidades:", UNIVERSIDADES_GUIA.length);
+
+    // Re-renderiza os selects se já estiverem visíveis
+    const cursosSelect = document.getElementById("vest-curso-select");
+    if (cursosSelect) {
+      cursosSelect.innerHTML = `<option value="">Selecione um curso...</option>
+        ${CURSOS_GUIA.map(c => `<option value="${c}">${c}</option>`).join("")}`;
+    }
+    const univSelect = document.getElementById("vest-universidade-select");
+    if (univSelect) {
+      univSelect.innerHTML = `<option value="">Selecione a universidade...</option>
+        ${UNIVERSIDADES_GUIA.map(u => `<option value="${u}">${u}</option>`).join("")}`;
+    }
   } catch(e) {
     console.warn("[Guia] Erro:", e);
     CURSOS_GUIA = ["Outro"];
