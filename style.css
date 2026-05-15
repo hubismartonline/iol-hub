@@ -2877,3 +2877,60 @@ mark {
 }
 .mo-vazio-icon { font-size: 40px; margin-bottom: 12px; }
 .mo-vazio-texto { font-size: 13px; line-height: 1.6; }
+
+/* =============================================
+   ABAS INTERNAS — MO (Explorar / Meu Plano)
+   ============================================= */
+
+.mo-abas-nav {
+  display: flex;
+  gap: 0;
+  margin-bottom: 16px;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  padding: 4px;
+  gap: 4px;
+}
+
+.mo-aba-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  color: var(--text2);
+  font-family: Montserrat, sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: calc(var(--r-md) - 4px);
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.mo-aba-btn:hover:not(.ativo) {
+  background: var(--white);
+  color: var(--navy);
+}
+
+.mo-aba-btn.ativo {
+  background: var(--white);
+  color: var(--navy);
+  box-shadow: 0 1px 4px rgba(0,37,97,0.1);
+}
+
+.mo-aba-badge {
+  background: var(--pink);
+  color: #fff;
+  border-radius: 20px;
+  padding: 1px 7px;
+  font-size: 10px;
+  font-weight: 800;
+  font-family: Montserrat, sans-serif;
+  display: inline-flex;
+  align-items: center;
+}
